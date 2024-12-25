@@ -1,8 +1,10 @@
 """Helper: Login to Strava via OAuth2."""
 
-import requests
+from time import time
+
 import streamlit as st
 
+from helper_api import api_post_deauthorize, api_post_oauth, api_post_token_refresh
 from helper_logging import init_logger
 
 logger = init_logger(__file__)
@@ -10,6 +12,7 @@ logger = init_logger(__file__)
 
 def display_strava_auth_link() -> None:
     """Display link for Strava auth."""
+    st.title("Login")
     st.write(
         "<a target='_self' href='http://www.strava.com/oauth/authorize?client_id=28009&response_type=code&redirect_uri=https://entorb.net/strava-streamlit/?exchange_token&approval_prompt=force&scope=activity:read_all'>Login</a>",
         unsafe_allow_html=True,
@@ -20,23 +23,36 @@ def handle_redirect() -> None:
     """
     Handle redirect from Strava after auth.
 
-    Sets st.session_state["TOKEN"].
+    Calls oauth API.
+    Stores in st.session_state: TOKEN, TOKEN_EXPIRE, USER_ID, USERNAME
     """
     code = st.query_params["code"]
-    url = "https://www.strava.com/oauth/token"
-    d = {
-        # 'Accept':"application/json",
-        # 'Accept-Encoding':'UTF-8',
-        "client_id": st.secrets["client_id"],
-        "client_secret": st.secrets["secret"],
-        "code": code,
-    }
-    resp = requests.post(url, json=d, timeout=3)
-    access_token = resp.json()["access_token"]
-    st.session_state["TOKEN"] = access_token
+    d = api_post_oauth(code)
+    # st.write(d)
+    st.session_state["TOKEN"] = d["access_token"]
+    st.session_state["TOKEN_EXPIRE"] = d["expires_at"]
+    st.session_state["TOKEN_REFRESH"] = d["refresh_token"]
+    st.session_state["USER_ID"] = d["athlete"]["id"]
+    st.session_state["USERNAME"] = d["athlete"].get("username", "no username")
 
     # remove url parameters
     st.query_params.clear()
+
+
+def handle_token_refresh(d: dict) -> None:
+    """Store refresh token response to session_state."""
+    st.session_state["TOKEN"] = d["access_token"]
+    st.session_state["TOKEN_EXPIRE"] = d["expires_at"]
+    st.session_state["TOKEN_REFRESH"] = d["refresh_token"]
+
+
+def token_refresh_if_needed() -> None:
+    """Trigger token refresh if needed."""
+    if time() > st.session_state["TOKEN_EXPIRE"] - 120:
+        st.header("Token Refresh")
+        d = api_post_token_refresh()
+        handle_token_refresh(d)
+        # st.write(d)
 
 
 def perform_login() -> None:
@@ -49,8 +65,9 @@ def perform_login() -> None:
 
 def logout() -> None:
     """Logout and unset all local access data."""
-    # TODO: Logout at Strava
+    api_post_deauthorize()
     for key in ("TOKEN", "USER_ID", "USERNAME", "ENV"):
         if key in st.session_state:
             del st.session_state[key]
+
     st.write("Logged Out")
