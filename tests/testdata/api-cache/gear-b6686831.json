@@ -1,0 +1,15 @@
+{
+  "id": "b6686831",
+  "primary": false,
+  "name": "Bike1",
+  "nickname": "Bike1",
+  "resource_state": 3,
+  "retired": false,
+  "distance": 3500607,
+  "converted_distance": 3500.6,
+  "brand_name": "Brand",
+  "model_name": "Model",
+  "frame_type": 3,
+  "description": "",
+  "weight": 10.0
+}
