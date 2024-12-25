@@ -9,22 +9,40 @@ from time import time
 import pandas as pd
 import streamlit as st
 
-from helper_api import fetch_all_activities, fetch_gear_data
+from helper_api import fetch_activities_page, fetch_gear_data
 from helper_logging import init_logger
 
 logger = init_logger(__file__)
 
+# counter = 0
+
+DIR_SERVER = "/var/www/virtual/entorb/data-web-pages/strava"
+DIR_LOCAL = "./data"
+
 
 def get_data_dir() -> Path:
     """Get date path, dependent on env."""
-    return Path(
-        "/var/www/virtual/entorb/data-web-pages/strava"
-        if st.session_state["ENV"] == "PROD"
-        else "./data"
-    )
+    return Path(DIR_SERVER if st.session_state["ENV"] == "PROD" else DIR_LOCAL)
 
 
-counter = 0
+# not caching this raw data
+def fetch_all_activities() -> list[dict]:
+    """Loop over fetch_activities_page unless the result is empty."""
+    page = 1
+    lst_all_activities = []
+    while True:
+        # st.write(f"Downloading page {page}")
+        lst = fetch_activities_page(page=page)
+        if len(lst) == 0:
+            break
+        lst_all_activities.extend(lst)
+        page += 1
+        # dev debug: only one page
+        # if st.session_state["USERNAME"] == "entorb":
+        #     break
+        # if st.session_state["ENV"] == "DEV":
+        #     break
+    return lst_all_activities
 
 
 def geo_distance_haversine(
@@ -35,9 +53,9 @@ def geo_distance_haversine(
 
     see https://en.wikipedia.org/wiki/Haversine_formula
     """
-    if st.session_state["ENV"] == "DEV":
-        global counter  # noqa: PLW0603
-        counter += 1
+    # if st.session_state["ENV"] == "DEV":
+    #     global counter
+    #     counter += 1
     lat1, lon1 = start
     lat2, lon2 = end
 
@@ -215,9 +233,9 @@ def geo_calc(df: pd.DataFrame) -> pd.DataFrame:
         axis=1,
     )
 
-    if st.session_state["ENV"] == "DEV":
-        global counter  # noqa: PLW0602
-        st.write(counter)
+    # if st.session_state["ENV"] == "DEV":
+    #     global counter
+    #     st.write(counter)
     return df
 
 
@@ -241,7 +259,7 @@ def get_known_locations() -> list[tuple[float, float, str]]:
 
     p = get_data_dir() / "knownLocations" / f"{user_id}.txt"
     if p.is_file():
-        for line in p.read_text().split("\n"):
+        for line in p.read_text().strip().split("\n"):
             lat, lng, name = line.split(" ", 3)
             lst_known_locations.append((float(lat), float(lng), name))
     return lst_known_locations
@@ -268,7 +286,7 @@ def read_city_db() -> list[tuple[float, float, str]]:
     """Read city database."""
     p = get_data_dir() / "city-gps.dat"
     lst = []
-    for line in p.read_text().split("\n"):
+    for line in p.read_text().strip().split("\n"):
         if line.startswith("#"):
             continue
         parts = line.split(",", 6)
