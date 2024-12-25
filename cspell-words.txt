@@ -2,9 +2,11 @@
 dropna
 entorb
 latlng
+pycache
 pytest
 selectbox
 Strava
 Streamlit
 supervisorctl
+tomli
 Torben

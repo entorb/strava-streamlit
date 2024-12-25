@@ -1,13 +1,13 @@
 #!/bin/sh
 
-# modify config
-cp .streamlit/config.toml .streamlit/config-prod.toml
-sed -i "" "s/watchdog/none/g" .streamlit/config-prod.toml
-sed -i "" "s/address = /# address = /g" .streamlit/config-prod.toml
-sed -i "" "s/# baseUrlPath/baseUrlPath/g" .streamlit/config-prod.toml
+echo copying
+# modify config.toml -> config-prod.toml
+python3 scripts/config_convert.py
 # transfer data
-scp .streamlit/config-prod.toml entorb@entorb.net:strava-streamlit/.streamlit/config.toml
-scp .streamlit/secrets.toml entorb@entorb.net:strava-streamlit/.streamlit/secrets.toml
-scp src/*.py entorb@entorb.net:strava-streamlit/src/
+rsync -uz .streamlit/config-prod.toml entorb@entorb.net:strava-streamlit/.streamlit/config.toml
+rsync -uz .streamlit/secrets.toml entorb@entorb.net:strava-streamlit/.streamlit/secrets.toml
+# scp src/*.py entorb@entorb.net:strava-streamlit/src/
+rsync -ruzv --no-links --delete --delete-excluded --exclude __pycache__ src/ entorb@entorb.net:strava-streamlit/src/
 
+echo restarting strava-streamlit
 ssh entorb@entorb.net "supervisorctl restart strava-streamlit"

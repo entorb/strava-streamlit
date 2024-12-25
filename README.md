@@ -1,5 +1,8 @@
 # Torben's Strava App V2 using Streamlit
 
+This is a modern rewrite of my old [Strava Äpp](https://github.com/entorb/strava/), that was written in Perl.
+Will be hosted later at <https://entorb.net/strava/>
+
 ## Repo Setup
 
 ### Install

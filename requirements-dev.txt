@@ -1,4 +1,5 @@
 pre-commit
 pytest
 ruff
+tomli-w
 watchdog
