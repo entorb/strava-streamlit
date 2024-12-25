@@ -21,6 +21,9 @@ def set_env() -> None:
             st.session_state["ENV"] = "PROD"
         else:
             st.session_state["ENV"] = "DEV"
+            # when running locally, ensure we have data dirs
+            Path("./cache").mkdir(exist_ok=True)
+            Path("./data").mkdir(exist_ok=True)
 
 
 title = "Strava Äpp V2"
