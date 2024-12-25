@@ -14,7 +14,7 @@
 
 exclude: |
   (?x)^(
-    .*.vscode/launch.json |
+    .*.vscode/launch.json | tests/testdata/.* |
   )$
 
 repos:
@@ -67,7 +67,7 @@ repos:
 
   # ruff
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: "v0.8.3"
+    rev: "v0.8.4"
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
@@ -81,7 +81,7 @@ repos:
         args: ["--skip", "B101,B404"]
 
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.21.2
+    rev: v8.22.0
     hooks:
       - id: gitleaks
 

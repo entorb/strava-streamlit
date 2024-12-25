@@ -1,12 +1,15 @@
 # CSpell Custom Dictionary Words
+deauthorize
 dropna
 entorb
 latlng
 pycache
 pytest
+ruzv
 selectbox
 Strava
 Streamlit
 supervisorctl
+testdata
 tomli
 Torben

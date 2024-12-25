@@ -2,8 +2,11 @@ __pycache__/
 .vscode/
 .DS_Store
 cache/
+cacheReal/
 data/
+dataReal/
 
 requirements-all.txt
 secrets.toml
 download.sh
+.coverage
