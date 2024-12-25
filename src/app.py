@@ -3,6 +3,8 @@
 from pathlib import Path
 from time import time
 
+import altair as alt
+import numpy as np
 import pandas as pd
 import streamlit as st
 
@@ -34,6 +36,103 @@ def set_env() -> None:
             Path("./data").mkdir(exist_ok=True)
 
 
+AGGREGATIONS = {
+    "Count": "count",
+    "Hour-sum": "sum",
+    "Hour-avg": "mean",
+    "Kilometer-sum": "sum",
+    "Kilometer-avg": "mean",
+    "Elevation-sum": "sum",
+    "Elevation-avg": "mean",
+    "Elevation%_avg": "mean",
+    "Speed_km/h-avg": "mean",
+    "Speed_km/h-max": "max",
+    "Heartrate-avg": "mean",
+    "Heartrate-max": "max",
+}
+
+
+def activity_stats_grouping(df: pd.DataFrame, freq: str) -> pd.DataFrame:
+    # copied from strava V1: activityStats2.py
+    """
+    Perform GROUP BY aggregation for time_freq (month, week, quarter, year) and type.
+    """
+    assert freq in ("Year", "Quarter", "Month", "Week")  # noqa: S101
+    # reduce to relevant columns
+    df = df[
+        [
+            "id",
+            "type",
+            "x_date",
+            "x_min",
+            "x_km",
+            "total_elevation_gain",
+            "x_elev_%",
+            "x_km/h",
+            "average_heartrate",
+            "max_heartrate",
+            "x_max_km/h",
+        ]
+    ]
+
+    df = df.rename(
+        columns={
+            "id": "Count",
+            "x_date": "date",
+            "x_min": "Hour-sum",
+            "x_km": "Kilometer-sum",
+            "total_elevation_gain": "Elevation-sum",
+            "x_elev_%": "Elevation%_avg",
+            "x_km/h": "Speed_km/h-avg",
+            "average_heartrate": "Heartrate-avg",
+        },
+    )  # not inplace here!
+
+    # replace 0 by nan
+    df = df.replace(0, np.nan)
+    df["date"] = pd.to_datetime(df["date"])
+    df["Hour-sum"] = df["Hour-sum"] / 60
+    df["Hour-avg"] = df["Hour-sum"]
+    df["Kilometer-avg"] = df["Kilometer-sum"]
+    df["Elevation-avg"] = df["Elevation-sum"]
+    df["Heartrate-max"] = df["Heartrate-avg"]
+    df["Speed_km/h-max"] = df["Speed_km/h-avg"]
+
+    if freq == "Week":
+        df = df.groupby(["type", pd.Grouper(key="date", freq="W")]).agg(AGGREGATIONS)
+
+    if freq == "Month":
+        df = df.groupby(["type", pd.Grouper(key="date", freq="MS")]).agg(AGGREGATIONS)
+
+    if freq == "Quarter":
+        df = df.groupby(["type", pd.Grouper(key="date", freq="QS")]).agg(AGGREGATIONS)
+
+    if freq == "Year":
+        df["date"] = df["date"].dt.year
+        df = df.groupby(["type", pd.Grouper(key="date")]).agg(AGGREGATIONS)
+
+    # rounding
+    for measure in AGGREGATIONS:
+        if measure in ("Count", "Elevation-sum"):
+            df[measure] = df[measure].astype(np.int64)
+        else:
+            df[measure] = df[measure].round(1)
+
+    df = df.reset_index()
+
+    # discrete values for date
+    if freq == "Week":
+        df["date"] = df["date"].dt.strftime("%Y-W%W")
+    elif freq == "Month":
+        df["date"] = df["date"].dt.strftime("%Y-%m")
+    elif freq == "Quarter":
+        df["date"] = df["date"].dt.to_period("Q").dt.strftime("%Y-Q%q")
+    elif freq == "Year":
+        df["date"] = df["date"].astype(int)
+    st.write(df)
+    return df
+
+
 title = "Strava Äpp V2"
 st.set_page_config(page_title=title, page_icon=None, layout="wide")
 st.title(title)
@@ -56,7 +155,7 @@ if "TOKEN" not in st.session_state:
     perform_login()
 
 
-def reset_filters():
+def reset_filters() -> None:  # noqa: D103
     st.session_state.sel_type = None
     st.session_state.sel_year = None
     st.session_state.sel_duration = 0
@@ -71,9 +170,9 @@ if "TOKEN" in st.session_state:
     username = st.session_state["USERNAME"]
     st.write(f"Welcome User '{username}'")
 
-    df, df_gear = cache_all_activities_and_gears()
+    df2, df_gear = cache_all_activities_and_gears()
 
-    df = df.drop(
+    df2 = df2.drop(
         columns=[
             "resource_state",
             "athlete",
@@ -84,49 +183,55 @@ if "TOKEN" in st.session_state:
             "start_date",
         ]
     )
-    df = df.reset_index()
+    df2 = df2.reset_index()
 
-    df = df.rename(columns={"start_date_local": "start_date"})
+    df2 = df2.rename(columns={"start_date_local": "start_date"})
 
     st.header("Activities")
     col1, col2, col3, col4, col5, col6 = st.columns(6)
+
     sel_type = col1.selectbox(
-        "Sport", options=sorted(df["type"].unique()), index=None, key="sel_type"
+        "Sport", options=sorted(df2["type"].unique()), index=None, key="sel_type"
     )
     if sel_type:
-        df = df.query("type in @sel_type")
-    sel_year = col2.selectbox(
+        df2 = df2.query("type in @sel_type")
+
+    sel_year = col2.slider(
         "Year",
-        options=range(df["x_year"].min(), df["x_year"].max()),
-        index=None,
+        min_value=df2["x_year"].min(),
+        max_value=df2["x_year"].max(),
+        value=(df2["x_year"].min(), df2["x_year"].max()),
         key="sel_year",
     )
     if sel_year:
-        df = df.query("x_year == @sel_year")
+        df2 = df2.query("x_year >= @sel_year[0] and x_year <= @sel_year[1]")
+
     sel_duration = col3.slider(
-        "Minutes", min_value=0, max_value=int(df["x_min"].max()), key="sel_duration"
+        "Minutes", min_value=0, max_value=int(df2["x_min"].max()), key="sel_duration"
     )
     if sel_duration:
-        df = df.query("x_min > @sel_duration")
+        df2 = df2.query("x_min > @sel_duration")
+
     sel_km = col4.slider(
-        "Kilometer", min_value=0, max_value=int(df["x_km"].max()), key="sel_km"
+        "Kilometer", min_value=0, max_value=int(df2["x_km"].max()), key="sel_km"
     )
     if sel_km:
-        df = df.query("x_km > @sel_km")
+        df2 = df2.query("x_km > @sel_km")
+
     sel_elev = col5.slider(
         "Elevation",
         min_value=0,
-        max_value=int(df["total_elevation_gain"].max()),
+        max_value=int(df2["total_elevation_gain"].max()),
         key="sel_elev",
     )
     if sel_elev:
-        df = df.query("total_elevation_gain > @sel_elev")
+        df2 = df2.query("total_elevation_gain > @sel_elev")
 
     col6.button("Reset", on_click=reset_filters)
 
     st.columns(1)
 
-    cols = df.columns.to_list()
+    cols = df2.columns.to_list()
     col_first = [
         "x_date",
         "name",
@@ -160,7 +265,7 @@ if "TOKEN" in st.session_state:
         else:
             st.write(f"'{col}' not in columns")
     col_first.extend(cols)
-    df = df[col_first]
+    df2 = df2[col_first]
 
     # some we do not display in web table, but keep for Excel export
     col_hide = [
@@ -183,7 +288,7 @@ if "TOKEN" in st.session_state:
             st.write(f"'{col}' not in columns")
 
     st.dataframe(
-        df,
+        df2,
         use_container_width=True,
         hide_index=True,
         column_order=col_first,
@@ -205,16 +310,61 @@ if "TOKEN" in st.session_state:
             "x_date": "date",
         },
     )
-    excel_download_buttons(df=df.reset_index(), exclude_index=True)
+    excel_download_buttons(df=df2.reset_index(), exclude_index=True)
 
     st.header("Gear")
     st.dataframe(df_gear)
 
+    st.header("Activity Stats")
+    col1, col2, col3, col4, col5, col6 = st.columns(6)
+    sel_freq = col1.selectbox("Frequency", options=("Year", "Quarter", "Month", "Week"))
+    sel_type = col2.selectbox("Sport", options=sorted(df2["type"].unique()))
+    sel_agg = col3.selectbox(
+        "Aggregation",
+        options=AGGREGATIONS.keys(),
+    )
+
+    df2 = activity_stats_grouping(df2, freq=sel_freq)
+
+    c = (
+        alt.Chart(
+            df2.query("type==@sel_type"),
+            title=alt.TitleParams(
+                f"Strava Stats: {sel_type} {sel_freq} {sel_agg}", anchor="middle"
+            ),
+        )
+        .mark_bar()
+        .encode(
+            x=alt.X("date:N", title=None),
+            y=alt.Y(sel_agg + ":Q", title=None),
+        )
+    )
+    st.altair_chart(c, use_container_width=True)
+
+    c = (
+        alt.Chart(
+            df2,
+            title=alt.TitleParams(
+                f"Strava Stats: All Activity {sel_freq} Count", anchor="middle"
+            ),
+        )
+        .mark_bar()
+        .encode(
+            x=alt.X("date:N", title=None),
+            y=alt.Y("Count:Q", title=None),
+            color="type:N",
+        )
+    )
+    st.altair_chart(c, use_container_width=True)
+
+    #
+    # #
+    #
     st.header("Your known locations")
     kl = get_known_locations()
-    df = pd.DataFrame(kl, columns=("Lat", "Lng", "Name"))
-    df = df[["Name", "Lat", "Lng"]].sort_values("Name")
-    st.dataframe(df, hide_index=True)
+    df2 = pd.DataFrame(kl, columns=("Lat", "Lng", "Name"))
+    df2 = df2[["Name", "Lat", "Lng"]].sort_values("Name")
+    st.dataframe(df2, hide_index=True)
     # some more debug output only to me
     if st.session_state["USER_ID"] == st.secrets["my_user_id"]:
         st.header("Session State")
