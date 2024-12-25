@@ -1,0 +1,10 @@
+# CSpell Custom Dictionary Words
+dropna
+entorb
+latlng
+pytest
+selectbox
+Strava
+Streamlit
+supervisorctl
+Torben
