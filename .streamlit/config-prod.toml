@@ -1,10 +1,8 @@
-# see https://docs.streamlit.io/develop/api-reference/configuration/config.toml
-
 [global]
 
 [logger]
 level = "info"
-messageFormat = "%(asctime)s\t%(levelname)s\t%(name)s\t%(message)s"
+messageFormat = "%(asctime)s	%(levelname)s	%(name)s	%(message)s"
 
 [client]
 showErrorDetails = true
@@ -13,11 +11,7 @@ showErrorDetails = true
 
 [server]
 port = 8501
-maxUploadSize = 1 # MB
-# restrict access to dev localhost
-# this is modified by upload.sh
-# address = "127.0.0.1"
-# this is modified by upload.sh
+maxUploadSize = 1
 fileWatcherType = "none"
 baseUrlPath = "/strava-streamlit"
 
