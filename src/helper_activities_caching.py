@@ -108,6 +108,7 @@ def cache_all_activities_and_gears() -> tuple[pd.DataFrame, pd.DataFrame]:
         2,
     )
     df["x_date"] = df["start_date_local"].dt.date
+    df["x_year"] = df["start_date_local"].dt.year
     df["x_week"] = df["start_date_local"].dt.isocalendar().week
 
     df = df.set_index("start_date_local")
@@ -139,16 +140,16 @@ def cache_all_activities_and_gears() -> tuple[pd.DataFrame, pd.DataFrame]:
         else None,
         axis=1,
     )
-    df["km/h"] = round(df["average_speed"] * 3.6, 1)
+    df["x_km/h"] = round(df["average_speed"] * 3.6, 1)
     df["x_max_km/h"] = round(df["max_speed"] * 3.6, 1)
     df["x_mph"] = round(df["average_speed"] * 3.6 / 1.60934, 1)
     df["x_max_mph"] = round(df["max_speed"] * 3.6 / 1.60934, 1)
 
-    df["x_min"] = round(df["moving_time"] / 60, 2)
-    df["x_km"] = round(df["distance"] / 1000, 3)
+    df["x_min"] = round(df["moving_time"] / 60, 1)
+    df["x_km"] = round(df["distance"] / 1000, 1)
     df["x_mi"] = round(df["distance"] / 1000 / 1.60934, 3)  # km -> mile
 
-    df["x_elev_m/km"] = round(df["total_elevation_gain"] / df["x_km"], 0)
+    # df["x_elev_m/km"] = round(df["total_elevation_gain"] / df["x_km"], 0)
     df["x_elev_%"] = round(df["total_elevation_gain"] / df["x_km"] / 10, 1)
 
     # gear
@@ -193,8 +194,11 @@ def geo_calc(df: pd.DataFrame) -> pd.DataFrame:
 
     # 2 dist start-end
     df["x_dist_start_end_km"] = df.apply(
-        lambda row: geo_distance_haversine(
-            tuple(row["start_latlng"]), tuple(row["end_latlng"])
+        lambda row: round(
+            geo_distance_haversine(
+                tuple(row["start_latlng"]), tuple(row["end_latlng"])
+            ),
+            1,
         )  # type: ignore
         if row["start_latlng"]
         and row["end_latlng"]
