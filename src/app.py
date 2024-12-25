@@ -16,6 +16,7 @@ from helper_login import (
     perform_login,
     token_refresh_if_needed,
 )
+from helper_ui_components import excel_download_buttons
 
 
 def set_env() -> None:
@@ -60,11 +61,25 @@ if "TOKEN" in st.session_state:
     st.write(f"Welcome User '{username}'")
 
     df, df_gear = cache_all_activities_and_gears()
+
+    df = df.drop(
+        columns=[
+            "resource_state",
+            "athlete",
+            "map",
+            "upload_id",
+            "upload_id_str",
+            "external_id",
+        ]
+    )
+
     st.header("Activities")
-    st.write(df)
+    # st.write(df.columns)
+    st.dataframe(df, use_container_width=True, column_order=(), column_config={})
+    excel_download_buttons(df=df.reset_index(), exclude_index=True)
 
     st.header("Gear")
-    st.write(df_gear)
+    st.dataframe(df_gear)
 
     st.header("Your known locations")
     kl = get_known_locations()
