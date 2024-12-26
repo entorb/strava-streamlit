@@ -1,7 +1,5 @@
 """ActivityList."""  # noqa: INP001
 
-import datetime as dt
-
 import streamlit as st
 
 from helper_activities_caching import (
@@ -16,45 +14,32 @@ logger = init_logger(__file__)
 logger.info("Start")
 
 
+df, df_gear = cache_all_activities_and_gears()
+min_year = df["x_year"].min()
+max_year = df["x_year"].max()
+if min_year == max_year:
+    max_year += 1
+
+
 def reset_filters() -> None:  # noqa: D103
     st.session_state.sel_type = None
-    st.session_state.sel_year = [2000, dt.datetime.now(tz=dt.UTC).year]
+    st.session_state.sel_year = [min_year, max_year]
     st.session_state.sel_duration = 0
     st.session_state.sel_km = 0
     st.session_state.sel_elev = 0
 
 
-df, df_gear = cache_all_activities_and_gears()
-
-
-df = df.drop(
-    columns=[
-        "resource_state",
-        "athlete",
-        "map",
-        "upload_id",
-        "upload_id_str",
-        "external_id",
-        "start_date",
-    ]
-)
-df = df.reset_index()
-
-df = df.rename(columns={"start_date_local": "start_date"})
-
-col1, col2, col3, col4, col5, col6 = st.columns(6)
+col1, col2, col3, col4, col5, col6, col7 = st.columns((1, 1, 1, 1, 1, 0.5, 0.5))
 
 sel_type = select_sport(df, col1)
 
 if sel_type:
     df = df.query("type in @sel_type")
 
-min_value = df["x_year"].min()
-max_value = df["x_year"].max()
 sel_year = col2.slider(
     "Year",
-    min_value=min_value,
-    max_value=max_value if max_value != min_value else min_value + 1,
+    min_value=min_year,
+    max_value=max_year,
     value=(df["x_year"].min(), df["x_year"].max()),
     key="sel_year",
 )
@@ -94,91 +79,70 @@ if max_value > 0:
         df = df.query("total_elevation_gain > @sel_elev")
 if df.empty:
     st.stop()
+sel_km = col6.selectbox("km/mi", options=["km", "mi"])
 
-col6.button("Reset", on_click=reset_filters)
+col7.button("Reset", on_click=reset_filters)
 
 st.columns(1)
 
-cols = df.columns.to_list()
-col_first = [
-    "x_date",
-    "name",
-    "type",
-    "x_url",
-    "start_date",
-    "x_min",
-    "x_km",
-    "x_elev_%",
-    "x_km/h",
-    "x_max_km/h",
-    "x_start_locality",
-    "x_end_locality",
-    "x_dist_start_end_km",
-    "x_nearest_city_start",
-    "location_country",
-    "x_gear_name",
-    "average_heartrate",
-    "max_heartrate",
-    "average_cadence",
-    "average_watts",
-    "kilojoules",
-    "total_elevation_gain",
-    "elev_high",
-    "elev_low",
-    "average_temp",
-]
-for col in col_first:
-    if col in cols:
-        cols.remove(col)
+
+# to rename "x_" prefix
+col_names = {}
+for col in df.columns.to_list():
+    if col.startswith("x_"):
+        col_names[col] = col[2:]
+    elif col.startswith("average_"):
+        col_names[col] = col[8:] + "_av"
     else:
-        st.write(f"'{col}' not in columns")
-col_first.extend(cols)
-df = df[col_first]
+        col_names[col] = col  # unchanged
+col_names["average_heartrate"] = "HR_av"
+col_names["average_watts"] = "W_av"
+col_names["device_watts"] = "W_device"
+col_names["display_hide_heartrate_option"] = "HR_hide"
+col_names["heartrate_opt_out"] = "HR_opt_out"
+col_names["location_country"] = "country"
+col_names["max_heartrate"] = "HR_max"
+col_names["max_watts"] = "W_max"
+col_names["total_elevation_gain"] = "elev_gain"
+col_names["weighted_average_watts"] = "W_weight_avg"
+col_names["x_gear_name"] = "gear"
+col_names["x_min"] = "minutes"
+col_names["x_nearest_city_start"] = "nearest_city"
+
 
 # some we do not display in web table, but keep for Excel export
 col_hide = [
     "distance",
-    "moving_time",
+    "elapsed_time",
+    "gear_id",
     "id",
+    "max_speed",
+    "moving_time",
+    "speed_av",
+    "start_date",
     "timezone",
     "utc_offset",
-    "gear_id",
-    "average_speed",
-    "max_speed",
-    "x_week",
-    "elapsed_time",
-    "start_date",
+    "week",
 ]
-for col in col_hide:
-    if col in col_first:
-        col_first.remove(col)
-    else:
-        st.write(f"'{col}' not in columns")
+if sel_km == "km":
+    col_hide.extend(("min/mi", "mi", "mph", "max_mph"))
+else:
+    col_hide.extend(("min/km", "km", "km/h", "max_km/h"))
+col_order = [new for new in col_names.values() if new not in col_hide]
 
 st.dataframe(
-    df,
+    df.rename(columns=col_names, errors="raise"),
     use_container_width=True,
     hide_index=True,
-    column_order=col_first,
+    column_order=col_order,
     column_config={
         # "start_date": st.column_config.DateColumn(format=FORMAT_DATETIME),
-        "name": st.column_config.Column(pinned=True),
-        "x_url": st.column_config.LinkColumn("ID", display_text=r"/(\d+)$"),
-        "x_min": "minutes",
-        "x_km": "km",
-        "x_elev_%": "elev %",
-        "x_km/h": "km/h",
-        "x_max_km/h": "max_km/h",
-        "x_dist_start_end_km": "km_start_end",
-        "x_start_locality": "location_start",
-        "x_end_locality": "location_end",
-        "x_nearest_city_start": "nearest_city",
-        "x_gear_name": "gear",
-        "total_elevation_gain": "elev_gain",
-        "x_date": "date",
+        # no pinning, as taking too much space on mobile
+        # "name": st.column_config.Column(pinned=False),
+        "url": st.column_config.LinkColumn("ID", display_text=r"/(\d+)$"),
     },
 )
-excel_download_buttons(df=df.reset_index(), exclude_index=True)
+excel_download_buttons(df=df, exclude_index=True)
 
 st.header("Gear")
 st.dataframe(df_gear)

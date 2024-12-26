@@ -53,12 +53,13 @@ utc_offset
 visibility
 workout_type
 x_date
-x_dist_start_end_km
 x_elev_%
-x_elev_m/km
-x_end_locality
+# x_elev_m/km
 x_gear_name
 x_km
+x_km_start_end
+x_location_end
+x_location_start
 x_max_km/h
 x_max_mph
 x_mi
@@ -68,6 +69,6 @@ x_min/mi
 x_mph
 x_nearest_city_start
 x_start_h
-x_start_locality
 x_url
 x_week
+x_year

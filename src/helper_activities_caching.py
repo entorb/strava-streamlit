@@ -108,10 +108,22 @@ def cache_all_activities_and_gears() -> tuple[pd.DataFrame, pd.DataFrame]:
     df = pd.DataFrame(fetch_all_activities())
     logger.info("End fetch_all_activities() in %.1fs", (time() - t_start))
 
-    # date parsing
-    for col in ("start_date", "start_date_local"):
-        df[col] = pd.to_datetime(df["start_date_local"]).dt.tz_localize(None)
+    # dropping and renaming some columns
 
+    df = df.drop(
+        columns=[
+            "resource_state",
+            "athlete",
+            "map",
+            "upload_id",
+            "upload_id_str",
+            "external_id",
+            "start_date",
+        ]
+    )
+
+    # date parsing
+    df["start_date_local"] = pd.to_datetime(df["start_date_local"]).dt.tz_localize(None)
     df = df.sort_values("start_date_local", ascending=False)
 
     # calc additional fields
@@ -128,7 +140,7 @@ def cache_all_activities_and_gears() -> tuple[pd.DataFrame, pd.DataFrame]:
     df["x_year"] = df["start_date_local"].dt.year
     df["x_week"] = df["start_date_local"].dt.isocalendar().week
 
-    df = df.set_index("start_date_local")
+    # df = df.set_index("start_date_local")
 
     # ensure the relevant columns are present
     for col in (
@@ -187,12 +199,57 @@ def cache_all_activities_and_gears() -> tuple[pd.DataFrame, pd.DataFrame]:
     df = geo_calc(df)
     logger.info("End geo_calc() in %.1fs", (time() - t_start))
 
+    # renaming
+    df = df.rename(columns={"start_date_local": "start_date"})
+
+    # ordering
+    cols = df.columns.to_list()
+    col_first = [
+        "x_date",
+        "name",
+        "type",
+        "x_url",
+        "start_date",
+        "x_min",
+        "x_km",
+        "x_mi",
+        "total_elevation_gain",
+        "x_elev_%",
+        "x_km/h",
+        "x_mph",
+        "x_max_km/h",
+        "x_max_mph",
+        "x_min/km",
+        "x_min/mi",
+        "x_location_start",
+        "x_location_end",
+        "x_km_start_end",
+        "x_nearest_city_start",
+        "location_country",
+        "x_gear_name",
+        "average_heartrate",
+        "max_heartrate",
+        "average_cadence",
+        "average_watts",
+        "kilojoules",
+        "elev_high",
+        "elev_low",
+        "average_temp",
+    ]
+    for col in col_first:
+        if col in cols:
+            cols.remove(col)
+        else:
+            st.write(f"'{col}' not in columns")
+    col_first.extend(cols)
+    df = df[col_first]
+
     return df, df_gear
 
 
 def geo_calc(df: pd.DataFrame) -> pd.DataFrame:
     """Geo distance calculations."""
-    # for each row in df, calc new column x_dist_start_end_km via geo_distance_haversine
+    # for each row in df, calc new column x_km_start_end via geo_distance_haversine
     #  using values of columns start_latlng and end_latlng if they are not null
 
     # 1. rounding
@@ -210,7 +267,7 @@ def geo_calc(df: pd.DataFrame) -> pd.DataFrame:
     )
 
     # 2 dist start-end
-    df["x_dist_start_end_km"] = df.apply(
+    df["x_km_start_end"] = df.apply(
         lambda row: round(
             geo_distance_haversine(
                 tuple(row["start_latlng"]), tuple(row["end_latlng"])
@@ -227,7 +284,7 @@ def geo_calc(df: pd.DataFrame) -> pd.DataFrame:
 
     # 3.1 is start a known location?
     known_locations = get_known_locations()
-    df["x_start_locality"] = df.apply(
+    df["x_location_start"] = df.apply(
         lambda row: check_is_known_location(
             reduce_geo_precision(tuple(row["start_latlng"]), 3), known_locations
         )  # type: ignore
@@ -236,7 +293,7 @@ def geo_calc(df: pd.DataFrame) -> pd.DataFrame:
         axis=1,
     )
     # 3.2 is end a known location?
-    df["x_end_locality"] = df.apply(
+    df["x_location_end"] = df.apply(
         lambda row: check_is_known_location(
             reduce_geo_precision(tuple(row["end_latlng"]), 3), known_locations
         )  # type: ignore

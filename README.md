@@ -49,13 +49,19 @@ see [.streamlit/secrets.toml](.streamlit/secrets-EXAMPLE.toml)
 
 * reconnect after token expired
 * some text to explain features
+* download stop after 2000 activities and button to continue
+* download process
+* Strava logos and buttons
+* calendar export
 
 #### Done Feature TODOs
 
-* activity: download all activities data and convert to DataFrame
-* activity: geo calculations
-* gear: download gear data
+* activity download all data and convert to DataFrame
+* activity geo calculations
+* gear download gear data
 * activity table
 * activity status
 * edit known locations
 * list unknown frequent locations
+* activity column order
+* choose km vs. miles
