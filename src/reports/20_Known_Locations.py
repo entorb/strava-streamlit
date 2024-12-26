@@ -1,4 +1,4 @@
-"""Known Locations."""  # noqa: INP001
+"""Known Locations."""
 
 import numpy as np
 import pandas as pd
@@ -10,11 +10,11 @@ from helper_activities_caching import (
     get_known_locations_file_path,
     reduce_geo_precision,
 )
-from helper_logging import init_logger
+from helper_logging import get_logger_from_filename
 
 st.title(__doc__[:-1])  # type: ignore
 
-logger = init_logger(__file__)
+logger = get_logger_from_filename(__file__)
 logger.info("Start")
 
 # TODO: Edit

@@ -14,7 +14,7 @@ showErrorDetails = true
 [server]
 port = 8501
 maxUploadSize = 1 # MB
-# restrict access to dev localhost
+# restrict access to localhost for dev environment
 # this is modified by deploy.sh
 address = "127.0.0.1"
 # this is modified by deploy.sh

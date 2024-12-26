@@ -5,9 +5,9 @@ from time import time
 import streamlit as st
 
 from helper_api import api_post_deauthorize, api_post_oauth, api_post_token_refresh
-from helper_logging import init_logger
+from helper_logging import get_logger_from_filename
 
-logger = init_logger(__file__)
+logger = get_logger_from_filename(__file__)
 
 
 def display_strava_auth_link() -> None:

@@ -28,6 +28,8 @@ extend-ignore = [
     "T201",   # print
     "TD002",  # missing-todo-author
     "TD003",  # missing-todo-link
+    "INP001", # missing __init__.py in streamlit reports dir
+    "S101",   # use of asserts
 ]
 
 
