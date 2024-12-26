@@ -52,7 +52,6 @@ see [.streamlit/secrets.toml](.streamlit/secrets-EXAMPLE.toml)
 * download stop after 2000 activities and button to continue
 * download process
 * Strava logos and buttons
-* calendar export
 
 #### Done Feature TODOs
 
@@ -65,3 +64,4 @@ see [.streamlit/secrets.toml](.streamlit/secrets-EXAMPLE.toml)
 * list unknown frequent locations
 * activity column order
 * choose km vs. miles
+* calendar export
