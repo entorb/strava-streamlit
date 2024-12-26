@@ -1,4 +1,4 @@
-"""ActivityList."""  # noqa: INP001
+"""Activity Stats."""  # noqa: INP001
 
 import altair as alt
 import numpy as np
@@ -11,7 +11,7 @@ from helper_activities_caching import (
 from helper_logging import init_logger
 from helper_ui_components import select_sport
 
-st.title("Activity Stats")
+st.title(__doc__[:-1])  # type: ignore
 
 logger = init_logger(__file__)
 logger.info("Start")
