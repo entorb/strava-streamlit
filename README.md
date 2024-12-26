@@ -11,7 +11,7 @@ see [install.sh](scripts/install.sh)
 
 ### Run
 
-see [run.sh](run.sh)
+see [run.sh](scripts/run.sh)
 
 ### Check Code
 
@@ -47,8 +47,15 @@ see [.streamlit/secrets.toml](.streamlit/secrets-EXAMPLE.toml)
 
 #### Open Feature TODOs
 
+* reconnect after token expired
+* some text to explain features
+
 #### Done Feature TODOs
 
 * activity: download all activities data and convert to DataFrame
 * activity: geo calculations
 * gear: download gear data
+* activity table
+* activity status
+* edit known locations
+* list unknown frequent locations

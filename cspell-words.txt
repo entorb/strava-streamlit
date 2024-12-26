@@ -1,8 +1,14 @@
 # CSpell Custom Dictionary Words
+DataFrame
 deauthorize
 dropna
 entorb
+heartrate
+isna
+Kreisel
+kudoed
 latlng
+notna
 pycache
 pytest
 ruzv
