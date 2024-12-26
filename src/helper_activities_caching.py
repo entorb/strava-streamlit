@@ -10,9 +10,9 @@ import pandas as pd
 import streamlit as st
 
 from helper_api import fetch_activities_page, fetch_gear_data
-from helper_logging import init_logger
+from helper_logging import get_logger_from_filename
 
-logger = init_logger(__file__)
+logger = get_logger_from_filename(__file__)
 
 # counter = 0
 

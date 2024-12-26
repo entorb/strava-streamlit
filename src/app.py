@@ -5,14 +5,19 @@ from time import time
 
 import streamlit as st
 
-from helper_logging import init_logger
+from helper_logging import get_logger_from_filename
 from helper_login import (
     perform_login,
     token_refresh_if_needed,
 )
+from helper_ui_components import create_navigation_menu
+
+st.set_page_config(page_title="Strava Äpp V2", page_icon=None, layout="wide")
+logger = get_logger_from_filename(__file__)
+logger.info("Start")
 
 # https://momentjs.com/docs/#/displaying/format/
-FORMAT_DATETIME = "YY-MM-DD HH:mm"
+# FORMAT_DATETIME = "YY-MM-DD HH:mm"
 
 
 def set_env() -> None:
@@ -26,27 +31,6 @@ def set_env() -> None:
             Path("./cache").mkdir(exist_ok=True)
             Path("./data").mkdir(exist_ok=True)
 
-
-AGGREGATIONS = {
-    "Count": "count",
-    "Hour-sum": "sum",
-    "Hour-avg": "mean",
-    "Kilometer-sum": "sum",
-    "Kilometer-avg": "mean",
-    "Elevation-sum": "sum",
-    "Elevation-avg": "mean",
-    "Elevation%_avg": "mean",
-    "Speed_km/h-avg": "mean",
-    "Speed_km/h-max": "max",
-    "Heartrate-avg": "mean",
-    "Heartrate-max": "max",
-}
-
-
-st.set_page_config(page_title="Strava Äpp V2", page_icon=None, layout="wide")
-
-logger = init_logger(__file__)
-logger.info("Start")
 
 set_env()
 
@@ -67,17 +51,10 @@ if "TOKEN" in st.session_state:
     # check if we need to refresh the token
     token_refresh_if_needed()
 
+    create_navigation_menu()
+
     # username = st.session_state["USERNAME"]
     # st.write(f"Welcome User '{username}'")
-
-    # create navigation
-    lst = []
-    for p in sorted(Path("src/reports").glob("*.py")):
-        f = p.stem
-        t = f[3:]
-        lst.append(st.Page(page=f"reports/{f}.py", title=t))
-    pg = st.navigation(lst)
-    pg.run()
 
 
 logger.info("End")
