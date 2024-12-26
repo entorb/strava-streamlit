@@ -1,14 +1,26 @@
 """Helper functions: UI components."""
 
 import io
+from pathlib import Path
 
 import pandas as pd
 import streamlit as st
 from streamlit.delta_generator import DeltaGenerator
 
-from helper_logging import init_logger
+from helper_logging import get_logger_from_filename
 
-logger = init_logger(__file__)
+logger = get_logger_from_filename(__file__)
+
+
+def create_navigation_menu() -> None:
+    """Create and populate navigation menu."""
+    lst = []
+    for p in sorted(Path("src/reports").glob("*.py")):
+        f = p.stem
+        t = f[3:]
+        lst.append(st.Page(page=f"reports/{f}.py", title=t))
+    pg = st.navigation(lst)
+    pg.run()
 
 
 def excel_download_buttons(
