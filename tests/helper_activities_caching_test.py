@@ -73,7 +73,7 @@ def test_cache_all_activities_and_gears_2() -> None:
     df, df_gear = cache_all_activities_and_gears()
     # run
     assert df["x_km"].iat[0] == 13.1
-    assert round(df["x_dist_start_end_km"].iat[0], 3) == 3.4
+    assert round(df["x_km_start_end"].iat[0], 3) == 3.4
     # ride
     assert df["x_nearest_city_start"].iat[1] == "EU-DE-SN-Dresden"
     assert df["x_mi"].iat[1] == 18.9
