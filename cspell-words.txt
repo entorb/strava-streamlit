@@ -1,10 +1,13 @@
 # CSpell Custom Dictionary Words
+CALNAME
+CALSCALE
 DataFrame
 deauthorize
 dropna
 entorb
 heartrate
 isna
+itertuples
 Kreisel
 kudoed
 latlng
@@ -19,3 +22,4 @@ supervisorctl
 testdata
 tomli
 Torben
+VCALENDAR

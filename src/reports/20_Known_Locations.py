@@ -12,7 +12,7 @@ from helper_activities_caching import (
 )
 from helper_logging import init_logger
 
-st.title("Known Locations")
+st.title(__doc__[:-1])  # type: ignore
 
 logger = init_logger(__file__)
 logger.info("Start")
