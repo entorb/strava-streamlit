@@ -20,9 +20,27 @@ DIR_SERVER = "/var/www/virtual/entorb/data-web-pages/strava"
 DIR_LOCAL = "./data"
 
 
+# some global hard coded ones
+KNOWN_LOCATIONS = [
+    # cspell:disable
+    (49.574986, 10.967483, "ER-Schaeffler-SMB"),
+    (51.070298, 13.760067, "DD-Alaunpark"),
+    (53.330333, 10.138152, "P-MTV-Pattensen"),
+    (51.010218, 13.701419, "DD-Robotron"),
+    (49.60579, 11.036603, "ER-Meilwald-Handtuchwiese"),
+    (49.588036, 11.035357, "ER-ObiKreisel"),
+    # cspell:enable
+]
+
+
 def get_data_dir() -> Path:
     """Get date path, dependent on env."""
     return Path(DIR_SERVER if st.session_state["ENV"] == "PROD" else DIR_LOCAL)
+
+
+def get_known_locations_file_path() -> Path:  # noqa: D103
+    user_id = st.session_state["USER_ID"]
+    return get_data_dir() / "knownLocations" / f"{user_id}.txt"
 
 
 # not caching this raw data
@@ -209,9 +227,10 @@ def geo_calc(df: pd.DataFrame) -> pd.DataFrame:
     )
 
     # 3.1 is start a known location?
+    known_locations = get_known_locations()
     df["x_start_locality"] = df.apply(
         lambda row: check_is_known_location(
-            reduce_geo_precision(tuple(row["start_latlng"]), 3)
+            reduce_geo_precision(tuple(row["start_latlng"]), 3), known_locations
         )  # type: ignore
         if row["start_latlng"] and len(row["start_latlng"]) == 2
         else None,
@@ -220,7 +239,7 @@ def geo_calc(df: pd.DataFrame) -> pd.DataFrame:
     # 3.2 is end a known location?
     df["x_end_locality"] = df.apply(
         lambda row: check_is_known_location(
-            reduce_geo_precision(tuple(row["end_latlng"]), 3)
+            reduce_geo_precision(tuple(row["end_latlng"]), 3), known_locations
         )  # type: ignore
         if row["end_latlng"] and len(row["end_latlng"]) == 2
         else None,
@@ -243,25 +262,11 @@ def geo_calc(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-@st.cache_data(ttl="5m")
-def get_known_locations() -> list[tuple[float, float, str]]:
+def get_known_locations(*, users_only: bool = False) -> list[tuple[float, float, str]]:
     """Get known locations from global and user stored data."""
-    lst_known_locations = [
-        # some global hard coded ones
-        # TODO: move to config file
-        # cspell:disable
-        (49.574986, 10.967483, "ER-Schaeffler-SMB"),
-        (51.070298, 13.760067, "DD-Alaunpark"),
-        (53.330333, 10.138152, "P-MTV-Pattensen"),
-        (51.010218, 13.701419, "DD-Robotron"),
-        (49.60579, 11.036603, "ER-Meilwald-Handtuchwiese"),
-        (49.588036, 11.035357, "ER-ObiKreisel"),
-        # cspell:enable
-    ]
+    lst_known_locations = KNOWN_LOCATIONS if users_only is False else []
 
-    user_id = st.session_state["USER_ID"]
-
-    p = get_data_dir() / "knownLocations" / f"{user_id}.txt"
+    p = get_known_locations_file_path()
     if p.is_file():
         for line in p.read_text().strip().split("\n"):
             lat, lng, name = line.split(" ", 3)
@@ -269,18 +274,21 @@ def get_known_locations() -> list[tuple[float, float, str]]:
     return lst_known_locations
 
 
-@st.cache_data(ttl="5m")
-def check_is_known_location(latlng: tuple[float, float]) -> str | None:
+def check_is_known_location(
+    latlng: tuple[float, float], known_locations: list[tuple[float, float, str]]
+) -> str | None:
     """
     Check if location is known location (dist<750m).
 
     reduce to max 3 digits to allow for caching
     """
+    max_distance = 0.75  # 750m
+
     lat, lng = latlng
-    for kl in get_known_locations():
+    for kl in known_locations:
         kl_lat, kl_lon, kl_name = kl
         dist = geo_distance_haversine((lat, lng), (kl_lat, kl_lon))
-        if dist < 0.75:
+        if dist < max_distance:
             return kl_name
     return None
 
