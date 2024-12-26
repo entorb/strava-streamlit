@@ -23,7 +23,6 @@ DIR_LOCAL = "./data"
 # some global hard coded ones
 KNOWN_LOCATIONS = [
     # cspell:disable
-    (49.574986, 10.967483, "ER-Schaeffler-SMB"),
     (51.070298, 13.760067, "DD-Alaunpark"),
     (53.330333, 10.138152, "P-MTV-Pattensen"),
     (51.010218, 13.701419, "DD-Robotron"),
@@ -96,8 +95,8 @@ def geo_distance_haversine(
 
 def reduce_geo_precision(loc: tuple[float, float], digits: int) -> tuple[float, float]:  # noqa: D103
     lat = round(loc[0], digits)
-    lng = round(loc[1], digits)
-    return lat, lng
+    lon = round(loc[1], digits)
+    return lat, lon
 
 
 # this cache is for 2h, while all others are only for 5min
@@ -165,7 +164,7 @@ def cache_all_activities_and_gears() -> tuple[pd.DataFrame, pd.DataFrame]:
 
     df["x_min"] = round(df["moving_time"] / 60, 1)
     df["x_km"] = round(df["distance"] / 1000, 1)
-    df["x_mi"] = round(df["distance"] / 1000 / 1.60934, 3)  # km -> mile
+    df["x_mi"] = round(df["distance"] / 1000 / 1.60934, 1)  # km -> mile
 
     # df["x_elev_m/km"] = round(df["total_elevation_gain"] / df["x_km"], 0)
     df["x_elev_%"] = round(df["total_elevation_gain"] / df["x_km"] / 10, 1)
@@ -259,6 +258,7 @@ def geo_calc(df: pd.DataFrame) -> pd.DataFrame:
     # if st.session_state["ENV"] == "DEV":
     #     global counter
     #     st.write(counter)
+    #     counter = 0
     return df
 
 
@@ -269,8 +269,8 @@ def get_known_locations(*, users_only: bool = False) -> list[tuple[float, float,
     p = get_known_locations_file_path()
     if p.is_file():
         for line in p.read_text().strip().split("\n"):
-            lat, lng, name = line.split(" ", 3)
-            lst_known_locations.append((float(lat), float(lng), name))
+            lat, lon, name = line.split(" ", 3)
+            lst_known_locations.append((float(lat), float(lon), name))
     return lst_known_locations
 
 
@@ -284,10 +284,13 @@ def check_is_known_location(
     """
     max_distance = 0.75  # 750m
 
-    lat, lng = latlng
+    lat, lon = latlng
     for kl in known_locations:
         kl_lat, kl_lon, kl_name = kl
-        dist = geo_distance_haversine((lat, lng), (kl_lat, kl_lon))
+        # an angle of 0.1 is > 10km, so no calculation needed
+        if abs(lat - kl_lat) > 0.1 or abs(lon - kl_lon) > 0.1:
+            continue
+        dist = geo_distance_haversine((lat, lon), (kl_lat, kl_lon))
         if dist < max_distance:
             return kl_name
     return None
@@ -320,8 +323,8 @@ def cities_into_1deg_geo_boxes() -> (  # noqa: C901
     boxes = {}
 
     for line in read_city_db():
-        lat, lng, name = line
-        lat0, lng0 = int(lat), int(lng)
+        lat, lon, name = line
+        lat0, lon0 = int(lat), int(lon)
         offset = 0.5
         # lat
         lat1 = int(lat - offset)
@@ -332,24 +335,24 @@ def cities_into_1deg_geo_boxes() -> (  # noqa: C901
         if lat1 and (lat1 > 90 or lat1 < -90):
             lat1 = None
         # lon
-        lng1 = int(lng - offset)
-        if lng1 == lng0:  # same box, so try + instead
-            lng1 = int(lng + offset)
-            if lng1 == lng0:
-                lng1 = None  # still same box, so city must be at center
+        lon1 = int(lon - offset)
+        if lon1 == lon0:  # same box, so try + instead
+            lon1 = int(lon + offset)
+            if lon1 == lon0:
+                lon1 = None  # still same box, so city must be at center
 
-        if lng1 and (lng1 > 180 or lng1 < -180):
-            lng1 = None
-        t = (lat0, lng0)
+        if lon1 and (lon1 > 180 or lon1 < -180):
+            lon1 = None
+        t = (lat0, lon0)
         boxes.setdefault(t, []).append(line)
         if lat1:
-            t = (lat1, lng0)
+            t = (lat1, lon0)
             boxes.setdefault(t, []).append(line)
-        if lng1:
-            t = (lat0, lng1)
+        if lon1:
+            t = (lat0, lon1)
             boxes.setdefault(t, []).append(line)
-        if lat1 and lng1:
-            t = (lat1, lng1)
+        if lat1 and lon1:
+            t = (lat1, lon1)
             boxes.setdefault(t, []).append(line)
 
     return boxes
@@ -359,8 +362,8 @@ def cities_into_1deg_geo_boxes() -> (  # noqa: C901
 def search_closest_city(latlng: tuple[float, float]) -> str | None:
     """Search in 1x1 deg box of cities for closest city."""
     boxes = cities_into_1deg_geo_boxes()
-    lat, lng = latlng
-    latlng = (int(lat), int(lng))
+    lat, lon = latlng
+    latlng = (int(lat), int(lon))
     if latlng not in boxes:
         return None
     closest_city_dist = 999
@@ -368,7 +371,7 @@ def search_closest_city(latlng: tuple[float, float]) -> str | None:
     lst = boxes[latlng]
     for line in lst:
         city_lat, city_lng, city_name = line
-        dist = geo_distance_haversine((lat, lng), (city_lat, city_lng))
+        dist = geo_distance_haversine((lat, lon), (city_lat, city_lng))
         if dist < closest_city_dist:
             closest_city_dist = dist
             closest_city_name = city_name
