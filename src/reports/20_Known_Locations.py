@@ -63,11 +63,11 @@ col2.dataframe(
 
 st.header("Unknown Frequent Locations")
 df = cache_all_activities_and_gears()[0]
-df = df[df["x_start_locality"].isna() & df["start_latlng"].notna()]
+df = df[df["x_location_start"].isna() & df["start_latlng"].notna()]
 lst = df["start_latlng"].to_list()
 
 df = cache_all_activities_and_gears()[0]
-df = df[df["x_end_locality"].isna() & df["end_latlng"].notna()]
+df = df[df["x_location_end"].isna() & df["end_latlng"].notna()]
 lst.extend(df["end_latlng"].to_list())
 
 # instead of the complicated calculation of V1, here a simple grouping
