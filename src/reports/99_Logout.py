@@ -1,4 +1,4 @@
-"""Known Locations."""  # noqa: INP001
+"""Logout."""  # noqa: INP001
 
 import streamlit as st
 
@@ -7,7 +7,7 @@ from helper_login import (
     logout,
 )
 
-st.title("Logout")
+st.title(__doc__[:-1])  # type: ignore
 
 logger = init_logger(__file__)
 logger.info("Start")

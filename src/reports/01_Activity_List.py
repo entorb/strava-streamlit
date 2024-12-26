@@ -1,4 +1,4 @@
-"""ActivityList."""  # noqa: INP001
+"""Activity List."""  # noqa: INP001
 
 import streamlit as st
 
@@ -8,13 +8,14 @@ from helper_activities_caching import (
 from helper_logging import init_logger
 from helper_ui_components import excel_download_buttons, select_sport
 
-st.title("Activity List")
+st.title(__doc__[:-1])  # type: ignore
 
 logger = init_logger(__file__)
 logger.info("Start")
 
 
 df, df_gear = cache_all_activities_and_gears()
+
 min_year = df["x_year"].min()
 max_year = df["x_year"].max()
 if min_year == max_year:
