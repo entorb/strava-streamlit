@@ -1,6 +1,5 @@
 """Helper: Strava API communication."""
 
-# ruff: noqa: S101
 import json
 from pathlib import Path
 from time import time
@@ -8,9 +7,9 @@ from time import time
 import requests
 import streamlit as st
 
-from helper_logging import init_logger
+from helper_logging import get_logger_from_filename
 
-logger = init_logger(__file__)
+logger = get_logger_from_filename(__file__)
 
 API_RETRIES = 2
 URL_OAUTH = "https://www.strava.com/api/v3/oauth/token"

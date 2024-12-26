@@ -1,6 +1,5 @@
-"""Calendar Export."""  # noqa: INP001
+"""Calendar Export."""
 
-# ruff: noqa: S101
 import datetime as dt
 import io
 
@@ -9,11 +8,11 @@ import streamlit as st
 from helper_activities_caching import (
     cache_all_activities_and_gears,
 )
-from helper_logging import init_logger
+from helper_logging import get_logger_from_filename
 
 st.title(__doc__[:-1])  # type: ignore
 
-logger = init_logger(__file__)
+logger = get_logger_from_filename(__file__)
 logger.info("Start")
 
 df = cache_all_activities_and_gears()[0]

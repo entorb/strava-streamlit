@@ -1,16 +1,16 @@
-"""Activity List."""  # noqa: INP001
+"""Activity List."""
 
 import streamlit as st
 
 from helper_activities_caching import (
     cache_all_activities_and_gears,
 )
-from helper_logging import init_logger
+from helper_logging import get_logger_from_filename
 from helper_ui_components import excel_download_buttons, select_sport
 
 st.title(__doc__[:-1])  # type: ignore
 
-logger = init_logger(__file__)
+logger = get_logger_from_filename(__file__)
 logger.info("Start")
 
 

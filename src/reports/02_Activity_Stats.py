@@ -1,4 +1,4 @@
-"""Activity Stats."""  # noqa: INP001
+"""Activity Stats."""
 
 import altair as alt
 import numpy as np
@@ -8,12 +8,12 @@ import streamlit as st
 from helper_activities_caching import (
     cache_all_activities_and_gears,
 )
-from helper_logging import init_logger
+from helper_logging import get_logger_from_filename
 from helper_ui_components import select_sport
 
 st.title(__doc__[:-1])  # type: ignore
 
-logger = init_logger(__file__)
+logger = get_logger_from_filename(__file__)
 logger.info("Start")
 
 
@@ -38,7 +38,7 @@ def activity_stats_grouping(df: pd.DataFrame, freq: str) -> pd.DataFrame:
     """
     Perform GROUP BY aggregation for time_freq (month, week, quarter, year) and type.
     """
-    assert freq in ("Year", "Quarter", "Month", "Week")  # noqa: S101
+    assert freq in ("Year", "Quarter", "Month", "Week")
     # reduce to relevant columns
     df = df[
         [
