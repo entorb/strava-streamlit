@@ -123,11 +123,14 @@ col1, col2, col3, col4 = st.columns((1, 1, 3, 1))
 
 sel_freq = col1.selectbox("Frequency", options=("Year", "Quarter", "Month", "Week"))
 
+min_value = df["x_year"].min()
+max_value = df["x_year"].max()
 sel_year = col3.slider(
     "Year",
-    min_value=df["x_year"].min(),
-    max_value=df["x_year"].max(),
+    min_value=min_value,
+    max_value=max_value if max_value != min_value else min_value + 1,
     value=(df["x_year"].min(), df["x_year"].max()),
+    key="sel_year",
 )
 if sel_year:
     df = df.query("x_year >= @sel_year[0] and x_year <= @sel_year[1]")
