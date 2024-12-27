@@ -7,29 +7,7 @@ Will be hosted later at <https://entorb.net/strava/>
 
 ### Python version
 
-As my webserver is running Python 3.11, I need to use it locally too.
-
-Variant 1: use venv
-
-```sh
-.pyenv/versions/3.11.9/bin/python -m venv .venv --prompt $(basename $(pwd))
-source .venv/bin/activate
-```
-
-Variant 2: use global pyenv
-
-```sh
-pyenv global 3.11.9
-eval "$(pyenv init -)"
-```
-
-`.vscode/settings.json`
-
-```json
-{
-    "python.defaultInterpreterPath": ".pyenv/versions/3.11.9/bin/python"
-}
-```
+As my webserver is running Python 3.11, I need to use it locally too. See below.
 
 ### Install
 
@@ -77,7 +55,6 @@ see [.streamlit/secrets.toml](.streamlit/secrets-EXAMPLE.toml)
 * some text to explain features
 * download stop after 2000 activities and button to continue
 * download process
-* Strava logos and buttons
 
 #### Done Feature TODOs
 
@@ -91,8 +68,35 @@ see [.streamlit/secrets.toml](.streamlit/secrets-EXAMPLE.toml)
 * activity column order
 * choose km vs. miles
 * calendar export
+* Strava logos and buttons
 
 ## Deployment at Uberspace
+
+### Python version for local dev
+
+As my webserver is running Python 3.11, I need to use it locally too.
+
+Variant 1: use venv
+
+```sh
+.pyenv/versions/3.11.9/bin/python -m venv .venv --prompt $(basename $(pwd))
+source .venv/bin/activate
+```
+
+Variant 2: use global pyenv
+
+```sh
+pyenv global 3.11.9
+eval "$(pyenv init -)"
+```
+
+`.vscode/settings.json`
+
+```json
+{
+    "python.defaultInterpreterPath": ".pyenv/versions/3.11.9/bin/python"
+}
+```
 
 ### Setup
 
