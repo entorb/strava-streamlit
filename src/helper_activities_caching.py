@@ -6,6 +6,7 @@ import math
 from pathlib import Path
 from time import time
 
+from numpy import datetime64
 import pandas as pd
 import streamlit as st
 
@@ -124,7 +125,17 @@ def cache_all_activities_and_gears() -> tuple[pd.DataFrame, pd.DataFrame]:
 
     # date parsing
     df["start_date_local"] = pd.to_datetime(df["start_date_local"]).dt.tz_localize(None)
+    assert df["start_date_local"].dtype == "datetime64[ns]", df["start_date_local"].dtype
+
     df = df.sort_values("start_date_local", ascending=False)
+
+    # set int types
+    cols = ["id","utc_offset", "moving_time", "elapsed_time", "total_elevation_gain"]
+    for col in cols:
+        df[col] = df[col].astype(int)
+    # st.write(df)
+    # st.write(df.dtypes)
+    # st.stop()
 
     # calc additional fields
 
@@ -138,6 +149,8 @@ def cache_all_activities_and_gears() -> tuple[pd.DataFrame, pd.DataFrame]:
     )
     df["x_date"] = df["start_date_local"].dt.date
     df["x_year"] = df["start_date_local"].dt.year
+    df["x_month"] = df["start_date_local"].dt.month
+    df["x_quarter"] = (1 + (df["x_month"] / 4)).astype(int)
     df["x_week"] = df["start_date_local"].dt.isocalendar().week
 
     # df = df.set_index("start_date_local")
@@ -200,7 +213,7 @@ def cache_all_activities_and_gears() -> tuple[pd.DataFrame, pd.DataFrame]:
     logger.info("End geo_calc() in %.1fs", (time() - t_start))
 
     # renaming
-    df = df.rename(columns={"start_date_local": "start_date"})
+    df = df.rename(columns={"start_date_local": "start_date_local"})
 
     # ordering
     cols = df.columns.to_list()
@@ -209,7 +222,7 @@ def cache_all_activities_and_gears() -> tuple[pd.DataFrame, pd.DataFrame]:
         "name",
         "type",
         "x_url",
-        "start_date",
+        "start_date_local",
         "x_min",
         "x_km",
         "x_mi",
