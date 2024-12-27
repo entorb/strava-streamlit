@@ -43,19 +43,23 @@ def excel_download_buttons(
     st.columns(1)
 
 
+def list_sports(df: pd.DataFrame) -> list:
+    """Return list of sport types."""
+    sports = sorted(df["type"].unique())
+    first = ["Run", "Ride", "Swim", "Hike"]
+    for col in reversed(first):
+        if col in sports:
+            sports.remove(col)
+        else:
+            first.remove(col)
+    first.extend(sports)
+    return first
+
+
 def select_sport(
     df: pd.DataFrame, location: DeltaGenerator, *, mandatory: bool = False
 ) -> str | None:
     """Display a selectbox for sport type."""
-    lst = sorted(df["type"].unique())
-    options = ["Run", "Ride", "Swim", "Hike"]
-    # remove manual selected and missing ones
-    for col in reversed(options):
-        if col in lst:
-            lst.remove(col)
-        else:
-            options.remove(col)
-    options.extend(lst)
-
+    options = list_sports(df)
     index = None if mandatory is False else 0
     return location.selectbox("Sport", options=options, key="sel_type", index=index)
