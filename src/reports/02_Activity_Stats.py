@@ -35,7 +35,9 @@ AGGREGATIONS = {
 def generate_empty_run_df(freq: str, year_min: int, year_max: int) -> pd.DataFrame:
     """Generate and empty DataFrame with year, freq and type=Run ans index."""
     assert freq in ("Quarter", "Month", "Week")
+
     field = freq.lower()
+    # single value df
     df = pd.DataFrame(
         data={
             "year": [year_min],
@@ -52,6 +54,7 @@ def generate_empty_run_df(freq: str, year_min: int, year_max: int) -> pd.DataFra
     elif freq == "Week":
         rng = range(1, 52 + 1)
 
+    # extend year and field
     df = df.reindex(
         pd.MultiIndex.from_product(
             [range(year_min, year_max + 1), rng, ["Run"]],
@@ -85,13 +88,11 @@ def activity_stats_grouping(df: pd.DataFrame, freq: str, sport: str) -> pd.DataF
 
     For sport == ALL only count is performed
     else all aggregations are performed
-    TODO: should this be removed and a parameter introduced?
-    advantage: can be displayed as table
     """
-    assert freq in ("Year", "Quarter", "Month", "Week")
+    assert freq in ("Year", "Quarter", "Month", "Week"), freq
 
     if sport != "ALL":
-        df = df.query("type == @sport")
+        df = df[df["type"] == sport]
         aggregations = AGGREGATIONS
     else:
         aggregations = {"Count": "count"}
@@ -133,8 +134,6 @@ def activity_stats_grouping(df: pd.DataFrame, freq: str, sport: str) -> pd.DataF
     )
     year_min, year_max = df["year"].min(), df["year"].max()
 
-    # # replace 0 by nan
-    # df = df.replace(0, np.nan)
     # add some more columns
     df["Hour-sum"] = df["Hour-sum"] / 60
     df["Hour-avg"] = df["Hour-sum"]
@@ -142,9 +141,6 @@ def activity_stats_grouping(df: pd.DataFrame, freq: str, sport: str) -> pd.DataF
     df["Elevation-avg"] = df["Elevation-sum"]
     df["Speed_km/h-max"] = df["Speed_km/h-avg"]
     df["Heartrate-max"] = df["Heartrate-avg"]
-
-    # df = df.groupby(["type", pd.Grouper(key="date-group")]).agg(AGGREGATIONS)
-    # df = df.reset_index()
 
     if freq == "Week":
         df2 = df.groupby(["year", "week", "type"]).agg(aggregations)
@@ -167,42 +163,11 @@ def activity_stats_grouping(df: pd.DataFrame, freq: str, sport: str) -> pd.DataF
         )
         df2 = df2.drop(columns=["year", "month"])
 
-        # if sport == "ALL":
-        #     df2 = df.groupby(["year", "month", "type"]).agg(aggregations)
-        # else:  # if sport is selected, we perform gap filling
-        #     df = df.drop(columns="type")
-        #     df2 = df.groupby(["year", "month"]).agg(aggregations)
-        #     df2 = df2.reindex(
-        #         pd.MultiIndex.from_product(
-        #             [range(year_min, year_max + 1), range(1, 12 + 1)],
-        #             names=["year", "month"],
-        #         ),
-        #         fill_value=0,
-        #     )
-        # df2 = df2.reset_index()
-        # df2["date-grouping"] = (
-        #     df2["year"].astype(str) + "-" + df2["month"].astype(str).str.zfill(2)
-        # )
-        # df2 = df2.drop(columns=["year", "month"])
-
     elif freq == "Quarter":
         df2 = df.groupby(["year", "quarter", "type"]).agg(aggregations)
         # add missing values
         df3 = generate_empty_run_df(freq=freq, year_min=year_min, year_max=year_max)
         df2 = add_data_and_empty_df(df2, df3)
-        # if sport == "ALL":
-        #     df2 = df.groupby(["year", "quarter", "type"]).agg(aggregations)
-        # else:  # if sport is selected, we perform gap filling
-        #     df = df.drop(columns="type")
-        #     df2 = df.groupby(["year", "quarter"]).agg(aggregations)
-        #     df2 = df2.reindex(
-        #         pd.MultiIndex.from_product(
-        #             [range(year_min, year_max + 1), range(1, 4 + 1)],
-        #             names=["year", "quarter"],
-        #         ),
-        #         fill_value=0,
-        #     )
-        # df2 = df2.reset_index()
         df2["date-grouping"] = (
             df2["year"].astype(str) + "-Q" + df2["quarter"].astype(str)
         )
@@ -214,12 +179,6 @@ def activity_stats_grouping(df: pd.DataFrame, freq: str, sport: str) -> pd.DataF
             {"year": range(year_min, year_max + 1), "type": "Run", "Count": 0}
         ).set_index(["year", "type"])
         df2 = add_data_and_empty_df(df2, df3)
-        # if sport == "ALL":
-        #     df2 = df.groupby(["year", "type"]).agg(aggregations)
-        # else:  # if sport is selected, we perform gap filling
-        #     df = df.drop(columns="type")
-        #     df2 = df.groupby(["year"]).agg(aggregations)
-        #     df2 = df2.reindex(range(year_min, year_max + 1), fill_value=0)
         df2 = df2.reset_index().rename(columns={"year": "date-grouping"})
 
     # rounding
@@ -232,7 +191,7 @@ def activity_stats_grouping(df: pd.DataFrame, freq: str, sport: str) -> pd.DataF
                 "Heartrate-avg",
                 "Heartrate-max",
             ):
-                df2[measure] = df2[measure].round(1).astype(int)
+                df2[measure] = df2[measure].round(0).astype(int)
             else:
                 df2[measure] = df2[measure].round(1)
     return df2
