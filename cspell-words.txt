@@ -1,6 +1,7 @@
 # CSpell Custom Dictionary Words
 CALNAME
 CALSCALE
+connectwith
 DataFrame
 deauthorize
 dropna
@@ -14,6 +15,7 @@ latlng
 logfile
 notna
 Pandas
+pwrd
 pycache
 pyenv
 pytest
