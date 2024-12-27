@@ -14,7 +14,7 @@
 
 exclude: |
   (?x)^(
-    .*.vscode/launch.json | tests/testdata/.* |
+    .*.vscode/launch.json | tests/testdata/.* | src/strava-resources/.* |
   )$
 
 repos:

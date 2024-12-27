@@ -5,6 +5,8 @@ connectwith
 DataFrame
 deauthorize
 dropna
+dtype
+dtypes
 entorb
 heartrate
 isna
