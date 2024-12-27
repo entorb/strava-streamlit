@@ -5,6 +5,32 @@ Will be hosted later at <https://entorb.net/strava/>
 
 ## Repo Setup
 
+### Python version
+
+As my webserver is running Python 3.11, I need to use it locally too.
+
+Variant 1: use venv
+
+```sh
+.pyenv/versions/3.11.9/bin/python -m venv .venv --prompt $(basename $(pwd))
+source .venv/bin/activate
+```
+
+Variant 2: use global pyenv
+
+```sh
+pyenv global 3.11.9
+eval "$(pyenv init -)"
+```
+
+`.vscode/settings.json`
+
+```json
+{
+    "python.defaultInterpreterPath": ".pyenv/versions/3.11.9/bin/python"
+}
+```
+
 ### Install
 
 see [install.sh](scripts/install.sh)
@@ -65,3 +91,57 @@ see [.streamlit/secrets.toml](.streamlit/secrets-EXAMPLE.toml)
 * activity column order
 * choose km vs. miles
 * calendar export
+
+## Deployment at Uberspace
+
+### Setup
+
+see <https://entorb.net/wickie/Uberspace#Streamlit>
+
+```sh
+mkdir ~/strava-streamlit
+
+# run scripts/deploy.sh
+
+pip3.11 install --user streamlit -r strava-streamlit/requirements.txt
+
+# start it manually (stop by ctrl+c)
+streamlit run app.py
+
+# add web backend
+uberspace web backend set /strava-streamlit --http --port 8501
+```
+
+verify it is working via browser <https://entorb.net/strava-streamlit>
+
+stop streamlit via `ctrl+c`
+
+create service `vim ~/etc/services.d/strava-streamlit.ini`
+
+```ini
+[program:strava-streamlit]
+directory=%(ENV_HOME)s/strava-streamlit
+command=python3.11 -O -m streamlit run src/app.py
+loglevel=info
+```
+
+start service
+
+```sh
+supervisorctl reread
+supervisorctl update
+supervisorctl status
+supervisorctl restart strava-streamlit
+```
+
+### Check log
+
+```sh
+ supervisorctl tail -f strava-streamlit
+```
+
+TODO: why is the output of logger missing?
+
+### Deploy update
+
+see [deploy.sh](scripts/deploy.sh)

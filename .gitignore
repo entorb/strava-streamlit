@@ -1,12 +1,18 @@
+# python
 __pycache__/
-.vscode/
+.coverage
 .DS_Store
+.venv/
+.vscode/
+.pytest_cache/
+coverage_report/
+
+#project
 cache/
 cacheReal/
 data/
 dataReal/
 
+download.sh
 requirements-all.txt
 secrets.toml
-download.sh
-.coverage

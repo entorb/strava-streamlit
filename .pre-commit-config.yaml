@@ -141,4 +141,4 @@ repos:
   #     # - id: perlimports
 
 default_language_version:
-  python: python3.12
+  python: python3.11
