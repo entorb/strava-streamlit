@@ -120,10 +120,14 @@ col_hide = [
     "max_speed",
     "moving_time",
     "speed_av",
-    "start_date",
+    "start_date_local",
     "timezone",
     "utc_offset",
     "week",
+    "year",
+    "month",
+    "quarter",
+    "start_h",
 ]
 if sel_km == "km":
     col_hide.extend(("min/mi", "mi", "mph", "max_mph"))
@@ -137,7 +141,7 @@ st.dataframe(
     hide_index=True,
     column_order=col_order,
     column_config={
-        # "start_date": st.column_config.DateColumn(format=FORMAT_DATETIME),
+        # "start_date_local": st.column_config.DateColumn(format=FORMAT_DATETIME),
         # no pinning, as taking too much space on mobile
         # "name": st.column_config.Column(pinned=False),
         "url": st.column_config.LinkColumn("ID", display_text=r"/(\d+)$"),
