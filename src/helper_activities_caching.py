@@ -6,7 +6,6 @@ import math
 from pathlib import Path
 from time import time
 
-from numpy import datetime64
 import pandas as pd
 import streamlit as st
 
@@ -102,7 +101,7 @@ def reduce_geo_precision(loc: tuple[float, float], digits: int) -> tuple[float, 
 
 # this cache is for 2h, while all others are only for 5min
 @st.cache_data(ttl="2h")
-def cache_all_activities_and_gears() -> tuple[pd.DataFrame, pd.DataFrame]:
+def cache_all_activities_and_gears() -> tuple[pd.DataFrame, pd.DataFrame]:  # noqa: PLR0915
     """Call fetch_all_activities() and convert to DataFrame."""
     t_start = time()
     logger.info("Start fetch_all_activities()")
@@ -125,12 +124,14 @@ def cache_all_activities_and_gears() -> tuple[pd.DataFrame, pd.DataFrame]:
 
     # date parsing
     df["start_date_local"] = pd.to_datetime(df["start_date_local"]).dt.tz_localize(None)
-    assert df["start_date_local"].dtype == "datetime64[ns]", df["start_date_local"].dtype
+    assert df["start_date_local"].dtype == "datetime64[ns]", df[
+        "start_date_local"
+    ].dtype
 
     df = df.sort_values("start_date_local", ascending=False)
 
     # set int types
-    cols = ["id","utc_offset", "moving_time", "elapsed_time", "total_elevation_gain"]
+    cols = ["id", "utc_offset", "moving_time", "elapsed_time", "total_elevation_gain"]
     for col in cols:
         df[col] = df[col].astype(int)
     # st.write(df)

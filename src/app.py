@@ -51,10 +51,7 @@ if "TOKEN" in st.session_state:
     # check if we need to refresh the token
     token_refresh_if_needed()
 
-    st.logo(
-            "src/strava-resources/api_logo_pwrdBy_strava_stack_light.svg",
-            size="large"
-        )
+    st.logo("src/strava-resources/api_logo_pwrdBy_strava_stack_light.svg", size="large")
     create_navigation_menu()
 
     # username = st.session_state["USERNAME"]
