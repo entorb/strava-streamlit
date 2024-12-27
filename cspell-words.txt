@@ -8,6 +8,7 @@ dropna
 dtype
 dtypes
 entorb
+fillna
 heartrate
 isna
 itertuples
