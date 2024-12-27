@@ -3,6 +3,7 @@
 import datetime as dt
 import io
 
+import pandas as pd
 import streamlit as st
 
 from helper_activities_caching import (
@@ -18,7 +19,7 @@ logger.info("Start")
 df = cache_all_activities_and_gears()[0]
 
 
-def gen_ics() -> str:
+def gen_ics(df: pd.DataFrame) -> str:
     """Generate calender in ICS format, dates in UTC."""
     date_str_now = dt.datetime.now(tz=dt.UTC).strftime("%Y%m%dT%H%M%SZ")
 
@@ -33,11 +34,11 @@ def gen_ics() -> str:
     cont = ics_header
 
     for row in df.itertuples():
-        assert type(row.start_date) is dt.datetime
-        assert type(row.utc_offset) is int
-        assert type(row.elapsed_time) is int
+        assert type(row.start_date_local) is pd.Timestamp, type(row.start_date_local)
+        assert type(row.utc_offset) is int, type(row.utc_offset)
+        assert type(row.elapsed_time) is int, type(row.elapsed_time)
         # note I renamed Strava field start_date_local to start_date
-        start_date = row.start_date - dt.timedelta(seconds=row.utc_offset)
+        start_date = row.start_date_local - dt.timedelta(seconds=row.utc_offset)
         end_date = start_date + dt.timedelta(seconds=row.elapsed_time)
         start_date_str = start_date.strftime("%Y%m%dT%H%M%SZ")
         end_date_str = end_date.strftime("%Y%m%dT%H%M%SZ")
@@ -72,7 +73,7 @@ filename = "ActivityList.ics"
 col1, col2, _ = st.columns((1, 1, 6))
 if col1.button(label="ICS Prepare"):
     buffer = io.BytesIO()
-    buffer.write(gen_ics().encode("utf-8"))
+    buffer.write(gen_ics(df).encode("utf-8"))
     buffer.seek(0)
 
     col2.download_button(

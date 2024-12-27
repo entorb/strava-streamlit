@@ -39,12 +39,31 @@ def activity_stats_grouping(df: pd.DataFrame, freq: str) -> pd.DataFrame:
     Perform GROUP BY aggregation for time_freq (month, week, quarter, year) and type.
     """
     assert freq in ("Year", "Quarter", "Month", "Week")
+
+    if freq == "Week":
+        df["date-group"] = (
+            df["start_date_local"].dt.to_period("W").apply(lambda r: r.start_time)
+        ).dt.strftime("%Y-%m-%d")
+        # alternative, using yyyy-ww
+        # df["date-group"] = (
+        #     df["x_year"].astype(str) + "-CW" + df["x_week"].astype(str).str.zfill(2)
+        # )
+    elif freq == "Month":
+        # df["date-group"] = (
+        #     df["x_year"].astype(str) + "-" + df["x_month"].astype(str).str.zfill(2)
+        # )
+        df["date-group"] = df["start_date_local"].dt.strftime("%Y-%m")
+    elif freq == "Quarter":
+        df["date-group"] = df["x_year"].astype(str) + "-Q" + df["x_quarter"].astype(str)
+    elif freq == "Year":
+        df["date-group"] = df["x_year"]
+
     # reduce to relevant columns
     df = df[
         [
             "type",
             "id",
-            "x_date",
+            "date-group",
             "x_min",
             "x_km",
             "total_elevation_gain",
@@ -59,7 +78,7 @@ def activity_stats_grouping(df: pd.DataFrame, freq: str) -> pd.DataFrame:
     df = df.rename(
         columns={
             "id": "Count",
-            "x_date": "date",
+            # "x_date": "date",
             "x_min": "Hour-sum",
             "x_km": "Kilometer-sum",
             "total_elevation_gain": "Elevation-sum",
@@ -71,7 +90,6 @@ def activity_stats_grouping(df: pd.DataFrame, freq: str) -> pd.DataFrame:
 
     # replace 0 by nan
     df = df.replace(0, np.nan)
-    df["date"] = pd.to_datetime(df["date"])
     # add some more columns
     df["Hour-sum"] = df["Hour-sum"] / 60
     df["Hour-avg"] = df["Hour-sum"]
@@ -80,32 +98,35 @@ def activity_stats_grouping(df: pd.DataFrame, freq: str) -> pd.DataFrame:
     df["Speed_km/h-max"] = df["Speed_km/h-avg"]
     df["Heartrate-max"] = df["Heartrate-avg"]
 
-    # group by
-    if freq == "Week":
-        df = df.groupby(["type", pd.Grouper(key="date", freq="W")]).agg(AGGREGATIONS)
-        df = df.reset_index()
-        df["date"] = df["date"].dt.strftime("%Y-%m-%d")
-        # df["date"] = df["date"].dt.strftime("%Y-W%W")
+    df = df.groupby(["type", pd.Grouper(key="date-group")]).agg(AGGREGATIONS)
+    df = df.reset_index()
 
-    if freq == "Month":
-        df = df.groupby(["type", pd.Grouper(key="date", freq="MS")]).agg(AGGREGATIONS)
-        df = df.reset_index()
-        df["date"] = df["date"].dt.strftime("%Y-%m")
+    # # group by
+    # if freq == "Week":
+    #     df = df.groupby(["type", pd.Grouper(key="date", freq="W")]).agg(AGGREGATIONS)
+    #     df = df.reset_index()
+    #     df["date"] = df["date"].dt.strftime("%Y-%m-%d")
+    #     # df["date"] = df["date"].dt.strftime("%Y-W%W")
 
-    if freq == "Quarter":
-        df = df.groupby(["type", pd.Grouper(key="date", freq="QS")]).agg(AGGREGATIONS)
-        df = df.reset_index()
-        # df["date"] = df["date"].dt.to_period("Q").dt.strftime("%Y-%m-%d")
-        df["date"] = df["date"].dt.to_period("Q").dt.strftime("%Y-Q%q")
+    # elif freq == "Month":
+    #     df = df.groupby(["type", pd.Grouper(key="date", freq="MS")]).agg(AGGREGATIONS)
+    #     df = df.reset_index()
+    #     df["date"] = df["date"].dt.strftime("%Y-%m")
 
-    if freq == "Year":
-        # df = df.groupby(["type", pd.Grouper(key="date", freq="YS")]).agg(AGGREGATIONS)
-        # df = df.reset_index()
-        # df["date"] = df["date"].dt.to_period("Y").dt.strftime("%Y-%m-%d")
-        df["date"] = df["date"].dt.year
-        df = df.groupby(["type", pd.Grouper(key="date")]).agg(AGGREGATIONS)
-        df = df.reset_index()
-        df["date"] = df["date"].astype(int)
+    # elif freq == "Quarter":
+    #     df = df.groupby(["type", pd.Grouper(key="date", freq="QS")]).agg(AGGREGATIONS)
+    #     df = df.reset_index()
+    #     # df["date"] = df["date"].dt.to_period("Q").dt.strftime("%Y-%m-%d")
+    #     df["date"] = df["date"].dt.to_period("Q").dt.strftime("%Y-Q%q")
+
+    # elif freq == "Year":
+    #     # df = df.groupby(["type", pd.Grouper(key="date", freq="YS")]).agg(AGGREGATIONS)
+    #     # df = df.reset_index()
+    #     # df["date"] = df["date"].dt.to_period("Y").dt.strftime("%Y-%m-%d")
+    #     df["date"] = df["date"].dt.year
+    #     df = df.groupby(["type", pd.Grouper(key="date")]).agg(AGGREGATIONS)
+    #     df = df.reset_index()
+    #     df["date"] = df["date"].astype(int)
 
     # rounding
     for measure in AGGREGATIONS:
@@ -138,7 +159,8 @@ if sel_year:
 
 df = activity_stats_grouping(df, freq=sel_freq)
 
-date_axis_type = "N" if sel_freq in ("Year", "Quarter") else "T"
+# date_axis_type = "N" if sel_freq in ("Year", "Quarter") else "T"
+date_axis_type = "N"
 
 c = (
     alt.Chart(
@@ -147,7 +169,7 @@ c = (
     )
     .mark_bar()
     .encode(
-        x=alt.X("date:" + date_axis_type, title=None),
+        x=alt.X("date-group:" + date_axis_type, title=None),
         y=alt.Y("Count:Q", title=None),
         color="type:N",
     )
@@ -172,7 +194,7 @@ c = (
     )
     .mark_bar()
     .encode(
-        x=alt.X("date:" + date_axis_type, title=None),
+        x=alt.X("date-group:" + date_axis_type, title=None),
         y=alt.Y(sel_agg + ":Q", title=None),
     )
 )
