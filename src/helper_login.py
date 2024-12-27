@@ -21,7 +21,7 @@ def display_strava_auth_link() -> None:
 <img src="/strava/strava-resources/btn_strava_connectwith_light.svg" alt="Connect with Strava">
 </button>
 </a>
-""",
+""",  # noqa: E501
         unsafe_allow_html=True,
     )
 
