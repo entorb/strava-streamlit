@@ -9,7 +9,7 @@ from helper_activities_caching import (
     cache_all_activities_and_gears,
 )
 from helper_logging import get_logger_from_filename
-from helper_ui_components import select_sport
+from helper_ui_components import list_sports, select_sport
 
 st.title(__doc__[:-1])  # type: ignore
 
@@ -101,33 +101,6 @@ def activity_stats_grouping(df: pd.DataFrame, freq: str) -> pd.DataFrame:
     df = df.groupby(["type", pd.Grouper(key="date-group")]).agg(AGGREGATIONS)
     df = df.reset_index()
 
-    # # group by
-    # if freq == "Week":
-    #     df = df.groupby(["type", pd.Grouper(key="date", freq="W")]).agg(AGGREGATIONS)
-    #     df = df.reset_index()
-    #     df["date"] = df["date"].dt.strftime("%Y-%m-%d")
-    #     # df["date"] = df["date"].dt.strftime("%Y-W%W")
-
-    # elif freq == "Month":
-    #     df = df.groupby(["type", pd.Grouper(key="date", freq="MS")]).agg(AGGREGATIONS)
-    #     df = df.reset_index()
-    #     df["date"] = df["date"].dt.strftime("%Y-%m")
-
-    # elif freq == "Quarter":
-    #     df = df.groupby(["type", pd.Grouper(key="date", freq="QS")]).agg(AGGREGATIONS)
-    #     df = df.reset_index()
-    #     # df["date"] = df["date"].dt.to_period("Q").dt.strftime("%Y-%m-%d")
-    #     df["date"] = df["date"].dt.to_period("Q").dt.strftime("%Y-Q%q")
-
-    # elif freq == "Year":
-    #     # df = df.groupby(["type", pd.Grouper(key="date", freq="YS")]).agg(AGGREGATIONS)
-    #     # df = df.reset_index()
-    #     # df["date"] = df["date"].dt.to_period("Y").dt.strftime("%Y-%m-%d")
-    #     df["date"] = df["date"].dt.year
-    #     df = df.groupby(["type", pd.Grouper(key="date")]).agg(AGGREGATIONS)
-    #     df = df.reset_index()
-    #     df["date"] = df["date"].astype(int)
-
     # rounding
     for measure in AGGREGATIONS:
         if measure in ("Count", "Elevation-sum"):
@@ -157,14 +130,15 @@ if sel_year:
     df = df.query("x_year >= @sel_year[0] and x_year <= @sel_year[1]")
 
 
-df = activity_stats_grouping(df, freq=sel_freq)
+st.header(f"All Activity {sel_freq} Count")
+df2 = activity_stats_grouping(df, freq=sel_freq)
 
 # date_axis_type = "N" if sel_freq in ("Year", "Quarter") else "T"
 date_axis_type = "N"
 
 c = (
     alt.Chart(
-        df,
+        df2,
         title=alt.TitleParams(f"Strava Stats: All Activity {sel_freq} Count"),
     )
     .mark_bar()
@@ -177,6 +151,7 @@ c = (
 st.altair_chart(c, use_container_width=True)
 
 
+st.header("Per Sport")
 col1, col2, col3, col4 = st.columns((1, 1, 1, 3))
 
 sel_type = select_sport(df, col1, mandatory=True)
@@ -189,7 +164,7 @@ sel_agg = col2.selectbox(
 
 c = (
     alt.Chart(
-        df.query("type==@sel_type"),
+        df2.query("type==@sel_type"),
         title=alt.TitleParams(f"Strava Stats: {sel_type} {sel_freq} {sel_agg}"),
     )
     .mark_bar()
@@ -199,5 +174,32 @@ c = (
     )
 )
 st.altair_chart(c, use_container_width=True)
+
+st.header("Active Days")
+sel_types = st.multiselect(label="Sport", options=list_sports(df))
+if sel_types:
+    df = df.query("type in @sel_types")
+df3 = (
+    df[["x_year", "x_date"]]
+    .drop_duplicates()
+    .groupby("x_year")
+    .agg(count=("x_date", "count"))
+    .reset_index()
+)
+
+c = (
+    alt.Chart(df3)
+    .mark_bar()
+    .encode(
+        x=alt.X("x_year:N", title=None),
+        y=alt.Y("count:Q", title=None),
+        tooltip=[
+            alt.Tooltip("x_year:N", title="Year"),
+            alt.Tooltip("count:Q", title="Count"),
+        ],
+    )
+)
+st.altair_chart(c, use_container_width=True)
+# st.write(df2)
 
 logger.info("End")
