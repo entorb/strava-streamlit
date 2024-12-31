@@ -56,11 +56,6 @@ col2.dataframe(
 )
 
 
-# # some more debug output only to me
-# if st.session_state["USER_ID"] == st.secrets["my_user_id"]:
-#     st.header("Session State")
-#     st.write(st.session_state)
-
 st.header("Unknown Frequent Locations")
 df = cache_all_activities_and_gears()[0]
 df = df[df["x_location_start"].isna() & df["start_latlng"].notna()]
@@ -98,5 +93,6 @@ st.dataframe(
     hide_index=True,
     column_config={"Map": st.column_config.LinkColumn(display_text="OSM")},
 )
+
 
 logger.info("End")
