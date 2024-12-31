@@ -1,4 +1,5 @@
 # CSpell Custom Dictionary Words
+aggfunc
 CALNAME
 CALSCALE
 connectwith
