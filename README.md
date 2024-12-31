@@ -38,6 +38,7 @@ see [.streamlit/secrets.toml](.streamlit/secrets-EXAMPLE.toml)
 
 * why is supervisorctl log empty
 `supervisorctl tail -f strava-streamlit`
+* reconnect after token expired
 
 #### Done Dev TODOs
 
@@ -51,10 +52,7 @@ see [.streamlit/secrets.toml](.streamlit/secrets-EXAMPLE.toml)
 
 #### Open Feature TODOs
 
-* reconnect after token expired
 * some text to explain features
-* download stop after 2000 activities and button to continue
-* download process
 
 #### Done Feature TODOs
 
@@ -69,6 +67,7 @@ see [.streamlit/secrets.toml](.streamlit/secrets-EXAMPLE.toml)
 * choose km vs. miles
 * calendar export
 * Strava logos and buttons
+* download some years only
 
 ## Deployment at Uberspace
 
