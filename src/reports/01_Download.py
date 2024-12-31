@@ -49,6 +49,11 @@ df2 = (
     .reset_index()
     .rename(columns={"x_year": "year", "id": "count"})
 )
-col1.dataframe(df2, hide_index=True, use_container_width=True)
+col1.dataframe(
+    df2,
+    hide_index=True,
+    use_container_width=True,
+    column_config={"year": st.column_config.NumberColumn(format="%d")},
+)
 
 logger.info("End")
