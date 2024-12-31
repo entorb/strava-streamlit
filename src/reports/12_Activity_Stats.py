@@ -201,7 +201,9 @@ df = cache_all_activities_and_gears()[0]
 
 col1, col2, col3, col4 = st.columns((1, 1, 3, 1))
 
-sel_freq = col1.selectbox("Frequency", options=("Year", "Quarter", "Month", "Week"))
+sel_freq = col1.selectbox(
+    label="Frequency", options=("Year", "Quarter", "Month", "Week")
+)
 
 year_min, year_max = df["x_year"].min(), df["x_year"].max()
 
@@ -244,7 +246,7 @@ sel_type = select_sport(df, col1, mandatory=True)
 assert sel_type is not None
 
 sel_agg = col2.selectbox(
-    "Aggregation",
+    label="Aggregation",
     options=AGGREGATIONS.keys(),
 )
 
