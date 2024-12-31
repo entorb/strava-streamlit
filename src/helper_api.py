@@ -7,7 +7,7 @@ from pathlib import Path
 import requests
 import streamlit as st
 
-from helper_logging import get_logger_from_filename
+from helper_logging import get_logger_from_filename, track_function_usage
 
 logger = get_logger_from_filename(__file__)
 
@@ -56,6 +56,7 @@ def api_post_deauthorize() -> None:
 
 
 # not caching raw data
+@track_function_usage
 def _api_get(path: str) -> dict | list:
     """Get data from Strava API."""
     path = f"{URL_BASE}/{path}"
@@ -77,6 +78,7 @@ def _api_get(path: str) -> dict | list:
     return []
 
 
+@track_function_usage
 def read_cache_file(cache_file: str) -> None | dict | list:
     """Read a json cache file, only used for local dev."""
     p = DIR_CACHE / cache_file
@@ -87,6 +89,7 @@ def read_cache_file(cache_file: str) -> None | dict | list:
     return d
 
 
+@track_function_usage
 def write_cache_file(cache_file: str, d: dict | list) -> None:
     """Write a json cache file, only used for local dev."""
     p = DIR_CACHE / cache_file
@@ -95,6 +98,7 @@ def write_cache_file(cache_file: str, d: dict | list) -> None:
 
 
 # no caching, as only performed once upon login
+@track_function_usage
 def fetch_athlete_info() -> str:
     """
     Get athlete ID and username and set in session_state.
@@ -116,6 +120,7 @@ def fetch_athlete_info() -> str:
 
 
 # not caching this raw data
+@track_function_usage
 def fetch_activities_page(
     page: int, year: int = 0, after: int = 0, before: int = 0
 ) -> list[dict]:
@@ -136,6 +141,7 @@ def fetch_activities_page(
 
 
 # not caching this raw data
+@track_function_usage
 def fetch_all_activities(year: int = 0) -> list[dict]:
     """
     Loop over fetch_activities_page unless the result is empty.
@@ -179,7 +185,8 @@ def fetch_all_activities(year: int = 0) -> list[dict]:
     return lst_all_activities
 
 
-@st.cache_data(ttl="15m")
+@st.cache_data(ttl="60m")
+@track_function_usage
 def fetch_gear_data(gear_id: int) -> dict:
     """Fetch gear info and return name."""
     cache_file = f"gear-{gear_id}.json"
