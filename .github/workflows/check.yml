@@ -39,5 +39,6 @@ jobs:
       - name: Install and run pytest
         run: |
           scripts/copy_test_data.sh
+          cp .streamlit/secrets-EXAMPLE.toml .streamlit/secrets.toml
           pip install pytest
           pytest
