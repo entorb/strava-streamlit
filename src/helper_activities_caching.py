@@ -3,14 +3,14 @@
 # ruff: noqa: PLR2004
 
 import math
+import time
 from pathlib import Path
-from time import time
 
 import pandas as pd
 import streamlit as st
 
 from helper_api import fetch_all_activities, fetch_gear_data
-from helper_logging import get_logger_from_filename
+from helper_logging import get_logger_from_filename, track_function_usage
 
 logger = get_logger_from_filename(__file__)
 
@@ -33,16 +33,19 @@ KNOWN_LOCATIONS = [
 ]
 
 
+@track_function_usage
 def get_data_dir() -> Path:
     """Get date path, dependent on env."""
     return Path(DIR_SERVER if st.session_state["ENV"] == "PROD" else DIR_LOCAL)
 
 
+@track_function_usage
 def get_known_locations_file_path() -> Path:  # noqa: D103
     user_id = st.session_state["USER_ID"]
     return get_data_dir() / "knownLocations" / f"{user_id}.txt"
 
 
+@track_function_usage
 def geo_distance_haversine(
     start: tuple[float, float], end: tuple[float, float]
 ) -> float:
@@ -74,25 +77,27 @@ def geo_distance_haversine(
     return r * c
 
 
+@track_function_usage
 def reduce_geo_precision(loc: tuple[float, float], digits: int) -> tuple[float, float]:  # noqa: D103
     lat = round(loc[0], digits)
     lon = round(loc[1], digits)
     return lat, lon
 
 
+@track_function_usage
 def cache_all_activities_and_gears() -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Set st.session_state["years"] and call cache_all_activities_and_gears_year().
     """
     if "years" not in st.session_state:
         st.session_state["years"] = 0  # this year
-    year = st.session_state["years"]
-    if year == 0:  # current year
-        df, df_gear = cache_all_activities_and_gears_year(year=0)
+    years = st.session_state["years"]
+    if years == 0:  # current year
+        df, df_gear = cache_all_activities_and_gears_year(years=0)
     else:
-        df1, df_gear1 = cache_all_activities_and_gears_year(year=0)
+        df1, df_gear1 = cache_all_activities_and_gears_year(years=0)
         # previous X years
-        df2, df_gear2 = cache_all_activities_and_gears_year(year=year)
+        df2, df_gear2 = cache_all_activities_and_gears_year(years=years)
         df = pd.concat([df1, df2]).reset_index(drop=True)
         df_gear = pd.concat([df_gear1, df_gear2]).reset_index(drop=True)
     return df, df_gear
@@ -100,17 +105,20 @@ def cache_all_activities_and_gears() -> tuple[pd.DataFrame, pd.DataFrame]:
 
 # this cache is for 2h, while all others are only for 15min
 @st.cache_data(ttl="2h")
-def cache_all_activities_and_gears_year(year: int) -> tuple[pd.DataFrame, pd.DataFrame]:  # noqa: PLR0915
+@track_function_usage
+def cache_all_activities_and_gears_year(  # noqa: PLR0915
+    years: int,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Call fetch_all_activities() and convert to DataFrame.
 
     year:0 -> this year
     year:N -> previous N years
     """
-    t_start = time()
+    t_start = time.time()
     logger.info("Start fetch_all_activities()")
-    df = pd.DataFrame(fetch_all_activities(year=year))
-    logger.info("End fetch_all_activities() in %.1fs", (time() - t_start))
+    df = pd.DataFrame(fetch_all_activities(year=years))
+    logger.info("End fetch_all_activities() in %.1fs", (time.time() - t_start))
 
     if df.empty:
         return (pd.DataFrame(), pd.DataFrame())
@@ -214,10 +222,10 @@ def cache_all_activities_and_gears_year(year: int) -> tuple[pd.DataFrame, pd.Dat
     df["x_gear_name"] = df["gear_id"].map(d_id_name)
 
     # geo calculations
-    t_start = time()
+    t_start = time.time()
     logger.info("Start geo_calc()")
     df = geo_calc(df)
-    logger.info("End geo_calc() in %.1fs", (time() - t_start))
+    logger.info("End geo_calc() in %.1fs", (time.time() - t_start))
 
     # renaming
     df = df.rename(columns={"start_date_local": "start_date_local"})
@@ -267,6 +275,7 @@ def cache_all_activities_and_gears_year(year: int) -> tuple[pd.DataFrame, pd.Dat
     return df, df_gear
 
 
+@track_function_usage
 def geo_calc(df: pd.DataFrame) -> pd.DataFrame:
     """Geo distance calculations."""
     # for each row in df, calc new column x_km_start_end via geo_distance_haversine
@@ -339,6 +348,7 @@ def geo_calc(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+@track_function_usage
 def get_known_locations(*, users_only: bool = False) -> list[tuple[float, float, str]]:
     """Get known locations from global and user stored data."""
     lst_known_locations = KNOWN_LOCATIONS if users_only is False else []
@@ -351,6 +361,7 @@ def get_known_locations(*, users_only: bool = False) -> list[tuple[float, float,
     return lst_known_locations
 
 
+@track_function_usage
 def check_is_known_location(
     latlng: tuple[float, float], known_locations: list[tuple[float, float, str]]
 ) -> str | None:
@@ -372,6 +383,7 @@ def check_is_known_location(
 
 
 # no cache for raw data
+@track_function_usage
 def read_city_db() -> list[tuple[float, float, str]]:
     """Read city database."""
     p = get_data_dir() / "city-gps.dat"
@@ -390,6 +402,7 @@ def read_city_db() -> list[tuple[float, float, str]]:
 
 
 @st.cache_resource
+@track_function_usage
 def cities_into_1deg_geo_boxes() -> (  # noqa: C901
     dict[tuple[float, float], list[tuple[float, float, str]]]
 ):
@@ -434,6 +447,7 @@ def cities_into_1deg_geo_boxes() -> (  # noqa: C901
 
 
 @st.cache_data(ttl="15m")
+@track_function_usage
 def search_closest_city(latlng: tuple[float, float]) -> str | None:
     """Search in 1x1 deg box of cities for closest city."""
     boxes = cities_into_1deg_geo_boxes()
