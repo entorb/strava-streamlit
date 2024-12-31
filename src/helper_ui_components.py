@@ -18,6 +18,13 @@ def create_navigation_menu() -> None:
     for p in sorted(Path("src/reports").glob("*.py")):
         f = p.stem
         t = f[3:].replace("_", " ")
+        # stats page for debugging only visible for me
+        if (
+            t == "Internal Stats"
+            and st.session_state["USER_ID"] != st.secrets["my_user_id"]
+        ):
+            continue
+
         lst.append(st.Page(page=f"reports/{f}.py", title=t))
     pg = st.navigation(lst)
     pg.run()
@@ -62,4 +69,6 @@ def select_sport(
     """Display a selectbox for sport type."""
     options = list_sports(df)
     index = None if mandatory is False else 0
-    return location.selectbox("Sport", options=options, key="sel_type", index=index)
+    return location.selectbox(
+        label="Sport", options=options, key="sel_type", index=index
+    )

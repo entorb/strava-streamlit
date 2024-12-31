@@ -80,7 +80,7 @@ if max_value > 0:
         df = df.query("total_elevation_gain > @sel_elev")
 if df.empty:
     st.stop()
-sel_km = col6.selectbox("km/mi", options=["km", "mi"])
+sel_km = col6.selectbox(label="km/mi", options=["km", "mi"])
 
 col7.button("Reset", on_click=reset_filters)
 

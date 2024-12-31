@@ -1,8 +1,8 @@
 """Helper: Strava API communication."""
 
+import datetime as dt
 import json
 from pathlib import Path
-from time import time
 
 import requests
 import streamlit as st
@@ -116,16 +116,18 @@ def fetch_athlete_info() -> str:
 
 
 # not caching this raw data
-def fetch_activities_page(page: int) -> list[dict]:
+def fetch_activities_page(
+    page: int, year: int = 0, after: int = 0, before: int = 0
+) -> list[dict]:
     """Request a page of 200 activities."""
-    cache_file = f"activities-page-{page}.json"
+    cache_file = f"activities-page-{year}-{page}.json"
     lst = None
-    current_timestamp = int(time())
     if st.session_state["ENV"] == "DEV":
         lst = read_cache_file(cache_file)
+
     if lst is None:
         lst = _api_get(
-            path=f"athlete/activities?per_page=200&page={page}&before={current_timestamp}&after=0"
+            path=f"athlete/activities?per_page=200&page={page}&before={before}&after={after}"
         )
         if st.session_state["ENV"] == "DEV":
             write_cache_file(cache_file, d=lst)
@@ -133,7 +135,51 @@ def fetch_activities_page(page: int) -> list[dict]:
     return lst
 
 
-@st.cache_data(ttl="5m")
+# not caching this raw data
+def fetch_all_activities(year: int = 0) -> list[dict]:
+    """
+    Loop over fetch_activities_page unless the result is empty.
+
+    year:0 -> this year
+    year:N -> previous N years
+    """
+    page = 1
+    lst_all_activities = []
+
+    date_today = dt.datetime.now(tz=dt.UTC).date()
+    if year == 0:
+        after = int(
+            dt.datetime(date_today.year, 1, 1, 0, 0, 0, tzinfo=dt.UTC).timestamp()
+        )
+        before = int(dt.datetime.now(tz=dt.UTC).timestamp())
+    else:
+        after = int(
+            dt.datetime(
+                date_today.year - year, 1, 1, 0, 0, 0, tzinfo=dt.UTC
+            ).timestamp()
+        )
+        after = max(0, after)  # not negative
+        before = int(
+            dt.datetime(date_today.year, 1, 1, 0, 0, 0, tzinfo=dt.UTC).timestamp()
+        )
+
+    while True:
+        # st.write(f"Downloading page {page}")
+
+        lst = fetch_activities_page(page=page, year=year, after=after, before=before)
+        if len(lst) == 0:
+            break
+        lst_all_activities.extend(lst)
+        page += 1
+        # dev debug: only one page
+        # if st.session_state["USERNAME"] == "entorb":
+        #     break
+        # if st.session_state["ENV"] == "DEV":
+        #     break
+    return lst_all_activities
+
+
+@st.cache_data(ttl="15m")
 def fetch_gear_data(gear_id: int) -> dict:
     """Fetch gear info and return name."""
     cache_file = f"gear-{gear_id}.json"

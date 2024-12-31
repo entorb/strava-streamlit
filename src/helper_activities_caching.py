@@ -9,7 +9,7 @@ from time import time
 import pandas as pd
 import streamlit as st
 
-from helper_api import fetch_activities_page, fetch_gear_data
+from helper_api import fetch_all_activities, fetch_gear_data
 from helper_logging import get_logger_from_filename
 
 logger = get_logger_from_filename(__file__)
@@ -20,6 +20,7 @@ DIR_SERVER = "/var/www/virtual/entorb/data-web-pages/strava"
 DIR_LOCAL = "./data"
 
 
+# TODO: move to config file
 # some global hard coded ones
 KNOWN_LOCATIONS = [
     # cspell:disable
@@ -40,26 +41,6 @@ def get_data_dir() -> Path:
 def get_known_locations_file_path() -> Path:  # noqa: D103
     user_id = st.session_state["USER_ID"]
     return get_data_dir() / "knownLocations" / f"{user_id}.txt"
-
-
-# not caching this raw data
-def fetch_all_activities() -> list[dict]:
-    """Loop over fetch_activities_page unless the result is empty."""
-    page = 1
-    lst_all_activities = []
-    while True:
-        # st.write(f"Downloading page {page}")
-        lst = fetch_activities_page(page=page)
-        if len(lst) == 0:
-            break
-        lst_all_activities.extend(lst)
-        page += 1
-        # dev debug: only one page
-        # if st.session_state["USERNAME"] == "entorb":
-        #     break
-        # if st.session_state["ENV"] == "DEV":
-        #     break
-    return lst_all_activities
 
 
 def geo_distance_haversine(
@@ -99,17 +80,42 @@ def reduce_geo_precision(loc: tuple[float, float], digits: int) -> tuple[float, 
     return lat, lon
 
 
-# this cache is for 2h, while all others are only for 5min
+def cache_all_activities_and_gears() -> tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Set st.session_state["years"] and call cache_all_activities_and_gears_year().
+    """
+    if "years" not in st.session_state:
+        st.session_state["years"] = 0  # this year
+    year = st.session_state["years"]
+    if year == 0:  # current year
+        df, df_gear = cache_all_activities_and_gears_year(year=0)
+    else:
+        df1, df_gear1 = cache_all_activities_and_gears_year(year=0)
+        # previous X years
+        df2, df_gear2 = cache_all_activities_and_gears_year(year=year)
+        df = pd.concat([df1, df2]).reset_index(drop=True)
+        df_gear = pd.concat([df_gear1, df_gear2]).reset_index(drop=True)
+    return df, df_gear
+
+
+# this cache is for 2h, while all others are only for 15min
 @st.cache_data(ttl="2h")
-def cache_all_activities_and_gears() -> tuple[pd.DataFrame, pd.DataFrame]:  # noqa: PLR0915
-    """Call fetch_all_activities() and convert to DataFrame."""
+def cache_all_activities_and_gears_year(year: int) -> tuple[pd.DataFrame, pd.DataFrame]:  # noqa: PLR0915
+    """
+    Call fetch_all_activities() and convert to DataFrame.
+
+    year:0 -> this year
+    year:N -> previous N years
+    """
     t_start = time()
     logger.info("Start fetch_all_activities()")
-    df = pd.DataFrame(fetch_all_activities())
+    df = pd.DataFrame(fetch_all_activities(year=year))
     logger.info("End fetch_all_activities() in %.1fs", (time() - t_start))
 
-    # dropping and renaming some columns
+    if df.empty:
+        return (pd.DataFrame(), pd.DataFrame())
 
+    # dropping and renaming some columns
     df = df.drop(
         columns=[
             "resource_state",
@@ -350,8 +356,6 @@ def check_is_known_location(
 ) -> str | None:
     """
     Check if location is known location (dist<750m).
-
-    reduce to max 3 digits to allow for caching
     """
     max_distance = 0.75  # 750m
 
@@ -429,7 +433,7 @@ def cities_into_1deg_geo_boxes() -> (  # noqa: C901
     return boxes
 
 
-@st.cache_data(ttl="5m")
+@st.cache_data(ttl="15m")
 def search_closest_city(latlng: tuple[float, float]) -> str | None:
     """Search in 1x1 deg box of cities for closest city."""
     boxes = cities_into_1deg_geo_boxes()
