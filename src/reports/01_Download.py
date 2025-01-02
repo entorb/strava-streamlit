@@ -41,6 +41,10 @@ else:
 
 df = cache_all_activities_and_gears()[0]
 
+# export activity_columns
+# lst = sorted(df.columns)
+# Path("activity_columns.txt").write_text("\n".join(lst) + "\n")
+
 df2 = (
     df[["x_year", "id"]]
     .groupby("x_year")

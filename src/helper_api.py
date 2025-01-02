@@ -158,6 +158,26 @@ def fetch_all_activities(year: int = 0) -> list[dict]:
             dt.datetime(date_today.year, 1, 1, 0, 0, 0, tzinfo=dt.UTC).timestamp()
         )
         before = int(dt.datetime.now(tz=dt.UTC).timestamp())
+    # elif year == 5:
+    #     after = int(
+    #         dt.datetime(
+    #             date_today.year - year, 1, 1, 0, 0, 0, tzinfo=dt.UTC
+    #         ).timestamp()
+    #     )
+    #     after = max(0, after)  # not negative
+    #     before = int(
+    #         dt.datetime(date_today.year, 1, 1, 0, 0, 0, tzinfo=dt.UTC).timestamp()
+    #     )
+    # elif year == 10:
+    #     after = int(
+    #         dt.datetime(
+    #             date_today.year - year, 1, 1, 0, 0, 0, tzinfo=dt.UTC
+    #         ).timestamp()
+    #     )
+    #     after = max(0, after)  # not negative
+    #     before = int(
+    #         dt.datetime(date_today.year-5, 1, 1, 0, 0, 0, tzinfo=dt.UTC).timestamp()
+    #     )
     else:
         after = int(
             dt.datetime(
