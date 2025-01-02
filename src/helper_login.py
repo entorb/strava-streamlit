@@ -73,8 +73,7 @@ def perform_login() -> None:
 def logout() -> None:
     """Logout and unset all local access data."""
     api_post_deauthorize()
-    for key in ("TOKEN", "USER_ID", "USERNAME", "ENV"):
-        if key in st.session_state:
-            del st.session_state[key]
+    for key in st.session_state:
+        del st.session_state[key]
 
     st.write("Logged Out")
