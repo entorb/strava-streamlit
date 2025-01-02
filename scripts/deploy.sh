@@ -6,7 +6,7 @@ python3 scripts/config_convert.py
 rsync -uz .streamlit/config-prod.toml entorb@entorb.net:strava-streamlit/.streamlit/config.toml
 rsync -uz .streamlit/secrets.toml entorb@entorb.net:strava-streamlit/.streamlit/secrets.toml
 rsync -uz requirements.txt entorb@entorb.net:strava-streamlit/
-# scp src/*.py entorb@entorb.net:strava-streamlit/src/
+rsync -uz activity_columns.txt entorb@entorb.net:strava-streamlit/
 rsync -ruzv --no-links --delete --delete-excluded --exclude __pycache__ --exclude 99_Playground.py src/ entorb@entorb.net:strava-streamlit/src/
 
 echo installing packages

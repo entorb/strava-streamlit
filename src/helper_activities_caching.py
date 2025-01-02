@@ -106,7 +106,7 @@ def cache_all_activities_and_gears() -> tuple[pd.DataFrame, pd.DataFrame]:
 # this cache is for 2h, while all others are only for 15min
 @st.cache_data(ttl="2h")
 @track_function_usage
-def cache_all_activities_and_gears_year(  # noqa: PLR0915
+def cache_all_activities_and_gears_year(  # noqa: C901, PLR0915
     years: int,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
@@ -120,8 +120,16 @@ def cache_all_activities_and_gears_year(  # noqa: PLR0915
     df = pd.DataFrame(fetch_all_activities(year=years))
     logger.info("End fetch_all_activities() in %.1fs", (time.time() - t_start))
 
+    # ensure all columns are there, even if df is empty
+    cont = Path("activity_columns.txt").read_text().strip().split()
+    for col in cont:
+        if col not in df.columns:
+            df[col] = None
+
+    df_gear = pd.DataFrame(columns=("id", "name", "nickname"))
+
     if df.empty:
-        return (pd.DataFrame(), pd.DataFrame())
+        return (df, df_gear)
 
     # dropping and renaming some columns
     df = df.drop(
@@ -218,7 +226,8 @@ def cache_all_activities_and_gears_year(  # noqa: PLR0915
         lst_gear.append(d_gear)
         # st.write(d_gear)
         d_id_name[gear_id] = d_gear["name"]
-    df_gear = pd.DataFrame(lst_gear).set_index("id").sort_index()
+    if lst_gear:
+        df_gear = pd.DataFrame(lst_gear).set_index("id").sort_index()
     df["x_gear_name"] = df["gear_id"].map(d_id_name)
 
     # geo calculations
@@ -268,7 +277,8 @@ def cache_all_activities_and_gears_year(  # noqa: PLR0915
         if col in cols:
             cols.remove(col)
         else:
-            st.write(f"'{col}' not in columns")
+            df[col] = None
+            # st.write(f"'{col}' not in columns")
     col_first.extend(cols)
     df = df[col_first]
 
