@@ -69,7 +69,7 @@ END:VEVENT
     return cont
 
 
-filename = "StravaActivityCalendar.ics"
+file_name = "Strava_Activity_Calendar.ics"
 df = cache_all_activities_and_gears()[0]
 
 col1, col2, _ = st.columns((1, 1, 6))
@@ -81,7 +81,7 @@ if col1.button(label="ICS Prepare"):
     col2.download_button(
         label="ICS Download",
         data=buffer,
-        file_name=filename,
+        file_name=file_name,
         mime="text/calendar",
     )
     # Path("/tmp/ActivityList.ics").write_text(cont)
