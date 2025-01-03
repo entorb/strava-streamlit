@@ -4,8 +4,6 @@
 #  pre-commit install
 # run manually
 #  pre-commit run --all-files
-# or
-#  pre-commit run --files myFile1.py myFile2.py
 # update hooks to latest version
 #  pre-commit autoupdate
 
@@ -67,7 +65,7 @@ repos:
 
   # ruff
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: "v0.8.4"
+    rev: "v0.8.5"
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
@@ -81,7 +79,7 @@ repos:
         args: ["--skip", "B101,B404"]
 
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.22.0
+    rev: v8.22.1
     hooks:
       - id: gitleaks
 
