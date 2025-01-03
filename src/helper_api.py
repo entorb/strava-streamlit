@@ -142,7 +142,7 @@ def fetch_activities_page(
 
 # not caching this raw data
 @track_function_usage
-def fetch_all_activities(year: int = 0) -> list[dict]:
+def fetch_all_activities(years: int = 0) -> list[dict]:
     """
     Loop over fetch_activities_page unless the result is empty.
 
@@ -153,7 +153,7 @@ def fetch_all_activities(year: int = 0) -> list[dict]:
     lst_all_activities = []
 
     date_today = dt.datetime.now(tz=dt.UTC).date()
-    if year == 0:
+    if years == 0:
         after = int(
             dt.datetime(date_today.year, 1, 1, 0, 0, 0, tzinfo=dt.UTC).timestamp()
         )
@@ -181,7 +181,7 @@ def fetch_all_activities(year: int = 0) -> list[dict]:
     else:
         after = int(
             dt.datetime(
-                date_today.year - year, 1, 1, 0, 0, 0, tzinfo=dt.UTC
+                date_today.year - years, 1, 1, 0, 0, 0, tzinfo=dt.UTC
             ).timestamp()
         )
         after = max(0, after)  # not negative
@@ -192,7 +192,7 @@ def fetch_all_activities(year: int = 0) -> list[dict]:
     while True:
         # st.write(f"Downloading page {page}")
 
-        lst = fetch_activities_page(page=page, year=year, after=after, before=before)
+        lst = fetch_activities_page(page=page, year=years, after=after, before=before)
         if len(lst) == 0:
             break
         lst_all_activities.extend(lst)
