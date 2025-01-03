@@ -240,8 +240,9 @@ def caching_calc_additional_fields(df: pd.DataFrame) -> pd.DataFrame:
     df["x_date"] = df["start_date_local"].dt.date
     df["x_year"] = df["start_date_local"].dt.year
     df["x_month"] = df["start_date_local"].dt.month
-    df["x_quarter"] = (1 + (df["x_month"] / 4)).astype(int)
+    df["x_quarter"] = df["start_date_local"].dt.quarter
     df["x_week"] = df["start_date_local"].dt.isocalendar().week
+    df["x_week"] = df["x_week"].clip(upper=52)
 
     # m/s -> min/km = 1 / X / 60 * 1000
     # df["x_min/km"] = 1 / df["average_speed"] / 60 * 1000
