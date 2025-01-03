@@ -102,8 +102,10 @@ def cache_all_activities_and_gears() -> tuple[pd.DataFrame, pd.DataFrame]:
         df2, df_gear2 = cache_all_activities_and_gears_year(
             user_id=user_id, years=years
         )
+        # index is not id
         df = pd.concat([df1, df2]).reset_index(drop=True)
-        df_gear = pd.concat([df_gear1, df_gear2]).reset_index(drop=True)
+        # index is gear_id
+        df_gear = pd.concat([df_gear1, df_gear2])
     return df, df_gear
 
 
@@ -122,8 +124,9 @@ def cache_all_activities_and_gears_year(  # noqa: C901, PLR0915
     year:N -> previous N years
     """
     t_start = time.time()
-    logger.info("Start fetch_all_activities for user_id = %s", user_id)
+    logger.info("Start fetch_all_activities for user_id=%s", user_id)
     df = pd.DataFrame(fetch_all_activities(years=years))
+    # .set_index("id")
     logger.info("End fetch_all_activities() in %.1fs", (time.time() - t_start))
 
     # ensure all columns are there, even if df is empty
@@ -132,12 +135,12 @@ def cache_all_activities_and_gears_year(  # noqa: C901, PLR0915
         if col not in df.columns:
             df[col] = None
 
-    df_gear = pd.DataFrame(columns=("id", "name", "nickname"))
+    df_gear = pd.DataFrame(columns=("id", "name", "nickname")).set_index("id")
 
     if df.empty:
         return (df, df_gear)
 
-    # dropping and renaming some columns
+    # dropping some columns
     df = df.drop(
         columns=[
             "resource_state",
@@ -230,10 +233,11 @@ def cache_all_activities_and_gears_year(  # noqa: C901, PLR0915
     for gear_id in gear_ids:
         d_gear = fetch_gear_data(gear_id)
         lst_gear.append(d_gear)
-        # st.write(d_gear)
         d_id_name[gear_id] = d_gear["name"]
     if lst_gear:
-        df_gear = pd.DataFrame(lst_gear).set_index("id").sort_index()
+        df_gear = pd.DataFrame(lst_gear)
+        df_gear = df_gear.set_index("id").sort_index()
+
     df["x_gear_name"] = df["gear_id"].map(d_id_name)
 
     # geo calculations
