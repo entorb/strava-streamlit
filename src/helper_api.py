@@ -18,6 +18,7 @@ URL_BASE = "https://www.strava.com/api/v3"
 DIR_CACHE = Path("./cache/")
 
 
+@track_function_usage
 def api_post_oauth(code: str) -> dict:
     """Post the code from the oauth2 redirect to retrieve token."""
     d = {
@@ -32,6 +33,7 @@ def api_post_oauth(code: str) -> dict:
     return resp.json()
 
 
+@track_function_usage
 def api_post_token_refresh() -> dict:
     """Refresh the oauth2 token."""
     d = {
@@ -46,6 +48,7 @@ def api_post_token_refresh() -> dict:
     return resp.json()
 
 
+@track_function_usage
 def api_post_deauthorize() -> None:
     """Deauthorize this app from user's strava account."""
     headers = {"Authorization": f"Bearer {st.session_state['TOKEN']}"}

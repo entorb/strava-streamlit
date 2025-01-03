@@ -7,7 +7,7 @@ import streamlit as st
 from helper_activities_caching import (
     cache_all_activities_and_gears,
 )
-from helper_logging import get_logger_from_filename
+from helper_logging import get_logger_from_filename, track_function_usage
 from helper_pandas import reorder_cols
 from helper_ui_components import excel_download_buttons, list_sports, select_sport
 
@@ -33,6 +33,7 @@ AGGREGATIONS = {
 }
 
 
+@track_function_usage
 def generate_empty_df(
     sport: str, freq: str, year_min: int, year_max: int
 ) -> pd.DataFrame:
@@ -84,6 +85,7 @@ def add_data_and_empty_df(df2: pd.DataFrame, df3: pd.DataFrame) -> pd.DataFrame:
     return df2
 
 
+@track_function_usage
 def activity_stats_grouping(df: pd.DataFrame, freq: str, sport: str) -> pd.DataFrame:
     # copied from strava V1: activityStats2.py
     """

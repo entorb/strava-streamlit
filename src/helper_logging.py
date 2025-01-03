@@ -33,17 +33,12 @@ def track_function_usage(func: Callable) -> Callable:
 
     @wraps(func)
     def wrapper(*args: tuple, **kwargs: dict):  # noqa: ANN202
-        # Gather stats only for me
-        if st.session_state["USER_ID"] == st.secrets["my_user_id"]:
-            start_time = time.time()
-            result = func(*args, **kwargs)  # Call the original function
-            end_time = time.time()
-            call_stats = get_call_stats()
-            call_stats[func.__name__]["calls"] += 1
-            call_stats[func.__name__]["total_time"] += end_time - start_time
-            return result
-
-        # normal user
-        return func(*args, **kwargs)  # Call the original function
+        start_time = time.time()
+        result = func(*args, **kwargs)  # Call the original function
+        end_time = time.time()
+        call_stats = get_call_stats()
+        call_stats[func.__name__]["calls"] += 1
+        call_stats[func.__name__]["total_time"] += end_time - start_time
+        return result
 
     return wrapper
