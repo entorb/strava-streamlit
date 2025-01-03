@@ -33,7 +33,7 @@ def create_navigation_menu() -> None:
 
 @track_function_usage
 def excel_download_buttons(
-    df: pd.DataFrame, file_name: str = "ActivityList.xlsx", *, exclude_index: bool
+    df: pd.DataFrame, file_name: str, *, exclude_index: bool
 ) -> None:
     """Show prepare data and download buttons."""
     col1, col2, _ = st.columns((1, 1, 6))
@@ -46,7 +46,7 @@ def excel_download_buttons(
             col2.download_button(
                 label="Excel Download",
                 data=buffer,
-                file_name=file_name,
+                file_name=file_name.replace(" ", "_"),
                 mime="application/vnd.ms-excel",
             )
     st.columns(1)

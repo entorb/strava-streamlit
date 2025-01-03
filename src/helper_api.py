@@ -11,6 +11,7 @@ from helper_logging import get_logger_from_filename, track_function_usage
 
 logger = get_logger_from_filename(__file__)
 
+
 API_RETRIES = 2
 URL_OAUTH = "https://www.strava.com/api/v3/oauth/token"
 URL_BASE = "https://www.strava.com/api/v3"

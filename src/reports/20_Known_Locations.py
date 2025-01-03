@@ -17,7 +17,6 @@ st.title(__doc__[:-1])  # type: ignore
 logger = get_logger_from_filename(__file__)
 logger.info("Start")
 
-# TODO: Edit
 
 col1, col2 = st.columns(2)
 col1.header("Edit")
