@@ -84,29 +84,35 @@ def reduce_geo_precision(loc: tuple[float, float], digits: int) -> tuple[float, 
     return lat, lon
 
 
+# no caching here, as no user_id in parameters, and since session_state.years may change
 @track_function_usage
 def cache_all_activities_and_gears() -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Set st.session_state["years"] and call cache_all_activities_and_gears_year().
     """
+    user_id = st.session_state["USER_ID"]
     if "years" not in st.session_state:
         st.session_state["years"] = 0  # this year
     years = st.session_state["years"]
     if years == 0:  # current year
-        df, df_gear = cache_all_activities_and_gears_year(years=0)
+        df, df_gear = cache_all_activities_and_gears_year(user_id=user_id, years=0)
     else:
-        df1, df_gear1 = cache_all_activities_and_gears_year(years=0)
+        df1, df_gear1 = cache_all_activities_and_gears_year(user_id=user_id, years=0)
         # previous X years
-        df2, df_gear2 = cache_all_activities_and_gears_year(years=years)
+        df2, df_gear2 = cache_all_activities_and_gears_year(
+            user_id=user_id, years=years
+        )
         df = pd.concat([df1, df2]).reset_index(drop=True)
         df_gear = pd.concat([df_gear1, df_gear2]).reset_index(drop=True)
     return df, df_gear
 
 
 # this cache is for 2h, while all others are only for 15min
+# caching requires user_id is given as parameter!!!
 @st.cache_data(ttl="2h")
 @track_function_usage
 def cache_all_activities_and_gears_year(  # noqa: C901, PLR0915
+    user_id: int,
     years: int,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
@@ -116,8 +122,8 @@ def cache_all_activities_and_gears_year(  # noqa: C901, PLR0915
     year:N -> previous N years
     """
     t_start = time.time()
-    logger.info("Start fetch_all_activities()")
-    df = pd.DataFrame(fetch_all_activities(year=years))
+    logger.info("Start fetch_all_activities for user_id = %s", user_id)
+    df = pd.DataFrame(fetch_all_activities(years=years))
     logger.info("End fetch_all_activities() in %.1fs", (time.time() - t_start))
 
     # ensure all columns are there, even if df is empty
