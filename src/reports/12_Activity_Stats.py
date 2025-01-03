@@ -1,5 +1,7 @@
 """Activity Stats."""
 
+import datetime as dt
+
 import altair as alt
 import pandas as pd
 import streamlit as st
@@ -87,7 +89,7 @@ def add_data_and_empty_df(df2: pd.DataFrame, df3: pd.DataFrame) -> pd.DataFrame:
 
 
 @track_function_usage
-def activity_stats_grouping(df: pd.DataFrame, freq: str, sport: str) -> pd.DataFrame:
+def activity_stats_grouping(df: pd.DataFrame, freq: str, sport: str) -> pd.DataFrame:  # noqa: PLR0915
     # copied from strava V1: activityStats2.py
     """
     Perform GROUP BY aggregation for time_freq (month, week, quarter, year) and type.
@@ -158,6 +160,11 @@ def activity_stats_grouping(df: pd.DataFrame, freq: str, sport: str) -> pd.DataF
         df2 = add_data_and_empty_df(df2, df3)
         # same str column for each freq
         df2[freq] = df2["year"].astype(str) + "-" + df2["week"].astype(str).str.zfill(2)
+        df2["date"] = pd.to_datetime(
+            df2.apply(
+                lambda row: dt.date.fromisocalendar(row["year"], row["week"], 1), axis=1
+            )
+        )
         df2 = df2.drop(columns=["year", "week"])
 
     elif freq == "Month":
@@ -170,6 +177,12 @@ def activity_stats_grouping(df: pd.DataFrame, freq: str, sport: str) -> pd.DataF
         df2[freq] = (
             df2["year"].astype(str) + "-" + df2["month"].astype(str).str.zfill(2)
         )
+        df2["date"] = pd.to_datetime(
+            df2.apply(
+                lambda row: dt.date(row["year"], row["month"], 1),
+                axis=1,
+            )
+        )
         df2 = df2.drop(columns=["year", "month"])
 
     elif freq == "Quarter":
@@ -180,6 +193,12 @@ def activity_stats_grouping(df: pd.DataFrame, freq: str, sport: str) -> pd.DataF
         )
         df2 = add_data_and_empty_df(df2, df3)
         df2[freq] = df2["year"].astype(str) + "-Q" + df2["quarter"].astype(str)
+        df2["date"] = pd.to_datetime(
+            df2.apply(
+                lambda row: dt.date(row["year"], 3 * row["quarter"] - 2, 1),
+                axis=1,
+            )
+        )
         df2 = df2.drop(columns=["year", "quarter"])
 
     elif freq == "Year":
@@ -188,6 +207,10 @@ def activity_stats_grouping(df: pd.DataFrame, freq: str, sport: str) -> pd.DataF
             {"year": range(year_min, year_max + 1), "type": sport, "Count": 0}
         ).set_index(["year", "type"])
         df2 = add_data_and_empty_df(df2, df3)
+        df2["date"] = df2.apply(
+            lambda row: dt.date(row["year"], 1, 1),
+            axis=1,
+        )
         df2["year"] = df2["year"].astype(str)
         df2 = df2.reset_index().rename(columns={"year": freq})
 
@@ -234,6 +257,17 @@ df2 = activity_stats_grouping(df, freq=sel_freq, sport="ALL")
 # date_axis_type = "N" if sel_freq in ("Year", "Quarter") else "T"
 date_axis_type = ":N"
 
+# TODO: to streamlit-examples
+# altair time units https://altair-viz.github.io/user_guide/transform/timeunit.html
+if sel_freq == "Year":
+    time_unit = "year(date):T"
+elif sel_freq == "Quarter":
+    time_unit = "yearquarter(date):T"
+elif sel_freq == "Month":
+    time_unit = "yearmonth(date):T"
+elif sel_freq == "Week":
+    time_unit = "date:T"
+
 c = (
     alt.Chart(
         df2,
@@ -241,7 +275,7 @@ c = (
     )
     .mark_bar()
     .encode(
-        x=alt.X(sel_freq + date_axis_type, title=None),
+        x=alt.X(time_unit, title=None),
         y=alt.Y("Count:Q", title=None),
         color="type:N",
     )
@@ -277,7 +311,8 @@ c = (
     )
     .mark_bar()
     .encode(
-        x=alt.X(sel_freq + date_axis_type, title=None),
+        # x=alt.X(sel_freq + date_axis_type, title=None),
+        x=alt.X(time_unit, title=None),
         y=alt.Y(sel_agg + ":Q", title=None),
         tooltip=[
             alt.Tooltip(sel_freq + date_axis_type, title="Date"),
@@ -320,12 +355,15 @@ df3 = (
     .reindex(range(year_min, year_max + 1), fill_value=0)
     .reset_index()
 )
+
+df3["date"] = df3.apply(lambda row: dt.date(row["x_year"], 1, 1), axis=1)
+
 # st.write(df3)
 c = (
     alt.Chart(df3)
     .mark_bar()
     .encode(
-        x=alt.X("x_year:N", title=None),
+        x=alt.X("year(date):T", title=None),
         y=alt.Y("Count:Q", title=None),
         tooltip=[
             alt.Tooltip("x_year:N", title="Year"),
