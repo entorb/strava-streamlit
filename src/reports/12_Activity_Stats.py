@@ -69,6 +69,7 @@ def generate_empty_df(
     return df
 
 
+@track_function_usage
 def add_data_and_empty_df(df2: pd.DataFrame, df3: pd.DataFrame) -> pd.DataFrame:
     """
     Add empty DataFrame to real data.
@@ -107,7 +108,6 @@ def activity_stats_grouping(df: pd.DataFrame, freq: str, sport: str) -> pd.DataF
     df = df[
         [
             "type",
-            "id",  # this we use for count
             "x_year",
             "x_quarter",
             "x_month",
@@ -123,9 +123,10 @@ def activity_stats_grouping(df: pd.DataFrame, freq: str, sport: str) -> pd.DataF
         ]
     ]
 
+    df["Count"] = 0
+
     df = df.rename(
         columns={
-            "id": "Count",
             "x_year": "year",
             "x_quarter": "quarter",
             "x_month": "month",
@@ -331,6 +332,6 @@ c = (
     )
 )
 st.altair_chart(c, use_container_width=True)
-# st.write(df2)
+
 
 logger.info("End")
