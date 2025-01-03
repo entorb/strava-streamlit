@@ -2,11 +2,12 @@
 
 import pandas as pd
 
-from helper_logging import get_logger_from_filename
+from helper_logging import get_logger_from_filename, track_function_usage
 
 logger = get_logger_from_filename(__file__)
 
 
+@track_function_usage
 def reorder_cols(df: pd.DataFrame, col_first: list[str]) -> pd.DataFrame:
     """Reorder DataFrame columns, put col_first to beginning."""
     cols = df.columns.to_list()
