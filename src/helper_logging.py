@@ -16,11 +16,16 @@ def get_logger_from_filename(file: str) -> Logger:
     return get_logger(Path(file).stem)
 
 
-# Dictionary to store metrics
 @st.cache_resource
 def get_call_stats() -> defaultdict[str, dict[str, int | float]]:
     """Create cached dict of call stats."""
     return defaultdict(lambda: {"calls": 0, "total_time": 0.0})
+
+
+@st.cache_resource
+def get_user_login_count() -> dict[int, int]:
+    """Create cached dict of user login count."""
+    return {}
 
 
 def track_function_usage(func: Callable) -> Callable:
