@@ -16,6 +16,7 @@ st.set_page_config(page_title="Strava Äpp V2", page_icon=None, layout="wide")
 logger = get_logger_from_filename(__file__)
 logger.info("Start")
 
+
 # https://momentjs.com/docs/#/displaying/format/
 # FORMAT_DATETIME = "YY-MM-DD HH:mm"
 
@@ -57,9 +58,6 @@ if "TOKEN" in st.session_state:
 
     st.logo("src/strava-resources/api_logo_pwrdBy_strava_stack_light.svg", size="large")
     create_navigation_menu()
-
-    # username = st.session_state["USERNAME"]
-    # st.write(f"Welcome User '{username}'")
 
 
 logger.info("End")

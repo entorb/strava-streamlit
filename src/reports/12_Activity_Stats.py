@@ -299,7 +299,9 @@ st.dataframe(
     column_order=column_order,
 )
 excel_download_buttons(
-    df2[column_order], file_name=f"Strava {title}.xlsx", exclude_index=True
+    df2[column_order],
+    file_name=f"Strava {title}.xlsx",
+    exclude_index=True,
 )
 
 st.header("Active Days")
