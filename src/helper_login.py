@@ -5,7 +5,7 @@ from time import time
 import streamlit as st
 
 from helper_api import api_post_deauthorize, api_post_oauth, api_post_token_refresh
-from helper_logging import get_logger_from_filename
+from helper_logging import get_logger_from_filename, get_user_login_count
 
 logger = get_logger_from_filename(__file__)
 
@@ -36,11 +36,14 @@ def handle_redirect() -> None:
     code = st.query_params["code"]
     d = api_post_oauth(code)
     # st.write(d)
+    user_id = d["athlete"]["id"]
     st.session_state["TOKEN"] = d["access_token"]
     st.session_state["TOKEN_EXPIRE"] = d["expires_at"]
     st.session_state["TOKEN_REFRESH"] = d["refresh_token"]
-    st.session_state["USER_ID"] = d["athlete"]["id"]
+    st.session_state["USER_ID"] = user_id
     st.session_state["USERNAME"] = d["athlete"].get("username", "no username")
+    d_login_cnt = get_user_login_count()
+    d_login_cnt[user_id] = 1 + d_login_cnt.get(user_id, 0)
 
     # remove url parameters
     st.query_params.clear()

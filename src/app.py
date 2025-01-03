@@ -5,7 +5,7 @@ from time import time
 
 import streamlit as st
 
-from helper_logging import get_logger_from_filename
+from helper_logging import get_logger_from_filename, get_user_login_count
 from helper_login import (
     perform_login,
     token_refresh_if_needed,
@@ -41,6 +41,10 @@ if st.session_state["ENV"] == "DEV":
     st.session_state["TOKEN_EXPIRE"] = int(time() + 24 * 3600)
     st.session_state["TOKEN_REFRESH"] = st.secrets["my_refresh_token"]
     st.session_state["USER_ID"] = st.secrets["my_user_id"]
+    d_login_cnt = get_user_login_count()
+    d_login_cnt[st.session_state["USER_ID"]] = 1 + d_login_cnt.get(
+        st.session_state["USER_ID"], 0
+    )
     st.session_state["USERNAME"] = st.secrets["my_username"]
 
 if "TOKEN" not in st.session_state:
