@@ -147,7 +147,7 @@ st.dataframe(
         "url": st.column_config.LinkColumn("ID", display_text=r"/(\d+)$"),
     },
 )
-excel_download_buttons(df=df, exclude_index=True)
+excel_download_buttons(df=df, file_name="Strava_Activity_List.xlsx", exclude_index=True)
 
 st.header("Gear")
 st.dataframe(df_gear)
