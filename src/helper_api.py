@@ -11,6 +11,7 @@ from helper_logging import get_logger_from_filename, track_function_usage
 
 logger = get_logger_from_filename(__file__)
 
+
 API_RETRIES = 2
 URL_OAUTH = "https://www.strava.com/api/v3/oauth/token"
 URL_BASE = "https://www.strava.com/api/v3"
@@ -61,7 +62,7 @@ def api_post_deauthorize() -> None:
 # not caching raw data
 @track_function_usage
 def _api_get(path: str) -> dict | list:
-    """Get data from Strava API."""
+    """Get data from Strava API, used by fetch_* functions."""
     path = f"{URL_BASE}/{path}"
     logger.info(path)
 
