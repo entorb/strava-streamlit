@@ -16,8 +16,6 @@ st.title(__doc__[:-1])  # type: ignore
 logger = get_logger_from_filename(__file__)
 logger.info("Start")
 
-df = cache_all_activities_and_gears()[0]
-
 
 @track_function_usage
 def gen_ics(df: pd.DataFrame) -> str:
@@ -33,6 +31,8 @@ def gen_ics(df: pd.DataFrame) -> str:
     ics_footer = "END:VCALENDAR"
 
     cont = ics_header
+
+    df = df.reset_index()  # id as column
 
     for row in df.itertuples():
         assert type(row.start_date_local) is pd.Timestamp, type(row.start_date_local)
@@ -69,7 +69,8 @@ END:VEVENT
     return cont
 
 
-filename = "ActivityList.ics"
+filename = "StravaActivityCalendar.ics"
+df = cache_all_activities_and_gears()[0]
 
 col1, col2, _ = st.columns((1, 1, 6))
 if col1.button(label="ICS Prepare"):

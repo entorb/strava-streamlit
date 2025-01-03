@@ -46,12 +46,12 @@ df = cache_all_activities_and_gears()[0]
 # Path("activity_columns.txt").write_text("\n".join(lst) + "\n")
 
 df2 = (
-    df[["x_year", "id"]]
+    df[["x_year", "x_url"]]
     .groupby("x_year")
     .count()
     .sort_index(ascending=False)
     .reset_index()
-    .rename(columns={"x_year": "year", "id": "count"})
+    .rename(columns={"x_year": "year", "x_url": "count"})
 )
 col1.dataframe(
     df2,
@@ -59,5 +59,6 @@ col1.dataframe(
     use_container_width=True,
     column_config={"year": st.column_config.NumberColumn(format="%d")},
 )
+
 
 logger.info("End")
