@@ -3,7 +3,6 @@
 # ruff: noqa: PLR2004
 
 import math
-import time
 from pathlib import Path
 
 import pandas as pd
@@ -11,10 +10,10 @@ import streamlit as st
 
 from helper_api import fetch_all_activities, fetch_gear_data
 from helper_logging import get_logger_from_filename, track_function_usage
+from helper_pandas import reorder_cols
 
 logger = get_logger_from_filename(__file__)
 
-# counter = 0
 
 DIR_SERVER = "/var/www/virtual/entorb/data-web-pages/strava"
 DIR_LOCAL = "./data"
@@ -102,8 +101,8 @@ def cache_all_activities_and_gears() -> tuple[pd.DataFrame, pd.DataFrame]:
         df2, df_gear2 = cache_all_activities_and_gears_year(
             user_id=user_id, years=years
         )
-        # index is not id
-        df = pd.concat([df1, df2]).reset_index(drop=True)
+        # index is id
+        df = pd.concat([df1, df2])
         # index is gear_id
         df_gear = pd.concat([df_gear1, df_gear2])
     return df, df_gear
@@ -113,7 +112,7 @@ def cache_all_activities_and_gears() -> tuple[pd.DataFrame, pd.DataFrame]:
 # caching requires user_id is given as parameter!!!
 @st.cache_data(ttl="2h")
 @track_function_usage
-def cache_all_activities_and_gears_year(  # noqa: C901, PLR0915
+def cache_all_activities_and_gears_year(
     user_id: int,
     years: int,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -122,19 +121,29 @@ def cache_all_activities_and_gears_year(  # noqa: C901, PLR0915
 
     year:0 -> this year
     year:N -> previous N years
+    returns 2 DataFrames:
+    - Activities using id as index, ordered by start_date_local
+    - Gears, using id as index, ordered by index
     """
-    t_start = time.time()
-    logger.info("Start fetch_all_activities for user_id=%s", user_id)
-    df = pd.DataFrame(fetch_all_activities(years=years))
-    # .set_index("id")
-    logger.info("End fetch_all_activities() in %.1fs", (time.time() - t_start))
+    logger.info("cache_all_activities_and_gears_year for user_id=%s", user_id)
 
-    # ensure all columns are there, even if df is empty
+    df = pd.DataFrame(fetch_all_activities(years=years))
+
+    # ensure all expected columns are there, even if df is empty
     cont = Path("activity_columns.txt").read_text().strip().split()
     for col in cont:
         if col not in df.columns:
             df[col] = None
 
+    # set int types (before set_index)
+    cols = ["id", "utc_offset", "moving_time", "elapsed_time", "total_elevation_gain"]
+    for col in cols:
+        df[col] = df[col].astype(int)
+
+    # id as index
+    df = df.set_index("id")
+
+    # init empty df_gear of minimum columns
     df_gear = pd.DataFrame(columns=("id", "name", "nickname")).set_index("id")
 
     if df.empty:
@@ -161,70 +170,7 @@ def cache_all_activities_and_gears_year(  # noqa: C901, PLR0915
 
     df = df.sort_values("start_date_local", ascending=False)
 
-    # set int types
-    cols = ["id", "utc_offset", "moving_time", "elapsed_time", "total_elevation_gain"]
-    for col in cols:
-        df[col] = df[col].astype(int)
-    # st.write(df)
-    # st.write(df.dtypes)
-    # st.stop()
-
-    # calc additional fields
-
-    df["x_url"] = "https://www.strava.com/activities/" + df["id"].astype(str)
-
-    df["x_start_h"] = round(
-        df["start_date_local"].dt.hour
-        + df["start_date_local"].dt.minute / 60
-        + df["start_date_local"].dt.second / 3600,
-        2,
-    )
-    df["x_date"] = df["start_date_local"].dt.date
-    df["x_year"] = df["start_date_local"].dt.year
-    df["x_month"] = df["start_date_local"].dt.month
-    df["x_quarter"] = (1 + (df["x_month"] / 4)).astype(int)
-    df["x_week"] = df["start_date_local"].dt.isocalendar().week
-
-    # df = df.set_index("start_date_local")
-
-    # ensure the relevant columns are present
-    for col in (
-        "average_speed",
-        "moving_time",
-        "distance",
-        "total_elevation_gain",
-        # "start_latlng", # not working, due to magic of list in column
-        "end_latlng",
-    ):
-        if col not in df:
-            df[col] = pd.Series()  # dtype='int'
-            df[col] = pd.Series()  # dtype='int'
-
-    # m/s -> min/km = 1 / X / 60 * 1000
-    # df["x_min/km"] = 1 / df["average_speed"] / 60 * 1000
-    df["x_min/km"] = df.apply(
-        lambda row: round(1 / row["average_speed"] / 60 * 1000, 2)  # type: ignore
-        if row["average_speed"] and row["average_speed"] > 0
-        else None,
-        axis=1,
-    )
-    df["x_min/mi"] = df.apply(
-        lambda row: round(1 / row["average_speed"] / 60 * 1000 * 1.60934, 2)  # type: ignore
-        if row["average_speed"] and row["average_speed"] > 0
-        else None,
-        axis=1,
-    )
-    df["x_km/h"] = round(df["average_speed"] * 3.6, 1)
-    df["x_max_km/h"] = round(df["max_speed"] * 3.6, 1)
-    df["x_mph"] = round(df["average_speed"] * 3.6 / 1.60934, 1)
-    df["x_max_mph"] = round(df["max_speed"] * 3.6 / 1.60934, 1)
-
-    df["x_min"] = round(df["moving_time"] / 60, 1)
-    df["x_km"] = round(df["distance"] / 1000, 1)
-    df["x_mi"] = round(df["distance"] / 1000 / 1.60934, 1)  # km -> mile
-
-    # df["x_elev_m/km"] = round(df["total_elevation_gain"] / df["x_km"], 0)
-    df["x_elev_%"] = round(df["total_elevation_gain"] / df["x_km"] / 10, 1)
+    df = caching_calc_additional_fields(df)
 
     # gear
     gear_ids = df["gear_id"].dropna().unique()
@@ -235,22 +181,15 @@ def cache_all_activities_and_gears_year(  # noqa: C901, PLR0915
         lst_gear.append(d_gear)
         d_id_name[gear_id] = d_gear["name"]
     if lst_gear:
-        df_gear = pd.DataFrame(lst_gear)
-        df_gear = df_gear.set_index("id").sort_index()
+        df_gear = pd.DataFrame(lst_gear).set_index("id").sort_index()
 
+    # convert gear_id to name
     df["x_gear_name"] = df["gear_id"].map(d_id_name)
 
     # geo calculations
-    t_start = time.time()
-    logger.info("Start geo_calc()")
-    df = geo_calc(df)
-    logger.info("End geo_calc() in %.1fs", (time.time() - t_start))
+    df = caching_geo_calc(df)
 
-    # renaming
-    df = df.rename(columns={"start_date_local": "start_date_local"})
-
-    # ordering
-    cols = df.columns.to_list()
+    # column ordering
     col_first = [
         "x_date",
         "name",
@@ -283,20 +222,57 @@ def cache_all_activities_and_gears_year(  # noqa: C901, PLR0915
         "elev_low",
         "average_temp",
     ]
-    for col in col_first:
-        if col in cols:
-            cols.remove(col)
-        else:
-            df[col] = None
-            # st.write(f"'{col}' not in columns")
-    col_first.extend(cols)
-    df = df[col_first]
-
+    df = reorder_cols(df, col_first)
     return df, df_gear
 
 
 @track_function_usage
-def geo_calc(df: pd.DataFrame) -> pd.DataFrame:
+def caching_calc_additional_fields(df: pd.DataFrame) -> pd.DataFrame:
+    """Calculate additional fields."""
+    df["x_url"] = "https://www.strava.com/activities/" + df.index.astype(str)
+
+    df["x_start_h"] = round(
+        df["start_date_local"].dt.hour
+        + df["start_date_local"].dt.minute / 60
+        + df["start_date_local"].dt.second / 3600,
+        2,
+    )
+    df["x_date"] = df["start_date_local"].dt.date
+    df["x_year"] = df["start_date_local"].dt.year
+    df["x_month"] = df["start_date_local"].dt.month
+    df["x_quarter"] = (1 + (df["x_month"] / 4)).astype(int)
+    df["x_week"] = df["start_date_local"].dt.isocalendar().week
+
+    # m/s -> min/km = 1 / X / 60 * 1000
+    # df["x_min/km"] = 1 / df["average_speed"] / 60 * 1000
+    df["x_min/km"] = df.apply(
+        lambda row: round(1 / row["average_speed"] / 60 * 1000, 2)  # type: ignore
+        if row["average_speed"] and row["average_speed"] > 0
+        else None,
+        axis=1,
+    )
+    df["x_min/mi"] = df.apply(
+        lambda row: round(1 / row["average_speed"] / 60 * 1000 * 1.60934, 2)  # type: ignore
+        if row["average_speed"] and row["average_speed"] > 0
+        else None,
+        axis=1,
+    )
+    df["x_km/h"] = round(df["average_speed"] * 3.6, 1)
+    df["x_max_km/h"] = round(df["max_speed"] * 3.6, 1)
+    df["x_mph"] = round(df["average_speed"] * 3.6 / 1.60934, 1)
+    df["x_max_mph"] = round(df["max_speed"] * 3.6 / 1.60934, 1)
+
+    df["x_min"] = round(df["moving_time"] / 60, 1)
+    df["x_km"] = round(df["distance"] / 1000, 1)
+    df["x_mi"] = round(df["distance"] / 1000 / 1.60934, 1)  # km -> mile
+
+    # df["x_elev_m/km"] = round(df["total_elevation_gain"] / df["x_km"], 0)
+    df["x_elev_%"] = round(df["total_elevation_gain"] / df["x_km"] / 10, 1)
+    return df
+
+
+@track_function_usage
+def caching_geo_calc(df: pd.DataFrame) -> pd.DataFrame:
     """Geo distance calculations."""
     # for each row in df, calc new column x_km_start_end via geo_distance_haversine
     #  using values of columns start_latlng and end_latlng if they are not null
