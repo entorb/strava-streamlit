@@ -7,11 +7,12 @@ import pandas as pd
 import streamlit as st
 from streamlit.delta_generator import DeltaGenerator
 
-from helper_logging import get_logger_from_filename
+from helper_logging import get_logger_from_filename, track_function_usage
 
 logger = get_logger_from_filename(__file__)
 
 
+@track_function_usage
 def create_navigation_menu() -> None:
     """Create and populate navigation menu."""
     lst = []
@@ -30,6 +31,7 @@ def create_navigation_menu() -> None:
     pg.run()
 
 
+@track_function_usage
 def excel_download_buttons(
     df: pd.DataFrame, file_name: str = "ActivityList.xlsx", *, exclude_index: bool
 ) -> None:
@@ -50,6 +52,7 @@ def excel_download_buttons(
     st.columns(1)
 
 
+@track_function_usage
 def list_sports(df: pd.DataFrame) -> list:
     """Return list of sport types."""
     sports = sorted(df["type"].unique())
@@ -63,6 +66,7 @@ def list_sports(df: pd.DataFrame) -> list:
     return first
 
 
+@track_function_usage
 def select_sport(
     df: pd.DataFrame, location: DeltaGenerator, *, mandatory: bool = False
 ) -> str | None:
