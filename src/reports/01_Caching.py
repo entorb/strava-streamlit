@@ -1,4 +1,4 @@
-"""Download Activities."""
+"""Caching of Activities."""
 
 import streamlit as st
 
