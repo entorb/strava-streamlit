@@ -9,7 +9,7 @@ import streamlit as st
 from helper_activities_caching import (
     cache_all_activities_and_gears,
 )
-from helper_logging import get_logger_from_filename
+from helper_logging import get_logger_from_filename, track_function_usage
 
 st.title(__doc__[:-1])  # type: ignore
 
@@ -19,6 +19,7 @@ logger.info("Start")
 df = cache_all_activities_and_gears()[0]
 
 
+@track_function_usage
 def gen_ics(df: pd.DataFrame) -> str:
     """Generate calender in ICS format, dates in UTC."""
     date_str_now = dt.datetime.now(tz=dt.UTC).strftime("%Y%m%dT%H%M%SZ")
