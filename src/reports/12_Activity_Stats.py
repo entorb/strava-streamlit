@@ -36,23 +36,78 @@ AGGREGATIONS = {
 
 
 @track_function_usage
+def reduce_and_rename_activity_df(df: pd.DataFrame) -> pd.DataFrame:
+    """Reduce activity DataFrame to relevant columns."""
+    # reduce
+    df = df[
+        [
+            "type",
+            "x_date",
+            "x_year",
+            "x_quarter",
+            "x_month",
+            "x_week",
+            "x_min",
+            "x_km",
+            "total_elevation_gain",
+            "x_elev_%",
+            "x_km/h",
+            "average_heartrate",
+            "max_heartrate",
+            "x_max_km/h",
+        ]
+    ]
+
+    # rename
+    df = df.rename(
+        columns={
+            "x_year": "year",
+            "x_quarter": "quarter",
+            "x_month": "month",
+            "x_week": "week",
+            "x_date": "date",
+            "x_min": "Hour-sum",
+            "x_km": "Kilometer-sum",
+            "total_elevation_gain": "Elevation-sum",
+            "x_elev_%": "Elevation%-avg",
+            "x_km/h": "Speed_km/h-avg",
+            "average_heartrate": "Heartrate-avg",
+        },
+    )
+
+    # add count
+    df["Count"] = 0
+
+    # add some more columns
+    df["Hour-sum"] = df["Hour-sum"] / 60
+    df["Hour-avg"] = df["Hour-sum"]
+    df["Kilometer-avg"] = df["Kilometer-sum"]
+    df["Elevation-avg"] = df["Elevation-sum"]
+    df["Speed_km/h-max"] = df["Speed_km/h-avg"]
+    df["Heartrate-max"] = df["Heartrate-avg"]
+    return df
+
+
+@track_function_usage
 def generate_empty_df(
-    sport: str, freq: str, year_min: int, year_max: int
+    sport: str, freq: str, year_min: int, year_max: int, aggregation_name: str
 ) -> pd.DataFrame:
-    """Generate and empty DataFrame with year, freq and type=Run ans index."""
+    """Generate and empty DataFrame with year, freq and type as index."""
     assert freq in ("Quarter", "Month", "Week")
 
     field = freq.lower()
+
     # single value df
     df = pd.DataFrame(
         data={
             "year": [year_min],
             field: 1,
             "type": sport,
-            "Count": 0,
+            aggregation_name: 0,
         }
     ).set_index(["year", field, "type"])
 
+    # sub-level range
     if freq == "Quarter":
         rng = range(1, 4 + 1)
     elif freq == "Month":
@@ -72,7 +127,9 @@ def generate_empty_df(
 
 
 @track_function_usage
-def add_data_and_empty_df(df2: pd.DataFrame, df3: pd.DataFrame) -> pd.DataFrame:
+def add_data_and_empty_df(
+    df2: pd.DataFrame, df3: pd.DataFrame, aggregation_name: str
+) -> pd.DataFrame:
     """
     Add empty DataFrame to real data.
 
@@ -80,8 +137,8 @@ def add_data_and_empty_df(df2: pd.DataFrame, df3: pd.DataFrame) -> pd.DataFrame:
     """
     df2 = df2.add(df3, fill_value=0)
     # trim ends, maybe via
-    first_idx = df2[df2["Count"] > 0].index[0]
-    last_idx = df2[df2["Count"] > 0].index[-1]
+    first_idx = df2[df2[aggregation_name] > 0].index[0]
+    last_idx = df2[df2[aggregation_name] > 0].index[-1]
     df2 = df2.loc[first_idx:last_idx]
 
     df2 = df2.fillna(0).reset_index()
@@ -89,7 +146,9 @@ def add_data_and_empty_df(df2: pd.DataFrame, df3: pd.DataFrame) -> pd.DataFrame:
 
 
 @track_function_usage
-def activity_stats_grouping(df: pd.DataFrame, freq: str, sport: str) -> pd.DataFrame:  # noqa: PLR0915
+def activity_stats_grouping(
+    df: pd.DataFrame, freq: str, sport: str, aggregation: str
+) -> pd.DataFrame:
     # copied from strava V1: activityStats2.py
     """
     Perform GROUP BY aggregation for time_freq (month, week, quarter, year) and type.
@@ -100,64 +159,31 @@ def activity_stats_grouping(df: pd.DataFrame, freq: str, sport: str) -> pd.DataF
     assert freq in ("Year", "Quarter", "Month", "Week"), freq
 
     if sport != "ALL":
+        # if not ALL sports, filter on one sport
         df = df[df["type"] == sport]
-        aggregations = AGGREGATIONS
-    else:
-        aggregations = {"Count": "count"}
+    else:  # ALL
         sport = "Run"
 
-    # reduce to relevant columns
-    df = df[
-        [
-            "type",
-            "x_year",
-            "x_quarter",
-            "x_month",
-            "x_week",
-            "x_min",
-            "x_km",
-            "total_elevation_gain",
-            "x_elev_%",
-            "x_km/h",
-            "average_heartrate",
-            "max_heartrate",
-            "x_max_km/h",
-        ]
-    ]
+    if aggregation != "ALL":
+        agg = {aggregation: AGGREGATIONS[aggregation]}
+        aggregation_name = aggregation
+    else:  # ALL
+        agg = AGGREGATIONS
+        aggregation_name = "Count"
 
-    df["Count"] = 0
-
-    df = df.rename(
-        columns={
-            "x_year": "year",
-            "x_quarter": "quarter",
-            "x_month": "month",
-            "x_week": "week",
-            "x_min": "Hour-sum",
-            "x_km": "Kilometer-sum",
-            "total_elevation_gain": "Elevation-sum",
-            "x_elev_%": "Elevation%-avg",
-            "x_km/h": "Speed_km/h-avg",
-            "average_heartrate": "Heartrate-avg",
-        },
-    )
     year_min, year_max = df["year"].min(), df["year"].max()
 
-    # add some more columns
-    df["Hour-sum"] = df["Hour-sum"] / 60
-    df["Hour-avg"] = df["Hour-sum"]
-    df["Kilometer-avg"] = df["Kilometer-sum"]
-    df["Elevation-avg"] = df["Elevation-sum"]
-    df["Speed_km/h-max"] = df["Speed_km/h-avg"]
-    df["Heartrate-max"] = df["Heartrate-avg"]
-
     if freq == "Week":
-        df2 = df.groupby(["year", "week", "type"]).agg(aggregations)
+        df2 = df.groupby(["year", "week", "type"]).agg(agg)
         # add missing values
         df3 = generate_empty_df(
-            sport=sport, freq=freq, year_min=year_min, year_max=year_max
+            sport=sport,
+            freq=freq,
+            year_min=year_min,
+            year_max=year_max,
+            aggregation_name=aggregation_name,
         )
-        df2 = add_data_and_empty_df(df2, df3)
+        df2 = add_data_and_empty_df(df2, df3, aggregation_name=aggregation_name)
         # same str column for each freq
         df2[freq] = df2["year"].astype(str) + "-" + df2["week"].astype(str).str.zfill(2)
         df2["date"] = pd.to_datetime(
@@ -168,12 +194,16 @@ def activity_stats_grouping(df: pd.DataFrame, freq: str, sport: str) -> pd.DataF
         df2 = df2.drop(columns=["year", "week"])
 
     elif freq == "Month":
-        df2 = df.groupby(["year", "month", "type"]).agg(aggregations)
+        df2 = df.groupby(["year", "month", "type"]).agg(agg)
         # add missing values
         df3 = generate_empty_df(
-            sport=sport, freq=freq, year_min=year_min, year_max=year_max
+            sport=sport,
+            freq=freq,
+            year_min=year_min,
+            year_max=year_max,
+            aggregation_name=aggregation_name,
         )
-        df2 = add_data_and_empty_df(df2, df3)
+        df2 = add_data_and_empty_df(df2, df3, aggregation_name=aggregation_name)
         df2[freq] = (
             df2["year"].astype(str) + "-" + df2["month"].astype(str).str.zfill(2)
         )
@@ -186,12 +216,16 @@ def activity_stats_grouping(df: pd.DataFrame, freq: str, sport: str) -> pd.DataF
         df2 = df2.drop(columns=["year", "month"])
 
     elif freq == "Quarter":
-        df2 = df.groupby(["year", "quarter", "type"]).agg(aggregations)
+        df2 = df.groupby(["year", "quarter", "type"]).agg(agg)
         # add missing values
         df3 = generate_empty_df(
-            sport=sport, freq=freq, year_min=year_min, year_max=year_max
+            sport=sport,
+            freq=freq,
+            year_min=year_min,
+            year_max=year_max,
+            aggregation_name=aggregation_name,
         )
-        df2 = add_data_and_empty_df(df2, df3)
+        df2 = add_data_and_empty_df(df2, df3, aggregation_name=aggregation_name)
         df2[freq] = df2["year"].astype(str) + "-Q" + df2["quarter"].astype(str)
         df2["date"] = pd.to_datetime(
             df2.apply(
@@ -202,17 +236,17 @@ def activity_stats_grouping(df: pd.DataFrame, freq: str, sport: str) -> pd.DataF
         df2 = df2.drop(columns=["year", "quarter"])
 
     elif freq == "Year":
-        df2 = df.groupby(["year", "type"]).agg(aggregations)
+        df2 = df.groupby(["year", "type"]).agg(agg)
         df3 = pd.DataFrame(
-            {"year": range(year_min, year_max + 1), "type": sport, "Count": 0}
+            {"year": range(year_min, year_max + 1), "type": sport, aggregation_name: 0}
         ).set_index(["year", "type"])
-        df2 = add_data_and_empty_df(df2, df3)
+        df2 = add_data_and_empty_df(df2, df3, aggregation_name=aggregation_name)
         df2["date"] = df2.apply(
             lambda row: dt.date(row["year"], 1, 1),
             axis=1,
         )
         df2["year"] = df2["year"].astype(str)
-        df2 = df2.reset_index().rename(columns={"year": freq})
+        df2 = df2.rename(columns={"year": freq})  # capitalization
 
     # rounding
     for measure in AGGREGATIONS:
@@ -227,10 +261,13 @@ def activity_stats_grouping(df: pd.DataFrame, freq: str, sport: str) -> pd.DataF
                 df2[measure] = df2[measure].round(0).astype(int)
             else:
                 df2[measure] = df2[measure].round(1)
+    df2 = df2.rename(columns={"type": "Sport"})
+    df2 = reorder_cols(df=df2, col_first=[freq, "Sport"])
     return df2
 
 
 df = cache_all_activities_and_gears()[0]
+df = reduce_and_rename_activity_df(df)
 
 col1, col2, col3, col4 = st.columns((1, 1, 3, 1))
 
@@ -238,21 +275,22 @@ sel_freq = col1.selectbox(
     label="Frequency", options=("Year", "Quarter", "Month", "Week")
 )
 
-year_min, year_max = df["x_year"].min(), df["x_year"].max()
+year_min, year_max = df["year"].min(), df["year"].max()
 
 sel_year = col3.slider(
     "Year",
     min_value=year_min,
     max_value=year_max if year_max != year_min else year_min + 1,
-    value=(df["x_year"].min(), df["x_year"].max()),
+    value=(df["year"].min(), df["year"].max()),
     key="sel_year",
 )
 if sel_year:
-    df = df.query("x_year >= @sel_year[0] and x_year <= @sel_year[1]")
+    df = df.query("year >= @sel_year[0] and year <= @sel_year[1]")
 
 
 st.header(f"All Activity {sel_freq} Count")
-df2 = activity_stats_grouping(df, freq=sel_freq, sport="ALL")
+aggregation = "Count"
+df2 = activity_stats_grouping(df, freq=sel_freq, sport="ALL", aggregation=aggregation)
 
 # date_axis_type = "N" if sel_freq in ("Year", "Quarter") else "T"
 date_axis_type = ":N"
@@ -276,33 +314,92 @@ c = (
     .mark_bar()
     .encode(
         x=alt.X(time_unit, title=None),
-        y=alt.Y("Count:Q", title=None),
-        color="type:N",
+        y=alt.Y(f"{aggregation}:Q", title=None),
+        color="Sport:N",
+        tooltip=[
+            # alt.Tooltip(time_unit, title="Date"),
+            alt.Tooltip(sel_freq),
+            alt.Tooltip("Sport:N"),
+            alt.Tooltip(f"{aggregation}:Q"),
+        ],
     )
 )
 st.altair_chart(c, use_container_width=True)
 
 
 df2b = (
-    df2.pivot_table(index=sel_freq, columns="type", values="Count", aggfunc="first")
+    df2.pivot_table(index=sel_freq, columns="Sport", values="Count", aggfunc="first")
     .sort_index(ascending=False)
     .reset_index()
 )
 df2b = reorder_cols(df2b, [sel_freq, "Run", "Ride", "Swim", "Hike"])
 st.dataframe(df2b, hide_index=True)
 
-st.header("Per Sport")
-col1, col2, col3, col4 = st.columns((1, 1, 1, 3))
 
-sel_type = select_sport(df, col1, mandatory=True)
-assert sel_type is not None
-
-sel_agg = col2.selectbox(
+st.header("Compare to Previous Period")
+col1, _ = st.columns((1, 5))
+sel_agg = col1.selectbox(
     label="Aggregation",
     options=AGGREGATIONS.keys(),
 )
 
-df2 = activity_stats_grouping(df, freq=sel_freq, sport=sel_type).drop(columns="type")
+df2c = (
+    activity_stats_grouping(df, freq=sel_freq, sport="ALL", aggregation=sel_agg)
+    .drop(columns=["date"])
+    .sort_values([sel_freq, "Sport"], ascending=(False, True))
+)
+
+
+def get_cell(df: pd.DataFrame, sport: str, period: str, agg: str) -> float | int:
+    """Extract a cell."""
+    df2 = df[(df[sel_freq] == period) & (df["Sport"] == sport)]
+    lst = df2[agg].head(1).to_list()
+    if len(lst) == 0:
+        return 0
+    return lst[0]
+
+
+periods = df2c[sel_freq].unique()[:4]
+
+cols = st.columns(4)
+sports = ["Run", "Ride", "Swim", "Hike"]
+for i in range(4):
+    col = cols[i]
+    sport = sports[i]
+    col.subheader(sport)
+    cur = get_cell(df=df2c, sport=sport, period=periods[0], agg=sel_agg)
+    if len(periods) > 1:
+        prev1 = get_cell(df=df2c, sport=sport, period=periods[1], agg=sel_agg)
+    else:
+        prev1 = 0
+    if len(periods) > 2:  # noqa: PLR2004
+        prev2 = get_cell(df=df2c, sport=sport, period=periods[2], agg=sel_agg)
+    if len(periods) > 3:  # noqa: PLR2004
+        prev3 = get_cell(df=df2c, sport=sport, period=periods[3], agg=sel_agg)
+    else:
+        prev3 = 0
+    col.metric(label=periods[0], value=cur)
+    if len(periods) > 1:
+        col.metric(label=periods[1], value=prev1, delta=round(prev1 - prev2, 1))
+    if len(periods) > 2:  # noqa: PLR2004
+        col.metric(label=periods[2], value=prev2)
+        # col.metric(label=periods[2], value=prev2, delta=round(prev2 - prev3, 1))
+
+
+# st.dataframe(df, hide_index=True)
+
+
+st.header("Per Sport")
+col1, _ = st.columns((1, 5))
+
+sel_type = select_sport(df, col1, mandatory=True)
+assert sel_type is not None
+
+
+# df2 has 1 sport and all aggregations
+df2 = activity_stats_grouping(
+    df, freq=sel_freq, sport=sel_type, aggregation="ALL"
+).drop(columns="Sport")
 
 c = (
     alt.Chart(
@@ -311,22 +408,20 @@ c = (
     )
     .mark_bar()
     .encode(
-        # x=alt.X(sel_freq + date_axis_type, title=None),
         x=alt.X(time_unit, title=None),
-        y=alt.Y(sel_agg + ":Q", title=None),
+        y=alt.Y(f"{sel_agg}:Q", title=None),
         tooltip=[
-            alt.Tooltip(sel_freq + date_axis_type, title="Date"),
-            alt.Tooltip(sel_agg + ":Q"),
-            alt.Tooltip("Count:Q"),
+            alt.Tooltip(sel_freq),
+            alt.Tooltip(f"{sel_agg}:Q"),
         ],
     )
 )
 st.altair_chart(c, use_container_width=True)
 
-column_order = [sel_freq]
+column_order = [sel_freq]  # date frequency
 column_order.extend(AGGREGATIONS.keys())
 
-title = f"{sel_type} per {sel_freq}"
+title = f"{sel_type} Stats per {sel_freq}"
 st.header(title)
 st.dataframe(
     df2.sort_values(sel_freq, ascending=False),
@@ -339,26 +434,26 @@ excel_download_buttons(
     exclude_index=True,
 )
 
+
 st.header("Active Days")
 sel_types = st.multiselect(label="Sport", options=list_sports(df))
 if sel_types:
     df = df.query("type in @sel_types")
 
-year_min, year_max = df["x_year"].min(), df["x_year"].max()
+year_min, year_max = df["year"].min(), df["year"].max()
 
 df3 = (
-    df[["x_year", "x_date"]]
+    df[["year", "date"]]
     .drop_duplicates()
-    .groupby("x_year")
-    .agg({"x_date": "count"})
-    .rename(columns={"x_date": "Count"})
+    .groupby("year")
+    .count()
+    .rename(columns={"date": "Count"})
     .reindex(range(year_min, year_max + 1), fill_value=0)
     .reset_index()
 )
 
-df3["date"] = df3.apply(lambda row: dt.date(row["x_year"], 1, 1), axis=1)
+df3["date"] = df3.apply(lambda row: dt.date(row["year"], 1, 1), axis=1)
 
-# st.write(df3)
 c = (
     alt.Chart(df3)
     .mark_bar()
@@ -366,12 +461,25 @@ c = (
         x=alt.X("year(date):T", title=None),
         y=alt.Y("Count:Q", title=None),
         tooltip=[
-            alt.Tooltip("x_year:N", title="Year"),
-            alt.Tooltip("Count:Q", title="Count"),
+            alt.Tooltip("year", title="Year"),
+            alt.Tooltip("Count:Q", title="Active Days"),
         ],
     )
 )
 st.altair_chart(c, use_container_width=True)
+
+# Add download button
+# No because the required lib vl-convert-python is quite huge
+# users can screenshot instead.
+# if st.button("Download chart as PNG"):
+#     buffer = io.BytesIO()
+#     c.save(buffer, format="png")
+#     btn = st.download_button(
+#         label="Download chart as PNG",
+#         data=buffer,
+#         file_name="chart.png",
+#         mime="image/png",
+#     )
 
 
 logger.info("End")
