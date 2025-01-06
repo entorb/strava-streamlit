@@ -1,5 +1,6 @@
 """Activity Stats."""
 
+# ruff: noqa: PLR2004
 import datetime as dt
 
 import altair as alt
@@ -8,6 +9,7 @@ import streamlit as st
 
 from helper_activities_caching import (
     cache_all_activities_and_gears,
+    reduce_and_rename_activity_df_for_stats,
 )
 from helper_logging import get_logger_from_filename, track_function_usage
 from helper_pandas import reorder_cols
@@ -33,59 +35,6 @@ AGGREGATIONS = {
     "Heartrate-avg": "mean",
     "Heartrate-max": "max",
 }
-
-
-@track_function_usage
-def reduce_and_rename_activity_df(df: pd.DataFrame) -> pd.DataFrame:
-    """Reduce activity DataFrame to relevant columns."""
-    # reduce
-    df = df[
-        [
-            "type",
-            "x_date",
-            "x_year",
-            "x_quarter",
-            "x_month",
-            "x_week",
-            "x_min",
-            "x_km",
-            "total_elevation_gain",
-            "x_elev_%",
-            "x_km/h",
-            "average_heartrate",
-            "max_heartrate",
-            "x_max_km/h",
-        ]
-    ]
-
-    # rename
-    df = df.rename(
-        columns={
-            "x_year": "year",
-            "x_quarter": "quarter",
-            "x_month": "month",
-            "x_week": "week",
-            "x_date": "date",
-            "x_min": "Hour-sum",
-            "x_km": "Kilometer-sum",
-            "total_elevation_gain": "Elevation-sum",
-            "x_elev_%": "Elevation%-avg",
-            "x_km/h": "Speed_km/h-avg",
-            "average_heartrate": "Heartrate-avg",
-        },
-    )
-
-    # add count
-    df["Count"] = 0
-
-    # add some more columns
-    df["Hour-sum"] = df["Hour-sum"] / 60
-    df["Hour-avg"] = df["Hour-sum"]
-    df["Kilometer-avg"] = df["Kilometer-sum"]
-    df["Elevation-avg"] = df["Elevation-sum"]
-    df["Speed_km/h-max"] = df["Speed_km/h-avg"]
-    df["Heartrate-max"] = df["Heartrate-avg"]
-    return df
 
 
 @track_function_usage
@@ -267,7 +216,7 @@ def activity_stats_grouping(
 
 
 df = cache_all_activities_and_gears()[0]
-df = reduce_and_rename_activity_df(df)
+df = reduce_and_rename_activity_df_for_stats(df)
 
 col1, col2, col3, col4 = st.columns((1, 1, 3, 1))
 
@@ -289,6 +238,7 @@ if sel_year:
 
 
 st.header(f"All Activity {sel_freq} Count")
+st.write("Note: in the following, 'VirtualRide' is counted as 'Ride'.")
 aggregation = "Count"
 df2 = activity_stats_grouping(df, freq=sel_freq, sport="ALL", aggregation=aggregation)
 
@@ -368,25 +318,23 @@ for i in range(4):
     sport = sports[i]
     col.subheader(sport)
     cur = get_cell(df=df2c, sport=sport, period=periods[0], agg=sel_agg)
-    if len(periods) > 1:
+    if len(periods) >= 2:
         prev1 = get_cell(df=df2c, sport=sport, period=periods[1], agg=sel_agg)
     else:
         prev1 = 0
-    if len(periods) > 2:  # noqa: PLR2004
+    if len(periods) >= 3:
         prev2 = get_cell(df=df2c, sport=sport, period=periods[2], agg=sel_agg)
-    if len(periods) > 3:  # noqa: PLR2004
+    if len(periods) >= 4:
         prev3 = get_cell(df=df2c, sport=sport, period=periods[3], agg=sel_agg)
     else:
         prev3 = 0
     col.metric(label=periods[0], value=cur)
-    if len(periods) > 1:
-        col.metric(label=periods[1], value=prev1, delta=round(prev1 - prev2, 1))
-    if len(periods) > 2:  # noqa: PLR2004
+    if len(periods) >= 2:
+        delta = round(prev1 - prev2, 1) if len(periods) >= 3 else None
+        col.metric(label=periods[1], value=prev1, delta=delta)
+    if len(periods) >= 3:
         col.metric(label=periods[2], value=prev2)
         # col.metric(label=periods[2], value=prev2, delta=round(prev2 - prev3, 1))
-
-
-# st.dataframe(df, hide_index=True)
 
 
 st.header("Per Sport")
@@ -436,7 +384,7 @@ excel_download_buttons(
 
 
 st.header("Active Days")
-sel_types = st.multiselect(label="Sport", options=list_sports(df))
+sel_types = st.multiselect(label="Sports", options=list_sports(df))
 if sel_types:
     df = df.query("type in @sel_types")
 
