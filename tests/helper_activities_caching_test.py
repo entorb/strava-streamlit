@@ -46,7 +46,7 @@ def test_check_is_known_location() -> None:
 
 
 def test_fetch_all_activities() -> None:
-    _ = fetch_all_activities()
+    _ = fetch_all_activities(year_start=0, year_end=0)
     assert not at.exception
 
 
