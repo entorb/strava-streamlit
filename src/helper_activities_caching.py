@@ -93,18 +93,42 @@ def cache_all_activities_and_gears() -> tuple[pd.DataFrame, pd.DataFrame]:
     if "years" not in st.session_state:
         st.session_state["years"] = 0  # this year
     years = st.session_state["years"]
-    if years == 0:  # current year
-        df, df_gear = cache_all_activities_and_gears_year(user_id=user_id, years=0)
-    else:
-        df1, df_gear1 = cache_all_activities_and_gears_year(user_id=user_id, years=0)
-        # previous X years
-        df2, df_gear2 = cache_all_activities_and_gears_year(
-            user_id=user_id, years=years
-        )
-        # index is id
-        df = pd.concat([df1, df2])
-        # index is gear_id
-        df_gear = pd.concat([df_gear1, df_gear2])
+    # always fetch current year
+    df, df_gear = cache_all_activities_and_gears_in_year_range(
+        user_id=user_id, year_start=0, year_end=0
+    )
+    if years > 0:  # previous years as well
+        dfs = []
+        dfs_gear = []
+        dfs.append(df)
+        dfs_gear.append(df_gear)
+        if years >= 1:
+            df2, df_gear2 = cache_all_activities_and_gears_in_year_range(
+                user_id=user_id, year_start=1, year_end=0
+            )
+            dfs.append(df2)
+            dfs_gear.append(df_gear2)
+        if years >= 5:
+            df2, df_gear2 = cache_all_activities_and_gears_in_year_range(
+                user_id=user_id, year_start=5, year_end=1
+            )
+            dfs.append(df2)
+            dfs_gear.append(df_gear2)
+        if years >= 10:
+            df2, df_gear2 = cache_all_activities_and_gears_in_year_range(
+                user_id=user_id, year_start=10, year_end=5
+            )
+            dfs.append(df2)
+            dfs_gear.append(df_gear2)
+        if years > 10:
+            df2, df_gear2 = cache_all_activities_and_gears_in_year_range(
+                user_id=user_id, year_start=100, year_end=10
+            )
+            dfs.append(df2)
+            dfs_gear.append(df_gear2)
+        # index is id, so concat is safe.
+        df = pd.concat(dfs)
+        df_gear = pd.concat(dfs_gear)
     return df, df_gear
 
 
@@ -112,22 +136,23 @@ def cache_all_activities_and_gears() -> tuple[pd.DataFrame, pd.DataFrame]:
 # caching requires user_id is given as parameter!!!
 @st.cache_data(ttl="2h")
 @track_function_usage
-def cache_all_activities_and_gears_year(
+def cache_all_activities_and_gears_in_year_range(
     user_id: int,
-    years: int,
+    year_start: int,
+    year_end: int,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Call fetch_all_activities() and convert to DataFrame.
 
-    year:0 -> this year
-    year:N -> previous N years
+    year_start=0 -> this year
+    year_start=5, year_end=0 -> previous 5 years
     returns 2 DataFrames:
     - Activities using id as index, ordered by start_date_local
     - Gears, using id as index, ordered by index
     """
     logger.info("cache_all_activities_and_gears_year for user_id=%s", user_id)
 
-    df = pd.DataFrame(fetch_all_activities(years=years))
+    df = pd.DataFrame(fetch_all_activities(year_start=year_start, year_end=year_end))
 
     # ensure all expected columns are there, even if df is empty
     cont = Path("activity_columns.txt").read_text().strip().split()
