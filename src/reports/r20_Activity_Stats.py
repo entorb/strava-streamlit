@@ -77,21 +77,22 @@ def generate_empty_df(
 
 @track_function_usage
 def add_data_and_empty_df(
-    df2: pd.DataFrame, df3: pd.DataFrame, aggregation_name: str
+    df_data: pd.DataFrame, df_empty: pd.DataFrame, aggregation_name: str
 ) -> pd.DataFrame:
     """
     Add empty DataFrame to real data.
 
     Both have a 3-fold index: year, freq, type
     """
-    df2 = df2.add(df3, fill_value=0)
-    # trim ends, maybe via
-    first_idx = df2[df2[aggregation_name] > 0].index[0]
-    last_idx = df2[df2[aggregation_name] > 0].index[-1]
-    df2 = df2.loc[first_idx:last_idx]
+    df_data = df_data.add(df_empty, fill_value=0)
 
-    df2 = df2.fillna(0).reset_index()
-    return df2
+    # trim ends
+    first_idx = df_data[df_data[aggregation_name] > 0].index[0]
+    last_idx = df_data[df_data[aggregation_name] > 0].index[-1]
+    df_data = df_data.loc[first_idx:last_idx]
+
+    df_data = df_data.fillna(0).reset_index()
+    return df_data
 
 
 @track_function_usage
@@ -221,7 +222,7 @@ df = reduce_and_rename_activity_df_for_stats(df)
 col1, col2, col3, col4 = st.columns((1, 1, 3, 1))
 
 sel_freq = col1.selectbox(
-    label="Frequency", options=("Year", "Quarter", "Month", "Week")
+    label="Frequency", options=("Year", "Quarter", "Month", "Week"), key="sel_freq"
 )
 
 year_min, year_max = df["year"].min(), df["year"].max()

@@ -49,7 +49,7 @@ total_days_in_this_year = (
 year_ratio = today_day_no / total_days_in_this_year
 
 # optionally filter on sports
-sel_types = col2.multiselect(label="Sports", options=list_sports(df))
+sel_types = col2.multiselect(label="Sports", options=list_sports(df), key="sel_types")
 if sel_types:
     df = df.query("type in @sel_types")
 
