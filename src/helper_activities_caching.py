@@ -464,3 +464,63 @@ def search_closest_city(latlng: tuple[float, float]) -> str | None:
             closest_city_dist = dist
             closest_city_name = city_name
     return closest_city_name
+
+
+@track_function_usage
+def reduce_and_rename_activity_df_for_stats(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Reduce activity DataFrame to relevant columns for stats.
+
+    VirtualRide -> Ride
+    """
+    # reduce
+    df = df[
+        [
+            "type",
+            "x_date",
+            "x_year",
+            "x_quarter",
+            "x_month",
+            "x_week",
+            "x_min",
+            "x_km",
+            "total_elevation_gain",
+            "x_elev_%",
+            "x_km/h",
+            "average_heartrate",
+            "max_heartrate",
+            "x_max_km/h",
+        ]
+    ]
+
+    # rename
+    df = df.rename(
+        columns={
+            "x_year": "year",
+            "x_quarter": "quarter",
+            "x_month": "month",
+            "x_week": "week",
+            "x_date": "date",
+            "x_min": "Hour-sum",
+            "x_km": "Kilometer-sum",
+            "total_elevation_gain": "Elevation-sum",
+            "x_elev_%": "Elevation%-avg",
+            "x_km/h": "Speed_km/h-avg",
+            "average_heartrate": "Heartrate-avg",
+        },
+    )
+
+    # add count
+    df["Count"] = 0
+
+    # change VirtualRide to Ride
+    df.loc[df["type"] == "VirtualRide", "type"] = "Ride"
+
+    # add some more columns
+    df["Hour-sum"] = df["Hour-sum"] / 60
+    df["Hour-avg"] = df["Hour-sum"]
+    df["Kilometer-avg"] = df["Kilometer-sum"]
+    df["Elevation-avg"] = df["Elevation-sum"]
+    df["Speed_km/h-max"] = df["Speed_km/h-avg"]
+    df["Heartrate-max"] = df["Heartrate-avg"]
+    return df
