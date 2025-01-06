@@ -146,57 +146,41 @@ def fetch_activities_page(
 
 # not caching this raw data
 @track_function_usage
-def fetch_all_activities(years: int = 0) -> list[dict]:
+def fetch_all_activities(year_start: int, year_end: int) -> list[dict]:
     """
     Loop over fetch_activities_page unless the result is empty.
 
-    year:0 -> this year
-    year:N -> previous N years
+    year_start:0 -> this year
+    year_start=5, year_end=0 -> previous 5 years
     """
     page = 1
     lst_all_activities = []
 
     date_today = dt.datetime.now(tz=dt.UTC).date()
-    if years == 0:
+    if year_start == 0:  # this year only
         after = int(
             dt.datetime(date_today.year, 1, 1, 0, 0, 0, tzinfo=dt.UTC).timestamp()
         )
         before = int(dt.datetime.now(tz=dt.UTC).timestamp())
-    # elif year == 5:
-    #     after = int(
-    #         dt.datetime(
-    #             date_today.year - year, 1, 1, 0, 0, 0, tzinfo=dt.UTC
-    #         ).timestamp()
-    #     )
-    #     after = max(0, after)  # not negative
-    #     before = int(
-    #         dt.datetime(date_today.year, 1, 1, 0, 0, 0, tzinfo=dt.UTC).timestamp()
-    #     )
-    # elif year == 10:
-    #     after = int(
-    #         dt.datetime(
-    #             date_today.year - year, 1, 1, 0, 0, 0, tzinfo=dt.UTC
-    #         ).timestamp()
-    #     )
-    #     after = max(0, after)  # not negative
-    #     before = int(
-    #         dt.datetime(date_today.year-5, 1, 1, 0, 0, 0, tzinfo=dt.UTC).timestamp()
-    #     )
     else:
         after = int(
             dt.datetime(
-                date_today.year - years, 1, 1, 0, 0, 0, tzinfo=dt.UTC
+                date_today.year - year_start, 1, 1, 0, 0, 0, tzinfo=dt.UTC
             ).timestamp()
         )
         after = max(0, after)  # not negative
         before = int(
-            dt.datetime(date_today.year, 1, 1, 0, 0, 0, tzinfo=dt.UTC).timestamp()
+            dt.datetime(
+                date_today.year - year_end, 1, 1, 0, 0, 0, tzinfo=dt.UTC
+            ).timestamp()
         )
 
     while True:
         # st.write(f"Downloading page {page}")
 
-        lst = fetch_activities_page(page=page, year=years, after=after, before=before)
+        lst = fetch_activities_page(
+            page=page, year=year_start, after=after, before=before
+        )
         if len(lst) == 0:
             break
         lst_all_activities.extend(lst)

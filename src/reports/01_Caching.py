@@ -1,5 +1,7 @@
 """Caching of Activities."""
 
+# ruff: noqa: PLR2004
+
 import streamlit as st
 
 from helper_activities_caching import (
@@ -18,26 +20,29 @@ if "years" not in st.session_state:
     st.session_state["years"] = 0
 years = st.session_state["years"]
 
-lst = ["Current", "Last 5", "Last 10", "All"]
+lst = ["Current", "Last", "Last 5", "Last 10", "All"]
 if years == 0:
     index = 0
-elif years == 5:  # noqa: PLR2004
+elif years == 1:
     index = 1
-elif years == 10:  # noqa: PLR2004
+elif years == 5:
     index = 2
-else:
     index = 3
+else:
+    index = 4
 
 sel_years = col1.selectbox(label="Years", options=lst, index=index)
 
 if sel_years == "Current":
     st.session_state["years"] = 0
+elif sel_years == "Last":
+    st.session_state["years"] = 1
 elif sel_years == "Last 5":
     st.session_state["years"] = 5
 elif sel_years == "Last 10":
     st.session_state["years"] = 10
 else:
-    st.session_state["years"] = 1000
+    st.session_state["years"] = 100
 
 df = cache_all_activities_and_gears()[0]
 
