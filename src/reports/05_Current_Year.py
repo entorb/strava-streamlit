@@ -9,6 +9,7 @@ from helper_activities_caching import (
     reduce_and_rename_activity_df_for_stats,
 )
 from helper_logging import get_logger_from_filename
+from helper_ui_components import list_sports
 
 st.title(__doc__[:-1])  # type: ignore
 
@@ -19,7 +20,9 @@ logger.info("Start")
 df = cache_all_activities_and_gears()[0]
 df = reduce_and_rename_activity_df_for_stats(df)
 
-col1, _ = st.columns((1, 5))
+col1, col2, _ = st.columns((1, 2, 3))
+
+# list of years with min 3 activities
 df2 = (
     df[["year", "Count"]]
     .groupby("year")
@@ -27,9 +30,13 @@ df2 = (
     .sort_index(ascending=False)
 )
 df2 = df2[df2["Count"] >= 3]  # noqa: PLR2004
-
 sel_year = col1.selectbox(label="Year", options=df2.index)
 df = df[df["year"] == sel_year]
+
+# optionally filter on sports
+sel_types = col2.multiselect(label="Sports", options=list_sports(df))
+if sel_types:
+    df = df.query("type in @sel_types")
 
 cnt_activities = len(df)
 hour_sum = df["Hour-sum"].sum()
@@ -43,11 +50,13 @@ cols[1].subheader("Active Days")
 cols[2].subheader("Time")
 cols[3].subheader("Distance")
 cols[4].subheader("Elevation")
-cols[0].metric(label="", value=cnt_activities)
-cols[1].metric(label="", value=active_days)
-cols[2].metric(label="", value=f"{round(hour_sum)} h")
-cols[3].metric(label="", value=f"{round(km_sum)} km")
-cols[4].metric(label="", value=f"{round(elev_km_sum,1)} km")
+cols[0].metric(label="Activities", value=cnt_activities, label_visibility="hidden")
+cols[1].metric(label="Active Days", value=active_days, label_visibility="hidden")
+cols[2].metric(label="Hours", value=f"{round(hour_sum)} h", label_visibility="hidden")
+cols[3].metric(label="Distance", value=f"{round(km_sum)} km", label_visibility="hidden")
+cols[4].metric(
+    label="Elevation", value=f"{round(elev_km_sum,1)} km", label_visibility="hidden"
+)
 
 
 def calc_days_in_year(year: int) -> int:
