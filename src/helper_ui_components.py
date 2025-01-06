@@ -18,7 +18,7 @@ def create_navigation_menu() -> None:
     lst = []
     for p in sorted(Path("src/reports").glob("*.py")):
         f = p.stem
-        t = f[3:].replace("_", " ")
+        t = f[4:].replace("_", " ")
         # stats page for debugging only visible for me
         if (
             t == "Internal Stats"
