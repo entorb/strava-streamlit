@@ -1,0 +1,20 @@
+# python
+__pycache__/
+.coverage
+.DS_Store
+.venv/
+.vscode/
+.pytest_cache/
+coverage_report/
+
+# project dirs
+cache/
+cacheReal/
+data/
+dataReal/
+
+# files
+download.sh
+requirements-all.txt
+secrets.toml
+src/reports/r99_Playground.py
