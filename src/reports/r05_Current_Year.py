@@ -85,6 +85,10 @@ cols[2].metric(
     value=f"{round(60 * hour_sum / past_days_in_year,1)} min",
 )
 
+x = km_sum / 42.195
+v = f"{x:.2f} x"
+cols[3].metric(label="Marathon", value=v)
+
 x = km_sum / 40_075
 v = f"{x:.2f} x" if x > 1 else f"{x * 100:.2f} %"
 cols[3].metric(label="Earth Equator", value=v)
