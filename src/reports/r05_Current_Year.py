@@ -73,7 +73,7 @@ cols[1].metric(label="Active Days", value=active_days, label_visibility="hidden"
 cols[2].metric(label="Hours", value=f"{round(hour_sum)} h", label_visibility="hidden")
 cols[3].metric(label="Distance", value=f"{round(km_sum)} km", label_visibility="hidden")
 cols[4].metric(
-    label="Elevation", value=f"{round(elev_km_sum,1)} km", label_visibility="hidden"
+    label="Elevation", value=f"{round(elev_km_sum, 1)} km", label_visibility="hidden"
 )
 
 # comparisons
@@ -82,8 +82,12 @@ cols[1].metric(
 )
 cols[2].metric(
     label="Minutes per Day",
-    value=f"{round(60 * hour_sum / past_days_in_year,1)} min",
+    value=f"{round(60 * hour_sum / past_days_in_year, 1)} min",
 )
+
+x = km_sum / 42.195
+v = f"{x:.2f} x"
+cols[3].metric(label="Marathon", value=v)
 
 x = km_sum / 40_075
 v = f"{x:.2f} x" if x > 1 else f"{x * 100:.2f} %"
@@ -107,27 +111,27 @@ if DATE_TODAY.year == int(sel_year):
     cols = st.columns(5)
     cols[0].metric(
         label="Activities",
-        value=f"{round(cnt_activities/year_ratio)}",
+        value=f"{round(cnt_activities / year_ratio)}",
         label_visibility="hidden",
     )
     cols[1].metric(
         label="Active Days",
-        value=f"{round(active_days/year_ratio)}",
+        value=f"{round(active_days / year_ratio)}",
         label_visibility="hidden",
     )
     cols[2].metric(
         label="Hours",
-        value=f"{round(hour_sum/year_ratio)} h",
+        value=f"{round(hour_sum / year_ratio)} h",
         label_visibility="hidden",
     )
     cols[3].metric(
         label="Distance",
-        value=f"{round(km_sum/year_ratio)} km",
+        value=f"{round(km_sum / year_ratio)} km",
         label_visibility="hidden",
     )
     cols[4].metric(
         label="Elevation",
-        value=f"{round(elev_km_sum/year_ratio)} km",
+        value=f"{round(elev_km_sum / year_ratio)} km",
         label_visibility="hidden",
     )
 
