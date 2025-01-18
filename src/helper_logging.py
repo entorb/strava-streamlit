@@ -13,7 +13,11 @@ from streamlit.logger import get_logger
 
 def get_logger_from_filename(file: str) -> Logger:
     """Return logger using filename name."""
-    return get_logger(Path(file).stem)
+    page = Path(file).stem
+    if page != "app" and not page.startswith("helper_"):
+        d = get_page_count()
+        d[page] = d.get(page, 0) + 1
+    return get_logger(page)
 
 
 @st.cache_resource
@@ -25,6 +29,12 @@ def get_call_stats() -> defaultdict[str, dict[str, int | float]]:
 @st.cache_resource
 def get_user_login_count() -> dict[int, int]:
     """Create cached dict of user login count."""
+    return {}
+
+
+@st.cache_resource
+def get_page_count() -> dict[str, int]:
+    """Create cached dict of pages."""
     return {}
 
 
