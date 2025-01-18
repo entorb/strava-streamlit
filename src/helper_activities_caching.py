@@ -202,7 +202,7 @@ def cache_all_activities_and_gears_in_year_range(
     d_id_name = {}
     lst_gear = []
     for gear_id in gear_ids:
-        d_gear = fetch_gear_data(gear_id)
+        d_gear = fetch_gear_data(gear_id=gear_id, user_id=user_id)
         lst_gear.append(d_gear)
         d_id_name[gear_id] = d_gear["name"]
     if lst_gear:

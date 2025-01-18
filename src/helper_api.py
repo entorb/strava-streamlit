@@ -195,8 +195,13 @@ def fetch_all_activities(year_start: int, year_end: int) -> list[dict]:
 
 @st.cache_data(ttl="60m")
 @track_function_usage
-def fetch_gear_data(gear_id: int) -> dict:
-    """Fetch gear info and return name."""
+def fetch_gear_data(gear_id: int, user_id: int) -> dict:
+    """
+    Fetch gear info and return name.
+
+    user_id is only included to double-ensure the caching is per user.
+    """
+    _ = user_id  # not used
     cache_file = f"gear-{gear_id}.json"
     d = None
     if st.session_state["ENV"] == "DEV":
