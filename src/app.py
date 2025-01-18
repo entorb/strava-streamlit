@@ -1,9 +1,13 @@
 """Main file."""
 
+# ruff: noqa: E402
+import streamlit as st
+
+# needs to be first streamlit command, so placed before the imports
+st.set_page_config(page_title="Strava Äpp V2", page_icon=None, layout="wide")
+
 from pathlib import Path
 from time import time
-
-import streamlit as st
 
 from helper_logging import get_logger_from_filename, get_user_login_count
 from helper_login import (
@@ -12,7 +16,6 @@ from helper_login import (
 )
 from helper_ui_components import create_navigation_menu
 
-st.set_page_config(page_title="Strava Äpp V2", page_icon=None, layout="wide")
 logger = get_logger_from_filename(__file__)
 logger.info("Start")
 
