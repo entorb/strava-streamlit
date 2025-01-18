@@ -496,7 +496,7 @@ def reduce_and_rename_activity_df_for_stats(df: pd.DataFrame) -> pd.DataFrame:
     """
     Reduce activity DataFrame to relevant columns for stats.
 
-    VirtualRide -> Ride
+    VirtualRide -> Ride, Walk -> Hike
     """
     # reduce
     df = df[
@@ -538,8 +538,11 @@ def reduce_and_rename_activity_df_for_stats(df: pd.DataFrame) -> pd.DataFrame:
     # add count
     df["Count"] = 0
 
-    # change VirtualRide to Ride
+    # change
+    # VirtualRide to Ride
+    # Walk to Hike
     df.loc[df["type"] == "VirtualRide", "type"] = "Ride"
+    df.loc[df["type"] == "Walk", "type"] = "Hike"
 
     # add some more columns
     df["Hour-sum"] = df["Hour-sum"] / 60
