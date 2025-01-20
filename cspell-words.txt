@@ -25,6 +25,7 @@ pycache
 pyenv
 pytest
 ruzv
+scriptrunner
 selectbox
 startsecs
 Strava
