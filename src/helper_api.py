@@ -28,10 +28,19 @@ def api_post_oauth(code: str) -> dict:
         "code": code,
         "grant_type": "authorization_code",
     }
-    resp = requests.post(URL_OAUTH, json=d, timeout=15)
-    # st.write(resp.json())
-    resp.raise_for_status()
-    return resp.json()
+
+    for attempt in range(API_RETRIES):  # Try once, then retry if it fails
+        try:
+            resp = requests.post(URL_OAUTH, json=d, timeout=15)
+            # Raise HTTPError if HTTP request returns an unsuccessful status code
+            resp.raise_for_status()
+            return resp.json()
+        except requests.RequestException:
+            logger.exception("Attempt %i failed", attempt)
+            # If it's the last attempt, raise the exception
+            if attempt + 1 == API_RETRIES:
+                raise
+    return {}
 
 
 @track_function_usage
