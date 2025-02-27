@@ -12,7 +12,7 @@ from helper_logging import get_logger_from_filename, track_function_usage
 logger = get_logger_from_filename(__file__)
 
 
-API_RETRIES = 2
+API_RETRIES = 3
 URL_OAUTH = "https://www.strava.com/api/v3/oauth/token"
 URL_BASE = "https://www.strava.com/api/v3"
 # only used for local development to prevent api calls
@@ -31,7 +31,7 @@ def api_post_oauth(code: str) -> dict:
 
     for attempt in range(API_RETRIES):  # Try once, then retry if it fails
         try:
-            resp = requests.post(URL_OAUTH, json=d, timeout=15)
+            resp = requests.post(URL_OAUTH, json=d, timeout=5)
             # Raise HTTPError if HTTP request returns an unsuccessful status code
             resp.raise_for_status()
             return resp.json()
