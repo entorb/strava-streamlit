@@ -145,6 +145,7 @@ st.dataframe(
         # no pinning, as taking too much space on mobile
         # "name": st.column_config.Column(pinned=False),
         "url": st.column_config.LinkColumn("ID", display_text=r"/(\d+)$"),
+        "dl": st.column_config.LinkColumn("DL", display_text="DL"),
     },
 )
 excel_download_buttons(df=df, file_name="Strava_Activity_List.xlsx", exclude_index=True)

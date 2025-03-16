@@ -53,9 +53,6 @@ def geo_distance_haversine(
 
     see https://en.wikipedia.org/wiki/Haversine_formula
     """
-    # if st.session_state["ENV"] == "DEV":
-    #     global counter
-    #     counter += 1
     lat1, lon1 = start
     lat2, lon2 = end
 
@@ -220,6 +217,7 @@ def cache_all_activities_and_gears_in_year_range(
         "name",
         "type",
         "x_url",
+        "x_dl",
         "start_date_local",
         "x_min",
         "x_km",
@@ -255,6 +253,9 @@ def cache_all_activities_and_gears_in_year_range(
 def caching_calc_additional_fields(df: pd.DataFrame) -> pd.DataFrame:
     """Calculate additional fields."""
     df["x_url"] = "https://www.strava.com/activities/" + df.index.astype(str)
+    df["x_dl"] = (
+        "https://www.strava.com/activities/" + df.index.astype(str) + "/export_original"
+    )
 
     df["x_start_h"] = round(
         df["start_date_local"].dt.hour
@@ -294,7 +295,6 @@ def caching_calc_additional_fields(df: pd.DataFrame) -> pd.DataFrame:
     df["x_km"] = round(df["distance"] / 1000, 1)
     df["x_mi"] = round(df["distance"] / 1000 / 1.60934, 1)  # km -> mile
 
-    # df["x_elev_m/km"] = round(df["total_elevation_gain"] / df["x_km"], 0)
     df["x_elev_%"] = round(df["total_elevation_gain"] / df["x_km"] / 10, 1)
     return df
 
@@ -365,10 +365,6 @@ def caching_geo_calc(df: pd.DataFrame) -> pd.DataFrame:
         axis=1,
     )
 
-    # if st.session_state["ENV"] == "DEV":
-    #     global counter
-    #     st.write(counter)
-    #     counter = 0
     return df
 
 
@@ -435,7 +431,7 @@ def cities_into_1deg_geo_boxes() -> (  # noqa: C901
     boxes = {}
 
     for line in read_city_db():
-        lat, lon, name = line
+        lat, lon, _ = line
         lat0, lon0 = int(lat), int(lon)
         offset = 0.5
         # lat

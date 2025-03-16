@@ -25,7 +25,7 @@ def display_strava_auth_link() -> None:
     st.markdown("""This is a modern rewrite of my [old Strava Äpp](https://entorb.net/strava/). Currently, only read-only statistics features are implemented. For bulk modify of activities and Excel import, please use the old Äpp.
 """)
 
-    # TODO: currently re-using button image from App V1
+    # TODO: how to replace url to old strava app V1 here?
     st.write(
         """
 <a target='_self' href='https://www.strava.com/oauth/authorize?client_id=28009&response_type=code&redirect_uri=https://entorb.net/strava-streamlit/?exchange_token&approval_prompt=force&scope=activity:read_all'>
