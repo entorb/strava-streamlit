@@ -82,7 +82,11 @@ cols[1].metric(
 )
 cols[2].metric(
     label="Minutes per Day",
-    value=f"{round(60 * hour_sum / past_days_in_year, 1)} min",
+    value=f"{round(60 * hour_sum / past_days_in_year)} min",
+)
+cols[2].metric(
+    label="Hours per Week",
+    value=f"{round(hour_sum / past_days_in_year * 7, 1)} h",
 )
 
 x = km_sum / 42.195
