@@ -18,6 +18,7 @@ Kreisel
 kudoed
 latlng
 logfile
+Matomo
 notna
 Pandas
 pwrd
