@@ -28,6 +28,8 @@ pytest
 ruzv
 scriptrunner
 selectbox
+sonarcloud
+SonarQube
 startsecs
 Strava
 Streamlit
