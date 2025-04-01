@@ -42,3 +42,11 @@ jobs:
           cp .streamlit/secrets-EXAMPLE.toml .streamlit/secrets.toml
           pip install pytest
           pytest
+          # pip install pytest pytest-cov
+          # pytest --cov --cov-report=xml
+
+      # for SonarQube Coverage report
+      # - name: SonarQube Scan
+      #   uses: SonarSource/sonarqube-scan-action@v4
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
