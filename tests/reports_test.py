@@ -48,14 +48,14 @@ def test_all_pages() -> None:
         _ = init_and_run(p)
 
 
-def test_r05_Current_Year() -> None:
+def test_r05_current_year() -> None:
     p = Path("src/reports/r05_Current_Year.py")
     at = init_and_run(p)
     at.session_state["sel_types"] = ["Run", "Ride"]
     run_and_assert_no_problems(at, p)
 
 
-def test_r20_Activity_Stats() -> None:
+def test_r20_activity_stats() -> None:
     p = Path("src/reports/r20_Activity_Stats.py")
     at = init_and_run(p)
     at.session_state["sel_freq"] = "Quarter"
@@ -66,10 +66,10 @@ def test_r20_Activity_Stats() -> None:
     run_and_assert_no_problems(at, p)
 
 
-def test_r40_Cal_Export() -> None:
+def test_r40_cal_export() -> None:
     p = Path("src/reports/r40_Cal_Export.py")
     init_and_run(p)
-    df, df_gear = cache_all_activities_and_gears()
+    df, _df_gear = cache_all_activities_and_gears()
     from r40_Cal_Export import gen_ics
 
     gen_ics(df)
