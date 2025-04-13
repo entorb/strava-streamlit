@@ -14,6 +14,10 @@ logger = get_logger_from_filename(__file__)
 logger.info("Start")
 
 
+st.markdown(
+    "Edit at [Strava](https://www.strava.com/athlete/training) or bulk-edit using my [Äpp V1](https://entorb.net/strava/)"  # noqa: E501
+)
+
 df, df_gear = cache_all_activities_and_gears()
 
 min_year = df["x_year"].min()
