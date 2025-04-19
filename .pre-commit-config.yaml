@@ -12,7 +12,7 @@
 
 exclude: |
   (?x)^(
-    .*.vscode/.*.json | tests/testdata/.* | src/strava-resources/.* |
+    .*.vscode/.* | tests/testdata/.* | src/strava-resources/.* |
   )$
 
 repos:
