@@ -14,4 +14,3 @@ ignorePaths:
   - "cspell.config.yaml"
   - "dist"
   - "build"
-  - "requirements.txt"

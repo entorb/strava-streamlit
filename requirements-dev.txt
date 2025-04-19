@@ -1,6 +1,0 @@
-pre-commit
-pytest
-pytest-cov
-ruff
-tomli-w
-watchdog
