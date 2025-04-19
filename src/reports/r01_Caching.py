@@ -1,7 +1,5 @@
 """Caching of Activities."""
 
-# ruff: noqa: PLR2004
-
 import streamlit as st
 
 from helper_activities_caching import (
@@ -25,7 +23,7 @@ if years == 0:
     index = 0
 elif years == 1:
     index = 1
-elif years == 5:
+elif years == 5:  # noqa: PLR2004
     index = 2
     index = 3
 else:
