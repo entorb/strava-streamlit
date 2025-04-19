@@ -40,5 +40,6 @@ Torben
 Uberspace
 VCALENDAR
 venv
+xlsxwriter
 yearmonth
 yearquarter
