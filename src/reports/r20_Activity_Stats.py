@@ -1,4 +1,4 @@
-"""Activity Stats."""
+"""Activity Stats."""  # noqa: N999
 
 # ruff: noqa: PLR2004
 import datetime as dt

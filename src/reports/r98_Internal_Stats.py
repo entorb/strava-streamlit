@@ -1,4 +1,4 @@
-"""Internal Stats."""
+"""Internal Stats."""  # noqa: N999
 
 import pandas as pd
 import streamlit as st
