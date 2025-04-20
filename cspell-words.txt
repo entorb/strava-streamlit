@@ -25,6 +25,7 @@ pwrd
 pycache
 pyenv
 pytest
+pythonpath
 ruzv
 scriptrunner
 selectbox
