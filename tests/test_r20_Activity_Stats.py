@@ -12,7 +12,7 @@ st.session_state["USER_ID"] = 7656541
 
 sys.path.insert(0, (Path(__file__).parent.parent / "src").as_posix())
 sys.path.insert(0, (Path(__file__).parent.parent / "src" / "reports").as_posix())
-from r20_Activity_Stats import add_data_and_empty_df, generate_empty_df
+from reports.r20_Activity_Stats import add_data_and_empty_df, generate_empty_df
 
 at = AppTest.from_file("src/reports/r20_Activity_Stats.py")
 
