@@ -70,6 +70,6 @@ def test_r40_cal_export() -> None:
     p = Path("src/reports/r40_Cal_Export.py")
     init_and_run(p)
     df, _df_gear = cache_all_activities_and_gears()
-    from r40_Cal_Export import gen_ics
+    from reports.r40_Cal_Export import gen_ics
 
     gen_ics(df)
