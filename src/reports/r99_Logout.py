@@ -1,4 +1,4 @@
-"""Logout."""
+"""Logout."""  # noqa: N999
 
 import streamlit as st
 
