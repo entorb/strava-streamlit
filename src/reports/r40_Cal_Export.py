@@ -1,4 +1,4 @@
-"""Calendar Export."""
+"""Calendar Export."""  # noqa: N999
 
 import datetime as dt
 import io
