@@ -12,4 +12,4 @@ pip freeze >requirements-all.txt
 # pip install --upgrade -r requirements.txt
 # pip install --upgrade -r requirements-dev.txt
 
-pyenv global 3.12
+pyenv global 3.13
