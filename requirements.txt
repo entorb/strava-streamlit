@@ -1,0 +1,2 @@
+streamlit==1.45.0
+XlsxWriter==3.2.3
