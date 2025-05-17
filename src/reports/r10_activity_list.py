@@ -1,4 +1,4 @@
-"""Activity List."""  # noqa: N999
+"""Activity List."""
 
 import streamlit as st
 
