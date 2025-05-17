@@ -1,4 +1,4 @@
-"""Caching of Activities."""  # noqa: N999
+"""Caching of Activities."""
 
 import streamlit as st
 

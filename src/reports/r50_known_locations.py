@@ -1,4 +1,4 @@
-"""Known Locations."""  # noqa: N999
+"""Known Locations."""
 
 import numpy as np
 import pandas as pd

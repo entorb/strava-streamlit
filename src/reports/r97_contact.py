@@ -1,4 +1,4 @@
-"""Contact."""  # noqa: N999
+"""Contact."""
 
 import streamlit as st
 

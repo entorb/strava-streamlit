@@ -1,4 +1,4 @@
-"""Current Year."""  # noqa: N999
+"""Current Year."""
 
 import datetime as dt
 
