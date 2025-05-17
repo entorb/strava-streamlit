@@ -20,7 +20,7 @@ def create_navigation_menu() -> None:
         f = p.stem
         if f.startswith("_"):
             continue
-        t = f[4:].replace("_", " ")
+        t = f[4:].replace("_", " ").title()
         # stats page for debugging only visible for me
         if (
             t == "Internal Stats"
