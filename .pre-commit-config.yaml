@@ -66,7 +66,7 @@ repos:
 
   # ruff
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: "v0.11.6"
+    rev: "v0.11.10"
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
@@ -80,7 +80,7 @@ repos:
         args: ["--skip", "B101,B404"]
 
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.24.3
+    rev: v8.26.0
     hooks:
       - id: gitleaks
 
@@ -120,6 +120,6 @@ repos:
 
   # code spell check via cspell
   - repo: https://github.com/streetsidesoftware/cspell-cli
-    rev: v8.19.0
+    rev: v9.0.1
     hooks:
       - id: cspell
