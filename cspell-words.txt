@@ -29,7 +29,7 @@ pythonpath
 ruzv
 scriptrunner
 selectbox
-sonarcloud
+SonarCloud
 SonarQube
 startsecs
 Strava

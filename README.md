@@ -36,9 +36,9 @@ pytest --cov --cov-report=html:coverage_report
 see [.streamlit/config.toml](.streamlit/config.toml)
 see [.streamlit/secrets.toml](.streamlit/secrets-EXAMPLE.toml)
 
-### SonarQube
+### SonarQube Code Analysis
 
-Report is here: <https://sonarcloud.io/project/overview?id=entorb_strava-streamlit>
+At [sonarcloud.io](https://sonarcloud.io/summary/overall?id=entorb_template-python&branch=main)
 
 If you want unit test coverage reports in SonarQube, you need to run the sonar check in the GitHub Action pipeline:
 
