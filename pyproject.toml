@@ -4,7 +4,10 @@ version = "0.1.0"
 description = " Strava Äpp V2 using Streamlit"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = ["streamlit>=1.45.0", "xlsxwriter>=3.2.3"]
+dependencies = [
+    "streamlit==1.45.1",
+    "xlsxwriter==3.2.3",
+]
 
 [tool.pytest.ini_options]
 pythonpath = "src"
