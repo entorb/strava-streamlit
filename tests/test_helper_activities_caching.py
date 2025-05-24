@@ -1,6 +1,7 @@
 # ruff: noqa: D100 D103 INP001 PLR2004 S101
 
 import sys
+from math import isnan
 from pathlib import Path
 
 import streamlit as st
@@ -86,4 +87,4 @@ def test_cache_all_activities_and_gears_2() -> None:
     ].iat[1]
     assert df["x_mi"].iat[1] * 10 == 189, df["x_mi"].iat[1]
     # swim
-    assert df["x_elev_%"].iat[2] == 0, df["x_elev_%"].iat[2]
+    assert isnan(df["x_elev_%"].iat[2]) is True, df["x_elev_%"].iat[2]
