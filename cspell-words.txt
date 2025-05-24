@@ -24,6 +24,7 @@ Pandas
 pwrd
 pycache
 pyenv
+pyproject
 pytest
 pythonpath
 ruzv
