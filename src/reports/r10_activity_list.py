@@ -1,5 +1,7 @@
 """Activity List."""
 
+from math import isnan
+
 import streamlit as st
 
 from helper_activities_caching import (
@@ -72,8 +74,10 @@ if max_value > 0:
 if df.empty:
     st.stop()
 
-max_value = int(df["total_elevation_gain"].max())
-if max_value > 0:
+max_value = df["total_elevation_gain"].max()
+
+if not isnan(max_value):
+    max_value = int(max_value)
     sel_elev = col5.slider(
         "Elevation",
         min_value=0,
