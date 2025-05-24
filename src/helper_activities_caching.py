@@ -131,7 +131,7 @@ def cache_all_activities_and_gears() -> tuple[pd.DataFrame, pd.DataFrame]:
 
 # this cache is for 2h, while all others are only for 15min
 # caching requires user_id is given as parameter!!!
-@st.cache_data(ttl="2h")
+@st.cache_data(ttl="2h")  # add persist="disk" if we run into memory issues
 @track_function_usage
 def cache_all_activities_and_gears_in_year_range(
     user_id: int,
@@ -161,6 +161,11 @@ def cache_all_activities_and_gears_in_year_range(
     cols = ["id", "utc_offset", "moving_time", "elapsed_time", "total_elevation_gain"]
     for col in cols:
         df[col] = df[col].astype(int)
+
+    # Replace 0 by None in total_elevation_gain
+    df["total_elevation_gain"] = df["total_elevation_gain"].replace(0, None)
+    # For Swim, set total_elevation_gain to None
+    df.loc[df["type"] == "Swim", "total_elevation_gain"] = None
 
     # id as index
     df = df.set_index("id")
