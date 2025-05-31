@@ -23,11 +23,11 @@ def gen_ics(df: pd.DataFrame) -> str:
     date_str_now = dt.datetime.now(tz=dt.UTC).strftime("%Y%m%dT%H%M%SZ")
 
     ics_header = """BEGIN:VCALENDAR
-    CALSCALE:GREGORIAN
-    VERSION:2.0
-    X-WR-CALNAME:Strava Activity Export by entorb.net
-    METHOD:PUBLISH
-    """
+CALSCALE:GREGORIAN
+VERSION:2.0
+X-WR-CALNAME:Strava Activity Export by entorb.net
+METHOD:PUBLISH
+"""
     ics_footer = "END:VCALENDAR"
 
     cont = ics_header
