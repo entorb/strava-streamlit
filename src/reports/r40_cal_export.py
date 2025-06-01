@@ -38,6 +38,8 @@ METHOD:PUBLISH
         assert type(row.start_date_local) is pd.Timestamp, type(row.start_date_local)
         assert type(row.utc_offset) is int, type(row.utc_offset)
         assert type(row.elapsed_time) is int, type(row.elapsed_time)
+        assert type(row.x_min) is float, type(row.x_min)
+
         # note I renamed Strava field start_date_local to start_date
         start_date = row.start_date_local - dt.timedelta(seconds=row.utc_offset)
         end_date = start_date + dt.timedelta(seconds=row.elapsed_time)
@@ -57,7 +59,7 @@ DTEND:{end_date_str}
 CREATED:{end_date_str}
 LAST-MODIFIED:{date_str_now}
 DTSTAMP:{date_str_now}
-SUMMARY:{row.type}: {row.name} (Strava)
+SUMMARY:{row.type}: {row.name} ({round(row.x_min)} min) (Strava)
 LOCATION:{location}
 URL;VALUE=URI:{row.x_url}
 DESCRIPTION:open at Strava: {row.x_url}\\n\\ngenerated via https://entorb.net/strava/
