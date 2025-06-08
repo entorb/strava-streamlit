@@ -17,11 +17,14 @@ itertuples
 Kreisel
 kudoed
 latlng
+levelname
 logfile
 Matomo
 notna
+numpy
 Pandas
 pwrd
+pyarrow
 pycache
 pyenv
 pyproject
@@ -36,6 +39,7 @@ startsecs
 Strava
 Streamlit
 supervisorctl
+supervisord
 testdata
 tomli
 Torben
