@@ -2,6 +2,7 @@
 
 import io
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pandas as pd
 import streamlit as st
@@ -9,13 +10,17 @@ from streamlit.delta_generator import DeltaGenerator
 
 from helper_logging import get_logger_from_filename, track_function_usage
 
+if TYPE_CHECKING:
+    from streamlit.navigation.page import StreamlitPage
+
+
 logger = get_logger_from_filename(__file__)
 
 
 @track_function_usage
 def create_navigation_menu() -> None:
     """Create and populate navigation menu."""
-    lst = []
+    lst: list[StreamlitPage] = []
     for p in sorted(Path("src/reports").glob("*.py")):
         f = p.stem
         if f.startswith("_"):
