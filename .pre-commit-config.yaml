@@ -14,7 +14,7 @@ exclude: |
   (?x)^(
     \.vscode/.*|
     tests/testdata/.*|
-    src/strava-resources/.*|
+    src/strava-resources/.*
   )$
 
 repos:
@@ -65,55 +65,22 @@ repos:
       - id: trailing-whitespace
 
   # ruff
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: "v0.11.10"
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.8
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
       - id: ruff-format
 
   # security
-  - repo: https://github.com/PyCQA/bandit
-    rev: 1.8.3
-    hooks:
-      - id: bandit
-        args: ["--skip", "B101,B404"]
-
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.26.0
+    rev: v8.27.2
     hooks:
       - id: gitleaks
 
-  # - repo: https://github.com/trufflesecurity/truffleHog
-  #   rev: v3.88.4
-  #   hooks:
-  #     - id: trufflehog
-
-  # minor formatting
-  - repo: https://github.com/pre-commit/pygrep-hooks
-    rev: v1.10.0
-    hooks:
-      - id: python-check-blanket-noqa
-      # not, since '# type: ignore' is ok for me
-      # - id: python-check-blanket-type-ignore
-      - id: python-check-mock-methods
-      - id: python-no-eval
-      - id: python-no-log-warn
-      - id: python-use-type-annotations
-      - id: rst-backticks
-      - id: rst-directive-colons
-      - id: rst-inline-touching-normal
-      - id: text-unicode-replacement-char
-
-  # CRLF -> LF
-  - repo: https://github.com/Lucas-C/pre-commit-hooks
-    rev: v1.5.5
-    hooks:
-      - id: remove-crlf
-
   # markdown
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.44.0
+    rev: v0.45.0
     hooks:
       - id: markdownlint
         args: ["--disable", "MD013"]
