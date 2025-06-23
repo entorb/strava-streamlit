@@ -1,4 +1,4 @@
-# ruff: noqa: D100 D103 INP001 PLR2004 S101 E402
+# ruff: noqa: D100, D103, INP001, PLR2004, E402
 
 import sys
 from pathlib import Path
