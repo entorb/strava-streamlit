@@ -1,4 +1,4 @@
-"""Read config.toml, modify and export as config-prod.toml."""
+"""Read config.toml, modify and export as config-prod.toml."""  # noqa: INP001
 
 import tomllib
 from pathlib import Path
