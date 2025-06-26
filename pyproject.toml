@@ -5,7 +5,7 @@ description = " Strava Äpp V2 using Streamlit"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "streamlit==1.45.1",
+    "streamlit==1.46.0",
     "xlsxwriter==3.2.3",
 ]
 
