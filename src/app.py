@@ -22,7 +22,7 @@ logger.info("Start")
 
 def include_matomo_stats() -> None:
     """Include Matomo access stats update JavaScript snippet."""
-    import streamlit.components.v1 as components
+    import streamlit.components.v1 as components  # noqa: PLC0415
 
     components.html(
         """
@@ -43,6 +43,21 @@ _paq.push(['enableLinkTracking']);
     )
 
 
+def include_sentry() -> None:
+    # TODO: https://github.com/streamlit/streamlit/issues/3426
+    """Load Sentry."""
+    import sentry_sdk  # noqa: PLC0415
+
+    sentry_sdk.init(
+        dsn=st.secrets["sentry_dns"],
+        # Add data like request headers and IP for users,
+        # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+        send_default_pii=True,
+        traces_sample_rate=0.0,
+        environment="entorb.net",
+    )
+
+
 def set_env() -> None:
     """Set ENV to entorb.net / local."""
     if "ENV" not in st.session_state:
@@ -56,8 +71,13 @@ def set_env() -> None:
 
 
 set_env()
+
 if st.session_state["ENV"] == "PROD":
     include_matomo_stats()
+
+# include_sentry()
+# st.error("Test Error")
+# st.exception("Test Exception")
 
 # for local development I skip the login
 if st.session_state["ENV"] == "DEV":

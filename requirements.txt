@@ -1,2 +1,3 @@
+# sentry-sdk
 streamlit==1.45.1
-XlsxWriter==3.2.3
+XlsxWriter==3.2.5
