@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "streamlit==1.45.1",
-    "xlsxwriter==3.2.3",
+    "xlsxwriter==3.2.5",
 ]
 
 [tool.pytest.ini_options]
