@@ -11,7 +11,7 @@ rsync -uz activity_columns.txt entorb@entorb.net:strava-streamlit/
 rsync -ruzv --no-links --delete --delete-excluded --exclude __pycache__ --exclude r99_Playground.py src/ entorb@entorb.net:strava-streamlit/src/
 
 echo installing packages
-ssh entorb@entorb.net "pip3.11 install --user streamlit -r strava-streamlit/requirements.txt > /dev/null"
+ssh entorb@entorb.net "pip3.11 install --user -r strava-streamlit/requirements.txt > /dev/null"
 
 echo restarting strava-streamlit
 ssh entorb@entorb.net "supervisorctl restart strava-streamlit"
