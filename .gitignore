@@ -15,5 +15,6 @@ dataReal/
 # files
 download.sh
 requirements-all.txt
+requirements.txt
 secrets.toml
 src/reports/r99_playground.py
