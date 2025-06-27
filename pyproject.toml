@@ -1,13 +1,15 @@
 [project]
+dependencies = [
+    "pandas>=2.3.0",
+    "sentry-sdk>=2.32.0",
+    "streamlit>=1.46.1",
+    "xlsxwriter>=3.2.5",
+]
 name = "strava-streamlit"
 version = "0.1.0"
 description = " Strava Äpp V2 using Streamlit"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = [
-    "streamlit==1.45.1",
-    "xlsxwriter==3.2.3",
-]
 
 [tool.pytest.ini_options]
 pythonpath = "src"
@@ -15,9 +17,9 @@ pythonpath = "src"
 [dependency-groups]
 dev = [
     "pre-commit>=4.2.0",
-    "pytest>=8.3.5",
-    "pytest-cov>=6.1.1",
-    "ruff>=0.11.6",
+    "pytest>=8.4.1",
+    "pytest-cov>=6.2.1",
+    "ruff>=0.12.1",
     "tomli-w>=1.2.0",
     "watchdog>=6.0.0",
 ]
