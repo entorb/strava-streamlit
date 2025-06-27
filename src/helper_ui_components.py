@@ -28,7 +28,7 @@ def create_navigation_menu() -> None:
         t = f[4:].replace("_", " ").title()
         # stats page for debugging only visible for me
         if (
-            t == "Internal Stats"
+            f.startswith("r99")
             and st.session_state["USER_ID"] != st.secrets["my_user_id"]
         ):
             continue
