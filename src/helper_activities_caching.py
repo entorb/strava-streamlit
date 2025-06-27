@@ -163,7 +163,9 @@ def cache_all_activities_and_gears_in_year_range(
         df[col] = df[col].astype(int)
 
     # Replace 0 by None in total_elevation_gain
-    df["total_elevation_gain"] = df["total_elevation_gain"].replace(0, None)
+    df["total_elevation_gain"] = (
+        df["total_elevation_gain"].replace(0, None).astype("float64")
+    )
     # For Swim, set total_elevation_gain to None
     df.loc[df["type"] == "Swim", "total_elevation_gain"] = None
 
@@ -419,10 +421,10 @@ def read_city_db() -> list[tuple[float, float, str]]:
         parts = line.split(",", 6)
         if len(parts) == 6:
             continent, country, subdivision, city, lat, lng = parts
-        name = f"{continent}-{country}-{subdivision}-{city}".replace(",", "").replace(
+        name = f"{continent}-{country}-{subdivision}-{city}".replace(",", "").replace(  # type: ignore
             ";", ""
         )
-        lst.append((float(lat), float(lng), name))
+        lst.append((float(lat), float(lng), name))  # type: ignore
     return lst
 
 
