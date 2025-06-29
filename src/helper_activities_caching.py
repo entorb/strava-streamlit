@@ -125,6 +125,9 @@ def cache_all_activities_and_gears() -> tuple[pd.DataFrame, pd.DataFrame]:
             dfs_gear.append(df_gear2)
         # index is id, so concat is safe.
         df = pd.concat(dfs)
+        if df.empty:
+            st.error("No activity data found, please record/upload data at strava.com.")
+            st.stop()
         df_gear = pd.concat(dfs_gear)
     return df, df_gear
 
