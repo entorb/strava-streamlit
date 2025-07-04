@@ -8,9 +8,7 @@ from helper_activities_caching import (
 from helper_logging import get_logger_from_filename
 
 st.title(__doc__[:-1])  # type: ignore
-
 logger = get_logger_from_filename(__file__)
-logger.info("Start")
 
 
 col1, _ = st.columns((1, 5))
@@ -62,6 +60,3 @@ col1.dataframe(
     use_container_width=True,
     column_config={"year": st.column_config.NumberColumn(format="%d")},
 )
-
-
-logger.info("End")
