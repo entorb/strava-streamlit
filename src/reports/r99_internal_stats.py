@@ -11,9 +11,7 @@ from helper_logging import (
 )
 
 st.title(__doc__[:-1])  # type: ignore
-
 logger = get_logger_from_filename(__file__)
-logger.info("Start")
 
 
 # double check, that this file is only access-able by me
@@ -23,7 +21,6 @@ if st.session_state["USER_ID"] != st.secrets["my_user_id"]:
 
 st.header("Session State")
 st.write(st.session_state)
-
 
 st.header("User Login Count")
 d = get_user_login_count()
@@ -44,6 +41,3 @@ call_stats = get_call_stats()
 df = pd.DataFrame(call_stats).T.reset_index().sort_values("total_time", ascending=False)
 df["total_time"] = df["total_time"].round(3)
 st.dataframe(df, hide_index=True)
-
-
-logger.info("End")

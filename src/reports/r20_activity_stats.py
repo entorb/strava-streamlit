@@ -16,9 +16,7 @@ from helper_pandas import reorder_cols
 from helper_ui_components import excel_download_buttons, list_sports, select_sport
 
 st.title(__doc__[:-1])  # type: ignore
-
 logger = get_logger_from_filename(__file__)
-logger.info("Start")
 
 
 AGGREGATIONS = {
@@ -429,6 +427,3 @@ st.altair_chart(c, use_container_width=True)
 #         file_name="chart.png",
 #         mime="image/png",
 #     )
-
-
-logger.info("End")
