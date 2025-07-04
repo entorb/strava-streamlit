@@ -13,9 +13,7 @@ from helper_activities_caching import (
 from helper_logging import get_logger_from_filename
 
 st.title(__doc__[:-1])  # type: ignore
-
 logger = get_logger_from_filename(__file__)
-logger.info("Start")
 
 
 col1, col2 = st.columns(2)
@@ -91,6 +89,3 @@ st.dataframe(
     hide_index=True,
     column_config={"Map": st.column_config.LinkColumn(display_text="OSM")},
 )
-
-
-logger.info("End")

@@ -12,9 +12,7 @@ from helper_activities_caching import (
 from helper_logging import get_logger_from_filename, track_function_usage
 
 st.title(__doc__[:-1])  # type: ignore
-
 logger = get_logger_from_filename(__file__)
-logger.info("Start")
 
 
 @track_function_usage
@@ -87,6 +85,3 @@ if col1.button(label="ICS Prepare"):
         mime="text/calendar",
     )
     # Path("/tmp/ActivityList.ics").write_text(cont)
-
-
-logger.info("End")

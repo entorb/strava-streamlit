@@ -12,9 +12,7 @@ from helper_logging import get_logger_from_filename
 from helper_ui_components import list_sports
 
 st.title(__doc__[:-1])  # type: ignore
-
 logger = get_logger_from_filename(__file__)
-logger.info("Start")
 
 
 def calc_days_in_year(year: int) -> int:
@@ -143,6 +141,3 @@ if DATE_TODAY.year == int(sel_year):
         value=f"{round(elev_km_sum / year_ratio)} km",
         label_visibility="hidden",
     )
-
-
-logger.info("End")
