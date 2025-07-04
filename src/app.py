@@ -1,13 +1,14 @@
 """Main file."""
-
 # ruff: noqa: E402
+
+import tracemalloc
+from pathlib import Path
+from time import time
+
 import streamlit as st
 
 # needs to be first streamlit command, so placed before the imports
 st.set_page_config(page_title="Strava Äpp V2", page_icon=None, layout="wide")
-
-from pathlib import Path
-from time import time
 
 from helper_logging import get_logger_from_filename, get_user_login_count
 from helper_login import (
@@ -15,6 +16,9 @@ from helper_login import (
     token_refresh_if_needed,
 )
 from helper_ui_components import create_navigation_menu
+
+MEASURE_MEMORY = True
+logger = get_logger_from_filename(__file__)
 
 
 def set_env() -> None:
@@ -77,10 +81,6 @@ def init_dev_session_state() -> None:
     st.session_state["USERNAME"] = st.secrets["my_username"]
 
 
-logger = get_logger_from_filename(__file__)
-logger.info("Start")
-
-
 def main() -> None:  # noqa: D103
     set_env()
 
@@ -101,9 +101,18 @@ def main() -> None:  # noqa: D103
         st.logo(
             "src/strava-resources/api_logo_pwrdBy_strava_stack_light.svg", size="large"
         )
-        create_navigation_menu()
+        if MEASURE_MEMORY:
+            tracemalloc.start()
+        time_start = time()
+        pagename = create_navigation_menu()
+        time_end = time()
+        log_line = f"stats: {pagename},{round(time_end - time_start, 1)}s"
 
-    logger.info("End")
+        if MEASURE_MEMORY:
+            max_bytes = tracemalloc.get_traced_memory()[0]
+            tracemalloc.stop()
+            log_line += f",{round(max_bytes / 1_048_576, 1)}MB"
+        logger.info(log_line)
 
 
 if __name__ == "__main__":

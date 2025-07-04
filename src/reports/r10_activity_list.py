@@ -11,9 +11,7 @@ from helper_logging import get_logger_from_filename
 from helper_ui_components import excel_download_buttons, select_sport
 
 st.title(__doc__[:-1])  # type: ignore
-
 logger = get_logger_from_filename(__file__)
-logger.info("Start")
 
 
 st.markdown(
@@ -160,6 +158,3 @@ excel_download_buttons(df=df, file_name="Strava_Activity_List.xlsx", exclude_ind
 
 st.header("Gear")
 st.dataframe(df_gear)
-
-
-logger.info("End")
