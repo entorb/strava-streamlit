@@ -39,6 +39,11 @@ df2 = (
     .sort_index(ascending=False)
 )
 df2 = df2[df2["Count"] >= 3]  # noqa: PLR2004
+
+if len(df2) == 0:
+    st.write("No data found.")
+    st.stop()
+
 sel_year = col1.selectbox(label="Year", options=df2.index)
 df = df[df["year"] == sel_year]
 past_days_in_year = calc_days_in_year(int(sel_year))

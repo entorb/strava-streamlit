@@ -274,10 +274,10 @@ def caching_calc_additional_fields(df: pd.DataFrame) -> pd.DataFrame:
         2,
     )
     df["x_date"] = df["start_date_local"].dt.date
-    df["x_year"] = df["start_date_local"].dt.year
-    df["x_month"] = df["start_date_local"].dt.month
-    df["x_quarter"] = df["start_date_local"].dt.quarter
-    df["x_week"] = df["start_date_local"].dt.isocalendar().week
+    df["x_year"] = df["start_date_local"].dt.year.astype(int)
+    df["x_month"] = df["start_date_local"].dt.month.astype(int)
+    df["x_quarter"] = df["start_date_local"].dt.quarter.astype(int)
+    df["x_week"] = df["start_date_local"].dt.isocalendar().week.astype(int)
     df.loc[(df["x_week"] == 53) & (df["x_month"] == 1), "x_week"] = 1
     df.loc[(df["x_week"] == 53) & (df["x_month"] == 12), "x_week"] = 52
     assert max(df["x_week"]) <= 52
