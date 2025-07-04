@@ -18,7 +18,7 @@ logger = get_logger_from_filename(__file__)
 
 
 @track_function_usage
-def create_navigation_menu() -> None:
+def create_navigation_menu() -> str:
     """Create and populate navigation menu."""
     lst: list[StreamlitPage] = []
     for p in sorted(Path("src/reports").glob("*.py")):
@@ -36,6 +36,7 @@ def create_navigation_menu() -> None:
         lst.append(st.Page(page=f"reports/{f}.py", title=t))
     pg = st.navigation(lst)
     pg.run()
+    return pg.url_path
 
 
 @track_function_usage
