@@ -57,6 +57,6 @@ df2 = (
 col1.dataframe(
     df2,
     hide_index=True,
-    use_container_width=True,
+    width="stretch",
     column_config={"year": st.column_config.NumberColumn(format="%d")},
 )
