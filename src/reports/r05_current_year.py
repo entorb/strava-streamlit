@@ -35,8 +35,8 @@ df2 = (
     .groupby("year")
     .agg(Count=("Count", "count"))
     .sort_index(ascending=False)
+    .loc[lambda x: x["Count"] >= 3]  # noqa: PLR2004
 )
-df2 = df2[df2["Count"] >= 3]  # noqa: PLR2004
 
 if len(df2) == 0:
     st.write("No data found.")

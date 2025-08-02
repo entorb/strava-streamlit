@@ -37,7 +37,6 @@ if col1.button("Save", key="btn-save"):
     path_kl = get_known_locations_file_path()
     df2.to_csv(path_kl, sep=" ", index=False, header=False, lineterminator="\n")
     st.rerun()
-    # st.write(df2)
 
 col2.header("Map Links")
 df3 = df[["Name", "Lat", "Lon"]]
@@ -72,7 +71,6 @@ for el in lst:
 
 data = []
 for latlng, count in sorted(d.items(), key=lambda item: item[1], reverse=True):
-    # st.write(key.replace("_", "/", 1), value)
     lat, lon = latlng.split("_", 1)
     data.append((lat, lon, count))
     if count < 5:  # noqa: PLR2004

@@ -107,5 +107,6 @@ def logout() -> None:
     api_post_deauthorize()
     for key in st.session_state:
         del st.session_state[key]
+    # no st.logout() needed, as st.login is not used
 
     st.write("Logged Out")

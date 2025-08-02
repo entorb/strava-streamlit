@@ -143,7 +143,7 @@ col_order = [new for new in col_names.values() if new not in col_hide]
 
 st.dataframe(
     df.rename(columns=col_names, errors="raise"),
-    use_container_width=True,
+    width="stretch",
     hide_index=True,
     column_order=col_order,
     column_config={
