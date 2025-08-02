@@ -1,8 +1,8 @@
 [project]
 dependencies = [
-    "pandas>=2.3.0",
-    "sentry-sdk>=2.32.0",
-    "streamlit>=1.46.1",
+    "pandas>=2.3.1",
+    "sentry-sdk>=2.34.1",
+    "streamlit>=1.47.1",
     "xlsxwriter>=3.2.5",
 ]
 name = "strava-streamlit"
@@ -19,7 +19,7 @@ dev = [
     "pre-commit>=4.2.0",
     "pytest>=8.4.1",
     "pytest-cov>=6.2.1",
-    "ruff>=0.12.1",
+    "ruff>=0.12.7",
     "tomli-w>=1.2.0",
     "watchdog>=6.0.0",
 ]
