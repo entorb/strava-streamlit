@@ -24,7 +24,7 @@ df = df[["Name", "Lat", "Lon"]].sort_values("Name")
 # st.dataframe(df, hide_index=True)
 
 df_edited = col1.data_editor(df, hide_index=True, num_rows="dynamic")
-if col1.button("Save"):
+if col1.button("Save", key="btn-save"):
     df2 = df_edited[["Lat", "Lon", "Name"]]
     df2[["Lat", "Lon"]] = df2[["Lat", "Lon"]].replace(0, np.nan)
     df2["Name"] = df2["Name"].str.strip().replace("", np.nan)

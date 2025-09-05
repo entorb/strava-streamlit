@@ -68,8 +68,23 @@ def test_r20_activity_stats() -> None:
 
 def test_r40_cal_export() -> None:
     p = Path("src/reports/r40_cal_export.py")
-    init_and_run(p)
+    # load and run page
+    at = init_and_run(p)
+
+    # click prepare button
+    at.button(key="btn-prepare").click().run()
+
+    # unit test for gen_ics function
     df, _df_gear = cache_all_activities_and_gears()
     from reports.r40_cal_export import gen_ics
 
     gen_ics(df)
+
+
+def test_r50_known_locations() -> None:
+    p = Path("src/reports/r50_known_locations.py")
+    # load and run page
+    at = init_and_run(p)
+
+    # click save button
+    at.button(key="btn-save").click().run()
