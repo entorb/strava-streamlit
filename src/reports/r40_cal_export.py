@@ -73,7 +73,7 @@ file_name = "Strava_Activity_Calendar.ics"
 df = cache_all_activities_and_gears()[0]
 
 col1, col2, _ = st.columns((1, 1, 6))
-if col1.button(label="ICS Prepare"):
+if col1.button(label="ICS Prepare", key="btn-prepare"):
     buffer = io.BytesIO()
     buffer.write(gen_ics(df).encode("utf-8"))
     buffer.seek(0)
