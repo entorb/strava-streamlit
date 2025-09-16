@@ -115,7 +115,7 @@ col_names["weighted_average_watts"] = "W_weight_avg"
 col_names["x_gear_name"] = "gear"
 col_names["x_min"] = "minutes"
 col_names["x_nearest_city_start"] = "nearest_city"
-
+col_names["description"] = "description"
 
 # some we do not display in web table, but keep for Excel export
 col_hide = [
@@ -139,7 +139,12 @@ if sel_km == "km":
     col_hide.extend(("min/mi", "mi", "mph", "max_mph"))
 else:
     col_hide.extend(("min/km", "km", "km/h", "max_km/h"))
+
 col_order = [new for new in col_names.values() if new not in col_hide]
+
+# put description after name
+if "description" in col_order and "name" in col_order:
+    col_order.insert(col_order.index("name") + 1, col_order.pop(col_order.index("description")))
 
 st.dataframe(
     df.rename(columns=col_names, errors="raise"),
@@ -148,8 +153,6 @@ st.dataframe(
     column_order=col_order,
     column_config={
         # "start_date_local": st.column_config.DateColumn(format=FORMAT_DATETIME),
-        # no pinning, as taking too much space on mobile
-        # "name": st.column_config.Column(pinned=False),
         "url": st.column_config.LinkColumn("ID", display_text=r"/(\d+)$"),
         "dl": st.column_config.LinkColumn("DL", display_text="DL"),
     },
