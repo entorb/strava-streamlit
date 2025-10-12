@@ -219,5 +219,5 @@ def fetch_gear_data(gear_id: int, user_id: int) -> dict:
         d = _api_get(path=f"gear/{gear_id}")
         if st.session_state["ENV"] == "DEV":
             write_cache_file(cache_file, d=d)
-    assert type(d) is dict
+    assert isinstance(d, dict)
     return d
