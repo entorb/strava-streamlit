@@ -40,7 +40,7 @@ def api_post_oauth(code: str) -> dict:
             # If it's the last attempt, raise the exception
             if attempt + 1 == API_RETRIES:
                 raise
-    return {}
+    return {}  # unreachable, but makes ruff happy
 
 
 @track_function_usage
@@ -88,7 +88,7 @@ def _api_get(path: str) -> dict | list:
             # If it's the last attempt, raise the exception
             if attempt + 1 == API_RETRIES:
                 raise
-    return []
+    return []  # unreachable, but makes ruff happy
 
 
 @track_function_usage
@@ -116,7 +116,7 @@ def fetch_athlete_info() -> str:
     """
     Get athlete ID and username and set in session_state.
 
-    not used any more, since also included in api_post_oauth()
+    Deprecated: not used any more, since also included in api_post_oauth()
     """
     cache_file = "athlete.json"
     d = None
