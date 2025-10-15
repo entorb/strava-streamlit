@@ -23,6 +23,7 @@ elif years == 1:
     index = 1
 elif years == 5:  # noqa: PLR2004
     index = 2
+elif years == 10:  # noqa: PLR2004
     index = 3
 else:
     index = 4
