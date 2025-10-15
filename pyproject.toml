@@ -1,7 +1,9 @@
 [project]
 dependencies = [
-    "pandas>=2.3.3",
-    "sentry-sdk>=2.40.0",
+    "numpy==2.2.3",
+    "pandas==2.2.3",
+    "pyarrow==20.0.0",
+    "sentry-sdk>=2.42.0",
     "streamlit>=1.50.0",
     "xlsxwriter>=3.2.9",
 ]
