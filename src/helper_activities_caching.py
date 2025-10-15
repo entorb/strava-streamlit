@@ -386,7 +386,7 @@ def get_known_locations(*, users_only: bool = False) -> list[tuple[float, float,
     p = get_known_locations_file_path()
     if p.is_file():
         for line in p.read_text().strip().split("\n"):
-            lat, lon, name = line.split(" ", 3)
+            lat, lon, name = line.split(" ", 2)  # maxsplit=2 gives 3 parts
             lst_known_locations.append((float(lat), float(lon), name))
     return lst_known_locations
 
