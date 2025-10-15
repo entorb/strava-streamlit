@@ -11,13 +11,13 @@ cd $(dirname $0)/..
 # uv add -r requirements.txt
 # pyenv global 3.13
 
-uv remove pandas sentry-sdk streamlit XlsxWriter
+uv remove pandas pyarrow sentry-sdk streamlit XlsxWriter
 uv remove --dev ruff pre-commit pytest pytest-cov tomli-w watchdog
 
 uv lock --upgrade
 uv sync --upgrade
 
-uv add pandas sentry-sdk streamlit XlsxWriter
+uv add pandas==2.2.3 pyarrow==20.0.0 sentry-sdk streamlit XlsxWriter
 uv add --dev ruff pre-commit pytest pytest-cov tomli-w watchdog
 
 uv lock --upgrade
