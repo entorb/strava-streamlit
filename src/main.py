@@ -10,7 +10,7 @@ import streamlit as st
 # needs to be first streamlit command, so placed before the imports
 st.set_page_config(page_title="Strava Äpp V2", page_icon=None, layout="wide")
 
-from helper_logging import get_logger_from_filename, get_user_login_count
+from helper_logging import get_logger_from_filename, get_user_login_count, init_logging
 from helper_login import (
     perform_login,
     token_refresh_if_needed,
@@ -18,6 +18,7 @@ from helper_login import (
 from helper_ui_components import create_navigation_menu
 
 MEASURE_MEMORY = True
+init_logging()
 logger = get_logger_from_filename(__file__)
 
 
@@ -106,6 +107,8 @@ def main() -> None:  # noqa: D103
         time_start = time()
         pagename = create_navigation_menu()
         time_end = time()
+        if pagename == "":
+            pagename = "main"
         log_line = f"stats: {pagename},{round(time_end - time_start, 1)}s"
 
         if MEASURE_MEMORY:

@@ -1,23 +1,34 @@
 """Helper: Logging."""
 
+import logging
 import time
 from collections import defaultdict
 from collections.abc import Callable
 from functools import wraps
-from logging import Logger
 from pathlib import Path
 
 import streamlit as st
-from streamlit.logger import get_logger
 
 
-def get_logger_from_filename(file: str) -> Logger:
+def init_logging() -> None:
+    """Initialize and and configure the logging."""
+    logging.addLevelName(logging.DEBUG, "D")
+    logging.addLevelName(logging.INFO, "I")
+    logging.addLevelName(logging.WARNING, "W")
+    logging.addLevelName(logging.ERROR, "E")
+    logging.addLevelName(logging.CRITICAL, "C")
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s"
+    )
+
+
+def get_logger_from_filename(file: str) -> logging.Logger:
     """Return logger using filename name."""
     page = Path(file).stem
-    if page != "app" and not page.startswith("helper_"):
+    if page != "main" and not page.startswith("helper_"):
         d = get_page_count()
         d[page] = d.get(page, 0) + 1
-    return get_logger(page)
+    return logging.getLogger(page)
 
 
 @st.cache_resource
