@@ -1,6 +1,6 @@
 [project]
 dependencies = [
-    "numpy==2.2.3",
+    "numpy==2.3.5",
     "pandas==2.2.3",
     "pyarrow==20.0.0",
     "sentry-sdk>=2.42.0",
