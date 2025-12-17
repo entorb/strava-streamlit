@@ -1,4 +1,4 @@
-"""Activity List."""
+"""Activity List and Excel Export."""
 
 from math import isnan
 
