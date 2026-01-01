@@ -1,6 +1,6 @@
 # Torben's Strava App V2 using Streamlit
 
-This is a modern rewrite of my [old Strava Äpp](https://entorb.net/strava/). Currently, only read-only statistics features are implemented. For bulk modify of activities and Excel import, please use the old Äpp.
+This is a modern rewrite of my [old Strava Äpp](https://entorb.net/strava-old/). Currently, only read-only statistics features are implemented. For bulk modify of activities and Excel import, please use the old Äpp.
 
 ## Privacy
 
