@@ -15,7 +15,7 @@ logger = get_logger_from_filename(__file__)
 
 
 st.markdown(
-    "Edit at [Strava](https://www.strava.com/athlete/training) or bulk-edit using my [Äpp V1](https://entorb.net/strava/)"  # noqa: E501
+    "Edit at [Strava](https://www.strava.com/athlete/training) or bulk-edit using my [Äpp V1](https://entorb.net/strava-old/)"  # noqa: E501
 )
 
 df, df_gear = cache_all_activities_and_gears()

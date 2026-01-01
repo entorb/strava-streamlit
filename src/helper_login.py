@@ -22,7 +22,7 @@ def display_strava_auth_link() -> None:
     st.title("Login")
 
     # this text is copied from README.md
-    st.markdown("""This is a modern rewrite of my [old Strava Äpp](https://entorb.net/strava/). Currently, only read-only statistics features are implemented. For bulk modify of activities and Excel import, please use the old Äpp.
+    st.markdown("""This is a modern rewrite of my [old Strava Äpp](https://entorb.net/strava-old/). Currently, only read-only statistics features are implemented. For bulk modify of activities and Excel import, please use the old Äpp.
 """)
 
     # TODO: how to replace url to old strava app V1 here?
