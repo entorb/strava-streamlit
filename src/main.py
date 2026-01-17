@@ -19,7 +19,7 @@ from helper_ui_components import create_navigation_menu
 
 MEASURE_MEMORY = True
 init_logging()
-logger = get_logger_from_filename(__file__)
+LOGGER = get_logger_from_filename(__file__)
 
 
 def set_env() -> None:
@@ -105,17 +105,20 @@ def main() -> None:  # noqa: D103
         if MEASURE_MEMORY:
             tracemalloc.start()
         time_start = time()
-        pagename = create_navigation_menu()
+        page = create_navigation_menu()
+        pagename = page.url_path or "main"
+        st.title(page.title)
+
+        page.run()
+
         time_end = time()
-        if pagename == "":
-            pagename = "main"
         log_line = f"stats: {pagename},{round(time_end - time_start, 1)}s"
 
         if MEASURE_MEMORY:
             max_bytes = tracemalloc.get_traced_memory()[0]
             tracemalloc.stop()
             log_line += f",{round(max_bytes / 1_048_576, 1)}MB"
-        logger.info(log_line)
+        LOGGER.info(log_line)
 
 
 if __name__ == "__main__":
@@ -124,6 +127,6 @@ if __name__ == "__main__":
     except Exception as e:
         # automatically triggered by logger.exception
         # sentry_sdk.capture_exception(e)
-        logger.exception("Exception:")
+        LOGGER.exception("Exception:")
         st.exception(e)
         st.stop()
