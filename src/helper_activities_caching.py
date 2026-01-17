@@ -12,7 +12,7 @@ from helper_api import fetch_all_activities, fetch_gear_data
 from helper_logging import get_logger_from_filename, track_function_usage
 from helper_pandas import reorder_cols
 
-logger = get_logger_from_filename(__file__)
+LOGGER = get_logger_from_filename(__file__)
 
 
 DIR_SERVER = "/var/www/virtual/entorb/data-web-pages/strava"
@@ -150,7 +150,7 @@ def cache_all_activities_and_gears_in_year_range(
     - Activities using id as index, ordered by start_date_local
     - Gears, using id as index, ordered by index
     """
-    logger.info("cache_all_activities_and_gears_year for user_id=%s", user_id)
+    LOGGER.info("cache_all_activities_and_gears_year for user_id=%s", user_id)
 
     df = pd.DataFrame(fetch_all_activities(year_start=year_start, year_end=year_end))
 

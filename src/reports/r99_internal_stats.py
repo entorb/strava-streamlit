@@ -10,8 +10,7 @@ from helper_logging import (
     get_user_login_count,
 )
 
-st.title(__doc__[:-1])  # type: ignore
-logger = get_logger_from_filename(__file__)
+LOGGER = get_logger_from_filename(__file__)
 
 
 # double check, that this file is only access-able by me
