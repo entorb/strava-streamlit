@@ -1,4 +1,4 @@
-"""Activity Stats."""
+"""Activity Statistics."""
 
 # ruff: noqa: PLR2004
 import datetime as dt
@@ -15,8 +15,7 @@ from helper_logging import get_logger_from_filename, track_function_usage
 from helper_pandas import reorder_cols
 from helper_ui_components import excel_download_buttons, list_sports, select_sport
 
-st.title(__doc__[:-1])  # type: ignore
-logger = get_logger_from_filename(__file__)
+LOGGER = get_logger_from_filename(__file__)
 
 
 AGGREGATIONS = {
@@ -254,6 +253,8 @@ elif sel_freq == "Month":
     time_unit = "yearmonth(date):T"
 elif sel_freq == "Week":
     time_unit = "date:T"
+else:
+    time_unit = "date:T"
 
 c = (
     alt.Chart(
@@ -315,18 +316,15 @@ sports = ["Run", "Ride", "Swim", "Hike"]
 for i in range(4):
     col = cols[i]
     sport = sports[i]
+    prev1, prev2, prev3 = 0, 0, 0
     col.subheader(sport)
     cur = get_cell(df=df2c, sport=sport, period=periods[0], agg=sel_agg)
     if len(periods) >= 2:
         prev1 = get_cell(df=df2c, sport=sport, period=periods[1], agg=sel_agg)
-    else:
-        prev1 = 0
     if len(periods) >= 3:
         prev2 = get_cell(df=df2c, sport=sport, period=periods[2], agg=sel_agg)
     if len(periods) >= 4:
         prev3 = get_cell(df=df2c, sport=sport, period=periods[3], agg=sel_agg)
-    else:
-        prev3 = 0
     col.metric(label=periods[0], value=cur)
     if len(periods) >= 2:
         delta = round(prev1 - prev2, 1) if len(periods) >= 3 else None

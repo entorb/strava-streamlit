@@ -13,7 +13,7 @@ from helper_logging import (
     track_function_usage,
 )
 
-logger = get_logger_from_filename(__file__)
+LOGGER = get_logger_from_filename(__file__)
 
 
 @track_function_usage
