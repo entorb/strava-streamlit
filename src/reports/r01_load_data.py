@@ -7,8 +7,7 @@ from helper_activities_caching import (
 )
 from helper_logging import get_logger_from_filename
 
-st.title(__doc__[:-1])  # type: ignore
-logger = get_logger_from_filename(__file__)
+LOGGER = get_logger_from_filename(__file__)
 
 
 col1, _ = st.columns((1, 5))
@@ -41,7 +40,8 @@ elif sel_years == "Last 10":
 else:
     st.session_state["years"] = 100
 
-df = cache_all_activities_and_gears()[0]
+with st.spinner(text="Fetching your activities", show_time=True):
+    df = cache_all_activities_and_gears()[0]
 
 # export activity_columns
 # lst = sorted(df.columns)
