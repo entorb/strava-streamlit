@@ -1,0 +1,54 @@
+name: Check and Test Python Project
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          fetch-depth: 1 # 0 if you want to push to repo
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Python set up
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: ".python-version"
+
+      - name: Run pytest unittests
+        run: |
+          scripts/copy_test_data.sh
+          cp .streamlit/secrets-EXAMPLE.toml .streamlit/secrets.toml
+          uv run --frozen pytest tests/ --cov --cov-report=xml:coverage.xml
+
+      - name: Run pre-commit hooks
+        uses: pre-commit/action@v3.0.1
+
+      # for SonarQube coverage report
+      # - name: SonarQube Scan
+      #   uses: SonarSource/sonarqube-scan-action@v7
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      # - name: Minimize uv cache
+      #   run: uv cache prune --ci
