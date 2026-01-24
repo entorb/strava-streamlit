@@ -274,7 +274,7 @@ c = (
         ],
     )
 )
-st.altair_chart(c, use_container_width=True)
+st.altair_chart(c, width="stretch")
 
 
 df2b = (
@@ -361,7 +361,7 @@ c = (
         ],
     )
 )
-st.altair_chart(c, use_container_width=True)
+st.altair_chart(c, width="stretch")
 
 column_order = [sel_freq]  # date frequency
 column_order.extend(AGGREGATIONS.keys())
@@ -411,7 +411,7 @@ c = (
         ],
     )
 )
-st.altair_chart(c, use_container_width=True)
+st.altair_chart(c, width="stretch")
 
 # Add download button
 # No because the required lib vl-convert-python is quite huge
