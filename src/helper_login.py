@@ -2,6 +2,7 @@
 
 # ruff: noqa: E501
 
+import subprocess
 from time import time
 
 import streamlit as st
@@ -14,6 +15,7 @@ from helper_logging import (
 )
 
 LOGGER = get_logger_from_filename(__file__)
+PATH_WEBSTATS_SCRIPT = "/var/www/virtual/entorb/web-stats.py"
 
 
 @track_function_usage
@@ -69,6 +71,9 @@ def handle_redirect() -> None:
     st.session_state["USERNAME"] = d["athlete"].get("username", "no username")
     d_login_cnt = get_user_login_count()
     d_login_cnt[user_id] = 1 + d_login_cnt.get(user_id, 0)
+
+    # increase the login counter via web-stats script
+    subprocess.run([PATH_WEBSTATS_SCRIPT, "strava-streamlit"], check=False, shell=False)  # noqa: S603
 
     # remove url parameters
     st.query_params.clear()
