@@ -7,7 +7,9 @@ import pandas as pd
 import streamlit as st
 from streamlit.testing.v1 import AppTest
 
-st.session_state["ENV"] = "DEV"
+from helper import get_env
+
+_ = get_env()
 st.session_state["USER_ID"] = 7656541
 
 sys.path.insert(0, (Path(__file__).parent.parent / "src").as_posix())

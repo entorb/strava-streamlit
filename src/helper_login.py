@@ -7,6 +7,7 @@ from time import time
 
 import streamlit as st
 
+from helper import get_env
 from helper_api import api_post_deauthorize, api_post_oauth, api_post_token_refresh
 from helper_logging import (
     get_logger_from_filename,
@@ -109,7 +110,8 @@ def perform_login() -> None:
 @track_function_usage
 def logout() -> None:
     """Logout and unset all local access data."""
-    api_post_deauthorize()
+    if get_env() == "PROD":
+        api_post_deauthorize()
     for key in st.session_state:
         del st.session_state[key]
     # no st.logout() needed, as st.login is not used
