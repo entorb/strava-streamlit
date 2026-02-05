@@ -3,8 +3,5 @@
 # ensure we are in the root dir
 cd $(dirname $0)/..
 
-# exit upon error
-set -e
-
 uv run ruff format
 uv run ruff check --fix
