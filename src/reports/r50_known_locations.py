@@ -41,7 +41,9 @@ col2.header("Map Links")
 df3 = df[["Name", "Lat", "Lon"]]
 zoom = 16
 df3["Map"] = df3.apply(
-    lambda row: f"https://www.openstreetmap.org/?mlat={row['Lat']}&mlon={row['Lon']}#map={zoom}/{row['Lat']}/{row['Lon']}",
+    lambda row: (
+        f"https://www.openstreetmap.org/?mlat={row['Lat']}&mlon={row['Lon']}#map={zoom}/{row['Lat']}/{row['Lon']}"
+    ),
     axis=1,
 )
 col2.dataframe(
@@ -78,7 +80,9 @@ for latlng, count in sorted(d.items(), key=lambda item: item[1], reverse=True):
 df = pd.DataFrame(data, columns=("Lat", "Lon", "Count"))
 zoom = 16
 df["Map"] = df.apply(
-    lambda row: f"https://www.openstreetmap.org/?mlat={row['Lat']}&mlon={row['Lon']}#map={zoom}/{row['Lat']}/{row['Lon']}",
+    lambda row: (
+        f"https://www.openstreetmap.org/?mlat={row['Lat']}&mlon={row['Lon']}#map={zoom}/{row['Lat']}/{row['Lon']}"
+    ),
     axis=1,
 )
 st.dataframe(
