@@ -2,7 +2,7 @@
 dependencies = [
     "numpy==2.2.3",
     "pandas==2.2.3",
-    "pyarrow==20.0.0",
+    "pyarrow==23.0.0",
     "sentry-sdk>=2.52.0",
     "streamlit>=1.54.0",
     "xlsxwriter>=3.2.9",
