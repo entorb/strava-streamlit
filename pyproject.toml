@@ -3,8 +3,8 @@ dependencies = [
     "numpy==2.2.3",
     "pandas==2.2.3",
     "pyarrow==20.0.0",
-    "sentry-sdk>=2.50.0",
-    "streamlit>=1.53.1",
+    "sentry-sdk>=2.52.0",
+    "streamlit>=1.54.0",
     "xlsxwriter>=3.2.9",
 ]
 name = "strava-streamlit"
@@ -21,7 +21,7 @@ dev = [
     "pre-commit>=4.5.1",
     "pytest>=9.0.2",
     "pytest-cov>=7.0.0",
-    "ruff>=0.14.14",
+    "ruff>=0.15.0",
     "tomli-w>=1.2.0",
     "watchdog>=6.0.0",
 ]
