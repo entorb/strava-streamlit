@@ -8,8 +8,10 @@ from pathlib import Path
 import streamlit as st
 from streamlit.testing.v1 import AppTest
 
+from helper import get_env
+
 warnings.filterwarnings("ignore", message=".*streamlit.runtime.scriptrunner_utils.*")
-st.session_state["ENV"] = "DEV"
+_ = get_env()
 st.session_state["USER_ID"] = 7656541
 
 sys.path.insert(0, (Path(__file__).parent.parent / "src").as_posix())

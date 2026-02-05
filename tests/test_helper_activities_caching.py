@@ -8,6 +8,7 @@ import streamlit as st
 from streamlit.testing.v1 import AppTest
 
 sys.path.insert(0, (Path(__file__).parent.parent / "src").as_posix())
+from helper import get_env
 from helper_activities_caching import (
     cache_all_activities_and_gears,
     check_is_known_location,
@@ -20,7 +21,7 @@ from helper_activities_caching import (
     search_closest_city,
 )
 
-st.session_state["ENV"] = "DEV"
+_ = get_env()
 st.session_state["USER_ID"] = 7656541
 
 at = AppTest.from_file("src/helper_activities_caching.py")

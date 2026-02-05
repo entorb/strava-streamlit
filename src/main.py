@@ -2,7 +2,6 @@
 # ruff: noqa: E402
 
 import tracemalloc
-from pathlib import Path
 from time import time
 
 import streamlit as st
@@ -10,6 +9,7 @@ import streamlit as st
 # needs to be first streamlit command, so placed before the imports
 st.set_page_config(page_title="Strava Äpp V2", page_icon=None, layout="wide")
 
+from helper import get_env
 from helper_logging import get_logger_from_filename, get_user_login_count, init_logging
 from helper_login import (
     perform_login,
@@ -22,25 +22,13 @@ init_logging()
 LOGGER = get_logger_from_filename(__file__)
 
 
-def set_env() -> None:
-    """Set ENV to entorb.net / local."""
-    if "ENV" not in st.session_state:
-        if Path("/home/entorb/strava-streamlit").is_dir():
-            st.session_state["ENV"] = "PROD"
-        else:
-            st.session_state["ENV"] = "DEV"
-            # when running locally, ensure we have data dirs
-            Path("./cache").mkdir(exist_ok=True)
-            Path("./data").mkdir(exist_ok=True)
-
-
 def init_sentry() -> None:
     """Initialize Sentry exception tracking/alerting."""
     import sentry_sdk  # noqa: PLC0415
 
     sentry_sdk.init(
         dsn=st.secrets["sentry_dsn"],
-        environment=st.session_state["ENV"],
+        environment=get_env(),
         send_default_pii=True,
         traces_sample_rate=0.0,
     )
@@ -83,13 +71,11 @@ def init_dev_session_state() -> None:
 
 
 def main() -> None:  # noqa: D103
-    set_env()
-
-    if st.session_state["ENV"] == "PROD":
+    if get_env() == "PROD":
         init_sentry()
         init_matomo()
 
-    if st.session_state["ENV"] == "DEV":
+    if get_env() == "DEV":
         init_dev_session_state()
 
     if "TOKEN" not in st.session_state:
