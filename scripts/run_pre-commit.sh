@@ -6,5 +6,4 @@ cd $(dirname $0)/..
 # exit upon error
 set -e
 
-uv run pre-commit autoupdate
 uv run pre-commit run --all-files
