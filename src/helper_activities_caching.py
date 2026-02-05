@@ -8,6 +8,7 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
+from helper import get_env
 from helper_api import fetch_all_activities, fetch_gear_data
 from helper_logging import get_logger_from_filename, track_function_usage
 from helper_pandas import reorder_cols
@@ -35,7 +36,7 @@ KNOWN_LOCATIONS = [
 @track_function_usage
 def get_data_dir() -> Path:
     """Get date path, dependent on env."""
-    return Path(DIR_SERVER if st.session_state["ENV"] == "PROD" else DIR_LOCAL)
+    return Path(DIR_SERVER if get_env() == "PROD" else DIR_LOCAL)
 
 
 @track_function_usage
@@ -268,16 +269,16 @@ def caching_calc_additional_fields(df: pd.DataFrame) -> pd.DataFrame:
     )
 
     df["x_start_h"] = round(
-        df["start_date_local"].dt.hour
-        + df["start_date_local"].dt.minute / 60
-        + df["start_date_local"].dt.second / 3600,
+        df["start_date_local"].dt.hour  # type: ignore
+        + df["start_date_local"].dt.minute / 60  # type: ignore
+        + df["start_date_local"].dt.second / 3600,  # type: ignore
         2,
     )
-    df["x_date"] = df["start_date_local"].dt.date
-    df["x_year"] = df["start_date_local"].dt.year.astype(int)
-    df["x_month"] = df["start_date_local"].dt.month.astype(int)
-    df["x_quarter"] = df["start_date_local"].dt.quarter.astype(int)
-    df["x_week"] = df["start_date_local"].dt.isocalendar().week.astype(int)
+    df["x_date"] = df["start_date_local"].dt.date  # type: ignore
+    df["x_year"] = df["start_date_local"].dt.year.astype(int)  # type: ignore
+    df["x_month"] = df["start_date_local"].dt.month.astype(int)  # type: ignore
+    df["x_quarter"] = df["start_date_local"].dt.quarter.astype(int)  # type: ignore
+    df["x_week"] = df["start_date_local"].dt.isocalendar().week.astype(int)  # type: ignore
     df.loc[(df["x_week"] == 53) & (df["x_month"] == 1), "x_week"] = 1
     df.loc[(df["x_week"] == 53) & (df["x_month"] == 12), "x_week"] = 52
     assert max(df["x_week"]) <= 52
@@ -285,15 +286,19 @@ def caching_calc_additional_fields(df: pd.DataFrame) -> pd.DataFrame:
     # m/s -> min/km = 1 / X / 60 * 1000
     # df["x_min/km"] = 1 / df["average_speed"] / 60 * 1000
     df["x_min/km"] = df.apply(
-        lambda row: round(1 / row["average_speed"] / 60 * 1000, 2)  # type: ignore
-        if row["average_speed"] and row["average_speed"] > 0
-        else None,
+        lambda row: (
+            round(1 / row["average_speed"] / 60 * 1000, 2)  # type: ignore
+            if row["average_speed"] and row["average_speed"] > 0
+            else None
+        ),
         axis=1,
     )
     df["x_min/mi"] = df.apply(
-        lambda row: round(1 / row["average_speed"] / 60 * 1000 * 1.60934, 2)  # type: ignore
-        if row["average_speed"] and row["average_speed"] > 0
-        else None,
+        lambda row: (
+            round(1 / row["average_speed"] / 60 * 1000 * 1.60934, 2)  # type: ignore
+            if row["average_speed"] and row["average_speed"] > 0
+            else None
+        ),
         axis=1,
     )
     df["x_km/h"] = round(df["average_speed"] * 3.6, 1)
@@ -317,61 +322,71 @@ def caching_geo_calc(df: pd.DataFrame) -> pd.DataFrame:
 
     # 1. rounding
     df["start_latlng"] = df.apply(
-        lambda row: reduce_geo_precision(tuple(row["start_latlng"]), 4)
-        if len(row["start_latlng"]) == 2  # type: ignore
-        else None,
+        lambda row: (
+            reduce_geo_precision(tuple(row["start_latlng"]), 4)
+            if len(row["start_latlng"]) == 2  # type: ignore
+            else None
+        ),
         axis=1,
     )
     df["end_latlng"] = df.apply(
-        lambda row: reduce_geo_precision(tuple(row["end_latlng"]), 4)
-        if len(row["end_latlng"]) == 2  # type: ignore
-        else None,
+        lambda row: (
+            reduce_geo_precision(tuple(row["end_latlng"]), 4)
+            if len(row["end_latlng"]) == 2  # type: ignore
+            else None
+        ),
         axis=1,
     )
 
     # 2 dist start-end
     df["x_km_start_end"] = df.apply(
-        lambda row: round(
-            geo_distance_haversine(
-                tuple(row["start_latlng"]), tuple(row["end_latlng"])
-            ),
-            1,
-        )  # type: ignore
-        if row["start_latlng"]
-        and row["end_latlng"]
-        and len(row["start_latlng"]) == 2
-        and len(row["end_latlng"]) == 2
-        else None,
+        lambda row: (
+            round(
+                geo_distance_haversine(
+                    tuple(row["start_latlng"]), tuple(row["end_latlng"])
+                ),
+                1,
+            )  # type: ignore
+            if row["start_latlng"]
+            and row["end_latlng"]
+            and len(row["start_latlng"]) == 2
+            and len(row["end_latlng"]) == 2
+            else None
+        ),
         axis=1,
     )
 
     # 3.1 is start a known location?
     known_locations = get_known_locations()
     df["x_location_start"] = df.apply(
-        lambda row: check_is_known_location(
-            reduce_geo_precision(tuple(row["start_latlng"]), 3), known_locations
-        )  # type: ignore
-        if row["start_latlng"] and len(row["start_latlng"]) == 2
-        else None,
+        lambda row: (
+            check_is_known_location(
+                reduce_geo_precision(tuple(row["start_latlng"]), 3), known_locations
+            )  # type: ignore
+            if row["start_latlng"] and len(row["start_latlng"]) == 2
+            else None
+        ),
         axis=1,
     )
     # 3.2 is end a known location?
     df["x_location_end"] = df.apply(
-        lambda row: check_is_known_location(
-            reduce_geo_precision(tuple(row["end_latlng"]), 3), known_locations
-        )  # type: ignore
-        if row["end_latlng"] and len(row["end_latlng"]) == 2
-        else None,
+        lambda row: (
+            check_is_known_location(
+                reduce_geo_precision(tuple(row["end_latlng"]), 3), known_locations
+            )  # type: ignore
+            if row["end_latlng"] and len(row["end_latlng"]) == 2
+            else None
+        ),
         axis=1,
     )
 
     # 4. search for nearest city
     df["x_nearest_city_start"] = df.apply(
-        lambda row: search_closest_city(
-            reduce_geo_precision(tuple(row["start_latlng"]), 2)
-        )  # type: ignore
-        if row["start_latlng"] and len(row["start_latlng"]) == 2
-        else None,
+        lambda row: (
+            search_closest_city(reduce_geo_precision(tuple(row["start_latlng"]), 2))  # type: ignore
+            if row["start_latlng"] and len(row["start_latlng"]) == 2
+            else None
+        ),
         axis=1,
     )
 
