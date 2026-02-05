@@ -7,6 +7,7 @@ from pathlib import Path
 import requests
 import streamlit as st
 
+from helper import get_env
 from helper_logging import get_logger_from_filename, track_function_usage
 
 LOGGER = get_logger_from_filename(__file__)
@@ -120,11 +121,11 @@ def fetch_athlete_info() -> str:
     """
     cache_file = "athlete.json"
     d = None
-    if st.session_state["ENV"] == "DEV":
+    if get_env() == "DEV":
         d = read_cache_file(cache_file)
     if not d:
         d = _api_get(path="athlete")
-        if st.session_state["ENV"] == "DEV":
+        if get_env() == "DEV":
             write_cache_file(cache_file, d=d)
     assert type(d) is dict
     st.session_state["USER_ID"] = d["id"]
@@ -140,14 +141,14 @@ def fetch_activities_page(
     """Request a page of 200 activities."""
     cache_file = f"activities-page-{year}-{page}.json"
     lst = None
-    if st.session_state["ENV"] == "DEV":
+    if get_env() == "DEV":
         lst = read_cache_file(cache_file)
 
     if lst is None:
         lst = _api_get(
             path=f"athlete/activities?per_page=200&page={page}&before={before}&after={after}"
         )
-        if st.session_state["ENV"] == "DEV":
+        if get_env() == "DEV":
             write_cache_file(cache_file, d=lst)
     assert type(lst) is list
     return lst
@@ -197,7 +198,7 @@ def fetch_all_activities(year_start: int, year_end: int) -> list[dict]:
         # dev debug: only one page
         # if st.session_state["USERNAME"] == "entorb":
         #     break
-        # if st.session_state["ENV"] == "DEV":
+        # if get_env() == "DEV":
         #     break
     return lst_all_activities
 
@@ -213,11 +214,11 @@ def fetch_gear_data(gear_id: int, user_id: int) -> dict:
     _ = user_id  # not used
     cache_file = f"gear-{gear_id}.json"
     d = None
-    if st.session_state["ENV"] == "DEV":
+    if get_env() == "DEV":
         d = read_cache_file(cache_file)
     if not d:
         d = _api_get(path=f"gear/{gear_id}")
-        if st.session_state["ENV"] == "DEV":
+        if get_env() == "DEV":
             write_cache_file(cache_file, d=d)
     assert isinstance(d, dict)
     return d
