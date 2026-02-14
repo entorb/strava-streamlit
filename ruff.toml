@@ -1,6 +1,5 @@
-fix = true               # auto-fix findings
-line-length = 88         # same as Black
-target-version = "py311" # Python 3.11
+fix = true       # auto-fix findings
+line-length = 88 # same as Black
 
 # extend-exclude = ["src/MyBadFile1.py"]
 
