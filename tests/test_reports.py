@@ -1,5 +1,5 @@
 """Test: Open all Pages/Reports."""
-# ruff: noqa: D103, E402, INP001, PLC0415
+# ruff: noqa: E402, PLC0415
 
 import sys
 import warnings

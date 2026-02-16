@@ -1,5 +1,3 @@
-# ruff: noqa: D100, D103, INP001, PLR2004
-
 import sys
 from math import isnan
 from pathlib import Path
