@@ -1,16 +1,23 @@
 ---
 $schema: https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json
 version: "0.2"
-useGitignore: true
 language: en-US
+useGitignore: true
+
 dictionaryDefinitions:
   - name: cspell-words
     path: "./cspell-words.txt"
     addWords: true
+
 dictionaries:
   - cspell-words
+  - python
+
 ignorePaths:
   - ".*"
+  - "LICENSE"
   - "cspell.config.yaml"
-  - "dist"
-  - "build"
+  - "tests/testdata/.*"
+  - "requirements.txt"
+  - "src/strava-resources/*"
+  - "uv.lock"
