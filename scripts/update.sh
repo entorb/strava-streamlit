@@ -21,9 +21,12 @@ uv sync --upgrade
 
 python scripts/gen_requirements.py
 
-uv run pre-commit autoupdate
+# ruff
+uv run ruff check --fix
+uv run ruff format
 
-./scripts/run_ruff.sh
-./scripts/run_pre-commit.sh
+# pre-commit
+uv run pre-commit autoupdate
+uv run pre-commit run --all-files
 
 echo DONE
