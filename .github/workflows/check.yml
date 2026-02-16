@@ -5,7 +5,7 @@ on:
   push:
     branches: ["main"]
   pull_request:
-    branches: ["main"]
+    types: [opened, synchronize, reopened]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -19,36 +19,35 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
-          fetch-depth: 1 # 0 if you want to push to repo
+          fetch-depth: 1 # latest only
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
+      - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
+          cache-dependency-glob: |
+            pyproject.toml
+            uv.lock
 
-      - name: Python set up
-        uses: actions/setup-python@v6
-        with:
-          python-version-file: ".python-version"
+      - name: Run Ruff
+        run: |
+          uv run --frozen ruff format --check
+          uv run --frozen ruff check --no-fix --output-format=github
 
       - name: Run pytest unittests
         run: |
           scripts/copy_test_data.sh
           cp .streamlit/secrets-EXAMPLE.toml .streamlit/secrets.toml
-          uv run --frozen pytest tests/ --cov --cov-report=xml:coverage.xml
+          uv run --frozen pytest tests/
+        # --cov \
+        # --cov-report=term-missing \
+        # --cov-report=xml:coverage.xml
 
-      - name: Run pre-commit hooks
-        uses: pre-commit/action@v3.0.1
+      - uses: pre-commit/action@v3.0.1
 
-      # for SonarQube coverage report
-      # - name: SonarQube Scan
-      #   uses: SonarSource/sonarqube-scan-action@v7
+      # # for SonarQube coverage report
+      # - uses: SonarSource/sonarqube-scan-action@v7
       #   env:
       #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-      # - name: Minimize uv cache
-      #   run: uv cache prune --ci

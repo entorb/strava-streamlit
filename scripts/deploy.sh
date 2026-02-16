@@ -14,7 +14,7 @@ rm -f */.DS_Store
 uv run ruff check
 uv run ruff format
 
-sh scripts/pytest.sh
+sh scripts/run_pytest.sh
 
 echo copying
 # config.toml -> config-prod.toml

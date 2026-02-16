@@ -1,9 +1,7 @@
-fix = true               # auto-fix findings
-line-length = 88         # same as Black
-target-version = "py311" # Python 3.11
+fix = true       # auto-fix findings
+line-length = 88 # same as Black
 
 # extend-exclude = ["src/MyBadFile1.py"]
-
 
 [lint]
 # comment this out to use only default rules (["E4", "E7", "E9", "F"])
@@ -25,13 +23,20 @@ extend-ignore = [
     "ISC001", # implicit-str-concat
     "PGH003", # blanket-type-ignore
     "RET504", # unnecessary-assign
+    "S101",   # use of asserts
     "T201",   # print
     "TD002",  # missing-todo-author
     "TD003",  # missing-todo-link
-    "S101",   # use of asserts
 ]
 
+[lint.per-file-ignores]
+"tests/**/*.py" = [
+    "ANN",     # Don't require type annotations in tests
+    "D",       # Don't require doc strings in tests
+    "INP001",  # implicit-namespace-package
+    "PLR2004", # magic value used in comparison (test assertions)
+    "S101",    # Allow asserts in tests
+]
 
 [format]
 line-ending = "lf" # force lf
-preview = false    # enable unstable preview style formatting
