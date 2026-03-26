@@ -9,7 +9,7 @@ dependencies = [
     "numpy==2.2.3",
     "pandas==2.2.3",
     "pyarrow==20.0.0",
-    "sentry-sdk>=2.54.0",
+    "sentry-sdk>=2.56.0",
     "streamlit>=1.55.0",
     "xlsxwriter>=3.2.9",
 ]
@@ -18,8 +18,8 @@ dependencies = [
 dev = [
     "pre-commit>=4.5.1",
     "pytest>=9.0.2",
-    "pytest-cov>=7.0.0",
-    "ruff>=0.15.6",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.15.7",
     "tomli-w>=1.2.0",
     "watchdog>=6.0.0",
 ]
