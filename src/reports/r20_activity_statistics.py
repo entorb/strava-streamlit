@@ -241,7 +241,7 @@ aggregation = "Count"
 df2 = activity_stats_grouping(df, freq=sel_freq, sport="ALL", aggregation=aggregation)
 
 # date_axis_type = "N" if sel_freq in ("Year", "Quarter") else "T"
-date_axis_type = ":N"
+# date_axis_type = ":N"
 
 # TODO: to streamlit-examples
 # altair time units https://altair-viz.github.io/user_guide/transform/timeunit.html
@@ -316,15 +316,15 @@ sports = ["Run", "Ride", "Swim", "Hike"]
 for i in range(4):
     col = cols[i]
     sport = sports[i]
-    prev1, prev2, prev3 = 0, 0, 0
+    prev1, prev2 = 0, 0
     col.subheader(sport)
     cur = get_cell(df=df2c, sport=sport, period=periods[0], agg=sel_agg)
     if len(periods) >= 2:
         prev1 = get_cell(df=df2c, sport=sport, period=periods[1], agg=sel_agg)
     if len(periods) >= 3:
         prev2 = get_cell(df=df2c, sport=sport, period=periods[2], agg=sel_agg)
-    if len(periods) >= 4:
-        prev3 = get_cell(df=df2c, sport=sport, period=periods[3], agg=sel_agg)
+    # if len(periods) >= 4:
+    #     prev3 = get_cell(df=df2c, sport=sport, period=periods[3], agg=sel_agg)
     col.metric(label=periods[0], value=cur)
     if len(periods) >= 2:
         delta = round(prev1 - prev2, 1) if len(periods) >= 3 else None
