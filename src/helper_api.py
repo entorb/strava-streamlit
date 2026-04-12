@@ -112,25 +112,25 @@ def write_cache_file(cache_file: str, d: dict | list) -> None:
 
 
 # no caching, as only performed once upon login
-@track_function_usage
-def fetch_athlete_info() -> str:
-    """
-    Get athlete ID and username and set in session_state.
+# @track_function_usage
+# def fetch_athlete_info() -> str:
+#     """
+#     Get athlete ID and username and set in session_state.
 
-    Deprecated: not used any more, since also included in api_post_oauth()
-    """
-    cache_file = "athlete.json"
-    d = None
-    if get_env() == "DEV":
-        d = read_cache_file(cache_file)
-    if not d:
-        d = _api_get(path="athlete")
-        if get_env() == "DEV":
-            write_cache_file(cache_file, d=d)
-    assert type(d) is dict
-    st.session_state["USER_ID"] = d["id"]
-    st.session_state["USERNAME"] = d.get("username", "no username")
-    return st.session_state["USERNAME"]
+#     Deprecated: not used any more, since also included in api_post_oauth()
+#     """
+#     cache_file = "athlete.json"
+#     d = None
+#     if get_env() == "DEV":
+#         d = read_cache_file(cache_file)
+#     if not d:
+#         d = _api_get(path="athlete")
+#         if get_env() == "DEV":
+#             write_cache_file(cache_file, d=d)
+#     assert type(d) is dict
+#     st.session_state["USER_ID"] = d["id"]
+#     st.session_state["USERNAME"] = d.get("username", "no username")
+#     return st.session_state["USERNAME"]
 
 
 # not caching this raw data
