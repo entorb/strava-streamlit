@@ -1,0 +1,64 @@
+name: Check and Test Python Project
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          fetch-depth: 1 # latest only
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            pyproject.toml
+            uv.lock
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Run Ruff
+        run: |
+          uv run --frozen ruff format --check
+          uv run --frozen ruff check --no-fix --output-format=github
+
+      - name: Run pytest unittests
+        run: |
+          scripts/copy_test_data.sh
+          cp .streamlit/secrets-EXAMPLE.toml .streamlit/secrets.toml
+          uv run --frozen pytest tests/
+        # --cov \
+        # --cov-report=term-missing \
+        # --cov-report=xml:coverage.xml
+
+      - name: Cache pre-commit envs
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Run pre-commit
+        run: uv run pre-commit run --all-files
+
+      # # for SonarQube coverage report
+      # - uses: SonarSource/sonarqube-scan-action@v7
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
