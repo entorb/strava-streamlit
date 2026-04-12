@@ -33,3 +33,8 @@ source = ["src"]
 
 [tool.coverage.report]
 exclude_lines = ["pragma: no cover", "if __name__ == \"__main__\":"]
+
+[tool.vulture]
+paths = ["src"]
+# exclude = ["src/models.py"]
+ignore_names = ["LOGGER"]
