@@ -10,7 +10,7 @@ from helper_activities_caching import (
 from helper_logging import get_logger_from_filename
 from helper_ui_components import excel_download_buttons, select_sport
 
-LOGGER = get_logger_from_filename(__file__)
+_LOGGER = get_logger_from_filename(__file__)
 
 
 st.markdown(
