@@ -4,7 +4,7 @@ import pandas as pd
 
 from helper_logging import get_logger_from_filename, track_function_usage
 
-LOGGER = get_logger_from_filename(__file__)
+_LOGGER = get_logger_from_filename(__file__)
 
 
 @track_function_usage

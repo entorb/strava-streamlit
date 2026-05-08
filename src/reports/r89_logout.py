@@ -7,7 +7,7 @@ from helper_login import (
     logout,
 )
 
-LOGGER = get_logger_from_filename(__file__)
+_LOGGER = get_logger_from_filename(__file__)
 
 
 st.button("Logout", on_click=logout)

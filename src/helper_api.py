@@ -10,7 +10,7 @@ import streamlit as st
 from helper import get_env
 from helper_logging import get_logger_from_filename, track_function_usage
 
-LOGGER = get_logger_from_filename(__file__)
+_LOGGER = get_logger_from_filename(__file__)
 
 
 API_RETRIES = 5
@@ -37,7 +37,7 @@ def api_post_oauth(code: str) -> dict:
             resp.raise_for_status()
             return resp.json()
         except requests.RequestException:
-            LOGGER.exception("Attempt %i failed", attempt)
+            _LOGGER.exception("Attempt %i failed", attempt)
             # If it's the last attempt, raise the exception
             if attempt + 1 == API_RETRIES:
                 raise
@@ -74,7 +74,7 @@ def api_post_deauthorize() -> None:
 def _api_get(path: str) -> dict | list:
     """Get data from Strava API, used by fetch_* functions."""
     path = f"{URL_BASE}/{path}"
-    LOGGER.info(path)
+    _LOGGER.info(path)
 
     headers = {"Authorization": f"Bearer {st.session_state['TOKEN']}"}
 
@@ -85,7 +85,7 @@ def _api_get(path: str) -> dict | list:
             resp.raise_for_status()
             return resp.json()
         except requests.RequestException:
-            LOGGER.exception("Attempt %i failed", attempt)
+            _LOGGER.exception("Attempt %i failed", attempt)
             # If it's the last attempt, raise the exception
             if attempt + 1 == API_RETRIES:
                 raise
