@@ -19,7 +19,7 @@ from helper_ui_components import create_navigation_menu
 
 MEASURE_MEMORY = True
 init_logging()
-LOGGER = get_logger_from_filename(__file__)
+_LOGGER = get_logger_from_filename(__file__)
 
 
 def init_sentry() -> None:
@@ -104,7 +104,7 @@ def main() -> None:  # noqa: D103
             max_bytes = tracemalloc.get_traced_memory()[0]
             tracemalloc.stop()
             log_line += f",{round(max_bytes / 1_048_576, 1)}MB"
-        LOGGER.info(log_line)
+        _LOGGER.info(log_line)
 
 
 if __name__ == "__main__":
@@ -113,6 +113,6 @@ if __name__ == "__main__":
     except Exception as e:
         # automatically triggered by logger.exception
         # sentry_sdk.capture_exception(e)
-        LOGGER.exception("Exception:")
+        _LOGGER.exception("Exception:")
         st.exception(e)
         st.stop()
