@@ -15,7 +15,7 @@ from helper_logging import get_logger_from_filename, track_function_usage
 from helper_pandas import reorder_cols
 from helper_ui_components import excel_download_buttons, list_sports, select_sport
 
-LOGGER = get_logger_from_filename(__file__)
+_LOGGER = get_logger_from_filename(__file__)
 
 
 AGGREGATIONS = {
