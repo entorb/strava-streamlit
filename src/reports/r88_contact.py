@@ -4,7 +4,7 @@ import streamlit as st
 
 from helper_logging import get_logger_from_filename
 
-LOGGER = get_logger_from_filename(__file__)
+_LOGGER = get_logger_from_filename(__file__)
 
 
 st.markdown("""

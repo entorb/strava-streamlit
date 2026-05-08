@@ -12,7 +12,7 @@ from helper_activities_caching import (
 )
 from helper_logging import get_logger_from_filename
 
-LOGGER = get_logger_from_filename(__file__)
+_LOGGER = get_logger_from_filename(__file__)
 
 
 col1, col2 = st.columns(2)

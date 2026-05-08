@@ -11,7 +11,7 @@ from helper_activities_caching import (
 from helper_logging import get_logger_from_filename
 from helper_ui_components import list_sports
 
-LOGGER = get_logger_from_filename(__file__)
+_LOGGER = get_logger_from_filename(__file__)
 
 
 def calc_days_in_year(year: int) -> int:

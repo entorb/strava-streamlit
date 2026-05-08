@@ -10,7 +10,7 @@ from helper_logging import (
     get_user_login_count,
 )
 
-LOGGER = get_logger_from_filename(__file__)
+_LOGGER = get_logger_from_filename(__file__)
 
 
 # double check, that this file is only access-able by me
