@@ -3,6 +3,7 @@ aggfunc
 CALNAME
 CALSCALE
 connectwith
+Crossfit
 DataFrame
 deauthorize
 dropna

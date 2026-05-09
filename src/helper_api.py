@@ -74,7 +74,7 @@ def api_post_deauthorize() -> None:
 def _api_get(path: str) -> dict | list:
     """Get data from Strava API, used by fetch_* functions."""
     path = f"{URL_BASE}/{path}"
-    _LOGGER.info(path)
+    _LOGGER.info("API GET %s", path)
 
     headers = {"Authorization": f"Bearer {st.session_state['TOKEN']}"}
 
@@ -90,6 +90,17 @@ def _api_get(path: str) -> dict | list:
             if attempt + 1 == API_RETRIES:
                 raise
     return []  # unreachable, but makes ruff happy
+
+
+@track_function_usage
+def api_post(path: str, params: dict) -> dict:
+    """Post data to Strava API, used by post_* functions."""
+    url = f"{URL_BASE}/{path}"
+    _LOGGER.info("API POST %s", url)
+    headers = {"Authorization": f"Bearer {st.session_state['TOKEN']}"}
+    resp = requests.post(url, params=params, headers=headers, timeout=(3, 30))
+    resp.raise_for_status()
+    return resp.json()
 
 
 @track_function_usage

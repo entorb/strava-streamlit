@@ -5,14 +5,12 @@ import sys
 import warnings
 from pathlib import Path
 
-import streamlit as st
 from streamlit.testing.v1 import AppTest
 
 from helper import get_env
 
 warnings.filterwarnings("ignore", message=".*streamlit.runtime.scriptrunner_utils.*")
 _ = get_env()
-st.session_state["USER_ID"] = 7656541
 
 sys.path.insert(0, (Path(__file__).parent.parent / "src").as_posix())
 sys.path.insert(0, (Path(__file__).parent.parent / "src" / "reports").as_posix())
@@ -24,6 +22,7 @@ def init_report(path: Path) -> AppTest:
     at = AppTest.from_file(path)
     at.session_state["ENV"] = "DEV"
     at.session_state["USER_ID"] = 7656541
+    at.session_state["API_SCOPE"] = "read,activity:write,activity:read_all"
     return at
 
 

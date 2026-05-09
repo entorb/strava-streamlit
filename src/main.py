@@ -10,8 +10,9 @@ import streamlit as st
 st.set_page_config(page_title="Strava Äpp V2", page_icon=None, layout="wide")
 
 from helper import get_env
-from helper_logging import get_logger_from_filename, get_user_login_count, init_logging
+from helper_logging import get_logger_from_filename, init_logging
 from helper_login import (
+    init_dev_session_state,
     perform_login,
     token_refresh_if_needed,
 )
@@ -55,19 +56,6 @@ _paq.push(['enableLinkTracking']);
     """,
         height=0,
     )
-
-
-def init_dev_session_state() -> None:
-    """Set session variables needed for local dev without login."""
-    st.session_state["TOKEN"] = st.secrets["my_token"]
-    st.session_state["TOKEN_EXPIRE"] = int(time() + 24 * 3600)
-    st.session_state["TOKEN_REFRESH"] = st.secrets["my_refresh_token"]
-    st.session_state["USER_ID"] = st.secrets["my_user_id"]
-    d_login_cnt = get_user_login_count()
-    d_login_cnt[st.session_state["USER_ID"]] = 1 + d_login_cnt.get(
-        st.session_state["USER_ID"], 0
-    )
-    st.session_state["USERNAME"] = st.secrets["my_username"]
 
 
 def main() -> None:  # noqa: D103
