@@ -83,6 +83,21 @@ def handle_redirect() -> None:
     st.query_params.clear()
 
 
+def init_dev_session_state() -> None:
+    """Set session variables needed for local dev without login."""
+    st.session_state["TOKEN"] = st.secrets["my_token"]
+    st.session_state["TOKEN_EXPIRE"] = int(time() + 24 * 3600)
+    st.session_state["TOKEN_REFRESH"] = st.secrets["my_refresh_token"]
+    st.session_state["USER_ID"] = st.secrets["my_user_id"]
+    st.session_state["USER_ID"] = st.secrets["my_user_id"]
+    st.session_state["API_SCOPE"] = "read,activity:write,activity:read_all"
+    d_login_cnt = get_user_login_count()
+    d_login_cnt[st.session_state["USER_ID"]] = 1 + d_login_cnt.get(
+        st.session_state["USER_ID"], 0
+    )
+    st.session_state["USERNAME"] = st.secrets["my_username"]
+
+
 @track_function_usage
 def handle_token_refresh(d: dict) -> None:
     """Store refresh token response to session_state."""
