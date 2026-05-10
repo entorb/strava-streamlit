@@ -10,4 +10,9 @@ from helper_login import (
 _LOGGER = get_logger_from_filename(__file__)
 
 
-st.button("Logout", on_click=logout)
+def main() -> None:  # noqa: D103
+    st.button("Logout", on_click=logout)
+
+
+if __name__ == "__main__":
+    main()

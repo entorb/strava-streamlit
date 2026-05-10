@@ -213,94 +213,9 @@ def activity_stats_grouping(
     return df2
 
 
-df = cache_all_activities_and_gears()[0]
-df = reduce_and_rename_activity_df_for_stats(df)
-
-col1, col2, col3, col4 = st.columns((1, 1, 3, 1))
-
-sel_freq = col1.selectbox(
-    label="Frequency", options=("Year", "Quarter", "Month", "Week"), key="sel_freq"
-)
-
-year_min, year_max = df["year"].min(), df["year"].max()
-
-sel_year = col3.slider(
-    "Year",
-    min_value=year_min,
-    max_value=year_max if year_max != year_min else year_min + 1,
-    value=(df["year"].min(), df["year"].max()),
-    key="sel_year",
-)
-if sel_year:
-    df = df.query("year >= @sel_year[0] and year <= @sel_year[1]")
-
-
-st.header(f"All Activity {sel_freq} Count")
-st.write("Note: in the following, 'VirtualRide' is counted as 'Ride'.")
-aggregation = "Count"
-df2 = activity_stats_grouping(df, freq=sel_freq, sport="ALL", aggregation=aggregation)
-
-# date_axis_type = "N" if sel_freq in ("Year", "Quarter") else "T"
-# date_axis_type = ":N"
-
-# TODO: to streamlit-examples
-# altair time units https://altair-viz.github.io/user_guide/transform/timeunit.html
-if sel_freq == "Year":
-    time_unit = "year(date):T"
-elif sel_freq == "Quarter":
-    time_unit = "yearquarter(date):T"
-elif sel_freq == "Month":
-    time_unit = "yearmonth(date):T"
-elif sel_freq == "Week":
-    time_unit = "date:T"
-else:
-    time_unit = "date:T"
-
-c = (
-    alt.Chart(
-        df2,
-        title=alt.TitleParams(f"Strava Stats: All Activity {sel_freq} Count"),
-    )
-    .mark_bar()
-    .encode(
-        x=alt.X(time_unit, title=None),
-        y=alt.Y(f"{aggregation}:Q", title=None),
-        color="Sport:N",
-        tooltip=[
-            # alt.Tooltip(time_unit, title="Date"),
-            alt.Tooltip(sel_freq),
-            alt.Tooltip("Sport:N"),
-            alt.Tooltip(f"{aggregation}:Q"),
-        ],
-    )
-)
-st.altair_chart(c, width="stretch")
-
-
-df2b = (
-    df2.pivot_table(index=sel_freq, columns="Sport", values="Count", aggfunc="first")
-    .sort_index(ascending=False)
-    .reset_index()
-)
-df2b = reorder_cols(df2b, [sel_freq, "Run", "Ride", "Swim", "Hike"])
-st.dataframe(df2b, hide_index=True)
-
-
-st.header("Compare to Previous Period")
-col1, _ = st.columns((1, 5))
-sel_agg = col1.selectbox(
-    label="Aggregation",
-    options=AGGREGATIONS.keys(),
-)
-
-df2c = (
-    activity_stats_grouping(df, freq=sel_freq, sport="ALL", aggregation=sel_agg)
-    .drop(columns=["date"])
-    .sort_values([sel_freq, "Sport"], ascending=(False, True))
-)
-
-
-def get_cell(df: pd.DataFrame, sport: str, period: str, agg: str) -> float | int:
+def get_cell(
+    df: pd.DataFrame, sport: str, period: str, agg: str, sel_freq: str
+) -> float | int:
     """Extract a cell."""
     df2 = df[(df[sel_freq] == period) & (df["Sport"] == sport)]
     lst = df2[agg].head(1).to_list()
@@ -309,109 +224,213 @@ def get_cell(df: pd.DataFrame, sport: str, period: str, agg: str) -> float | int
     return lst[0]
 
 
-periods = df2c[sel_freq].unique()[:4]
+def main() -> None:  # noqa: D103
 
-cols = st.columns(4)
-sports = ["Run", "Ride", "Swim", "Hike"]
-for i in range(4):
-    col = cols[i]
-    sport = sports[i]
-    prev1, prev2 = 0, 0
-    col.subheader(sport)
-    cur = get_cell(df=df2c, sport=sport, period=periods[0], agg=sel_agg)
-    if len(periods) >= 2:
-        prev1 = get_cell(df=df2c, sport=sport, period=periods[1], agg=sel_agg)
-    if len(periods) >= 3:
-        prev2 = get_cell(df=df2c, sport=sport, period=periods[2], agg=sel_agg)
-    # if len(periods) >= 4:
-    #     prev3 = get_cell(df=df2c, sport=sport, period=periods[3], agg=sel_agg)
-    col.metric(label=periods[0], value=cur)
-    if len(periods) >= 2:
-        delta = round(prev1 - prev2, 1) if len(periods) >= 3 else None
-        col.metric(label=periods[1], value=prev1, delta=delta)
-    if len(periods) >= 3:
-        col.metric(label=periods[2], value=prev2)
-        # col.metric(label=periods[2], value=prev2, delta=round(prev2 - prev3, 1))
+    df = cache_all_activities_and_gears()[0]
+    df = reduce_and_rename_activity_df_for_stats(df)
 
+    cols = st.columns((1, 1, 3, 1))
 
-st.header("Per Sport")
-col1, _ = st.columns((1, 5))
-
-sel_type = select_sport(df, col1, mandatory=True)
-assert sel_type is not None
-
-
-# df2 has 1 sport and all aggregations
-df2 = activity_stats_grouping(
-    df, freq=sel_freq, sport=sel_type, aggregation="ALL"
-).drop(columns="Sport")
-
-c = (
-    alt.Chart(
-        df2,
-        title=alt.TitleParams(f"Strava Stats: {sel_type} {sel_freq} {sel_agg}"),
+    sel_freq = cols[0].selectbox(
+        label="sel_freq", options=("Year", "Quarter", "Month", "Week"), key="sel_freq"
     )
-    .mark_bar()
-    .encode(
-        x=alt.X(time_unit, title=None),
-        y=alt.Y(f"{sel_agg}:Q", title=None),
-        tooltip=[
-            alt.Tooltip(sel_freq),
-            alt.Tooltip(f"{sel_agg}:Q"),
-        ],
+    sel_agg = cols[1].selectbox(
+        label="Aggregation",
+        options=AGGREGATIONS.keys(),
     )
-)
-st.altair_chart(c, width="stretch")
 
-column_order = [sel_freq]  # date frequency
-column_order.extend(AGGREGATIONS.keys())
+    year_min, year_max = df["year"].min(), df["year"].max()
 
-title = f"{sel_type} Stats per {sel_freq}"
-st.header(title)
-st.dataframe(
-    df2.sort_values(sel_freq, ascending=False),
-    hide_index=True,
-    column_order=column_order,
-)
-excel_download_buttons(
-    df2[column_order],
-    file_name=f"Strava {title}.xlsx",
-    exclude_index=True,
-)
-
-
-st.header("Active Days")
-sel_types = st.multiselect(label="Sports", options=list_sports(df))
-if sel_types:
-    df = df.query("type in @sel_types")
-
-year_min, year_max = df["year"].min(), df["year"].max()
-
-df3 = (
-    df[["year", "date"]]
-    .drop_duplicates()
-    .groupby("year")
-    .count()
-    .rename(columns={"date": "Count"})
-    .reindex(range(year_min, year_max + 1), fill_value=0)
-    .reset_index()
-)
-
-df3["date"] = df3.apply(lambda row: dt.date(row["year"], 1, 1), axis=1)
-
-c = (
-    alt.Chart(df3)
-    .mark_bar()
-    .encode(
-        x=alt.X("year(date):T", title=None),
-        y=alt.Y("Count:Q", title=None),
-        tooltip=[
-            alt.Tooltip("year", title="Year"),
-            alt.Tooltip("Count:Q", title="Active Days"),
-        ],
+    sel_year = cols[2].slider(
+        "Year",
+        min_value=year_min,
+        max_value=year_max if year_max != year_min else year_min + 1,
+        value=(df["year"].min(), df["year"].max()),
+        key="sel_year",
     )
-)
-st.altair_chart(c, width="stretch")
+    if sel_year:
+        df = df.query("year >= @sel_year[0] and year <= @sel_year[1]")
+
+    # TODO: to streamlit-examples
+    # altair time units https://altair-viz.github.io/user_guide/transform/timeunit.html
+    if sel_freq == "Year":
+        time_unit = "year(date):T"
+    elif sel_freq == "Quarter":
+        time_unit = "yearquarter(date):T"
+    elif sel_freq == "Month":
+        time_unit = "yearmonth(date):T"
+    elif sel_freq == "Week":
+        time_unit = "date:T"
+    else:
+        time_unit = "date:T"
+
+    all_act(df=df, sel_freq=sel_freq, time_unit=time_unit)
+    compare_to_prev(df=df, sel_freq=sel_freq, sel_agg=sel_agg)
+    per_sport(df=df, sel_freq=sel_freq, sel_agg=sel_agg, time_unit=time_unit)
+    active_days(df)
+
+
+def all_act(df: pd.DataFrame, sel_freq: str, time_unit: str) -> None:
+    """Count for all activities."""
+    st.header(f"All Activity {sel_freq} Count")
+    st.write("Note: in the following, 'VirtualRide' is counted as 'Ride'.")
+    aggregation = "Count"
+    df2 = activity_stats_grouping(
+        df, freq=sel_freq, sport="ALL", aggregation=aggregation
+    )
+
+    c = (
+        alt.Chart(
+            df2,
+            title=alt.TitleParams(f"Strava Stats: All Activity {sel_freq} Count"),
+        )
+        .mark_bar()
+        .encode(
+            x=alt.X(time_unit, title=None),
+            y=alt.Y(f"{aggregation}:Q", title=None),
+            color="Sport:N",
+            tooltip=[
+                # alt.Tooltip(time_unit, title="Date"),
+                alt.Tooltip(sel_freq),
+                alt.Tooltip("Sport:N"),
+                alt.Tooltip(f"{aggregation}:Q"),
+            ],
+        )
+    )
+    st.altair_chart(c, width="stretch")
+
+    df2b = (
+        df2.pivot_table(
+            index=sel_freq, columns="Sport", values="Count", aggfunc="first"
+        )
+        .sort_index(ascending=False)
+        .reset_index()
+    )
+    df2b = reorder_cols(df2b, [sel_freq, "Run", "Ride", "Swim", "Hike"])
+    st.dataframe(df2b, hide_index=True)
+
+
+def compare_to_prev(df: pd.DataFrame, sel_freq: str, sel_agg: str) -> None:
+    """Compare to previous time period."""
+    st.header("Compare to Previous Period")
+
+    df2c = (
+        activity_stats_grouping(df, freq=sel_freq, sport="ALL", aggregation=sel_agg)
+        .drop(columns=["date"])
+        .sort_values([sel_freq, "Sport"], ascending=(False, True))
+    )
+
+    periods = df2c[sel_freq].unique()[:4]
+
+    cols = st.columns(4)
+    sports = ["Run", "Ride", "Swim", "Hike"]
+    for i in range(4):
+        col = cols[i]
+        sport = sports[i]
+        prev1, prev2 = 0, 0
+        col.subheader(sport)
+        cur = get_cell(
+            df=df2c, sport=sport, period=periods[0], agg=sel_agg, sel_freq=sel_freq
+        )
+        if len(periods) >= 2:
+            prev1 = get_cell(
+                df=df2c, sport=sport, period=periods[1], agg=sel_agg, sel_freq=sel_freq
+            )
+        if len(periods) >= 3:
+            prev2 = get_cell(
+                df=df2c, sport=sport, period=periods[2], agg=sel_agg, sel_freq=sel_freq
+            )
+        col.metric(label=periods[0], value=cur)
+        if len(periods) >= 2:
+            delta = round(prev1 - prev2, 1) if len(periods) >= 3 else None
+            col.metric(label=periods[1], value=prev1, delta=delta)
+        if len(periods) >= 3:
+            col.metric(label=periods[2], value=prev2)
+            # col.metric(label=periods[2], value=prev2, delta=round(prev2 - prev3, 1))
+
+
+def per_sport(df: pd.DataFrame, sel_freq: str, sel_agg: str, time_unit: str) -> None:
+    """Statistics per sport/activity type."""
+    st.header("Per Sport")
+    col1, _ = st.columns((1, 5))
+
+    sel_type = select_sport(df, col1, mandatory=True)
+    assert sel_type is not None
+
+    # df2 has 1 sport and all aggregations
+    df2 = activity_stats_grouping(
+        df, freq=sel_freq, sport=sel_type, aggregation="ALL"
+    ).drop(columns="Sport")
+
+    c = (
+        alt.Chart(
+            df2,
+            title=alt.TitleParams(f"Strava Stats: {sel_type} {sel_freq} {sel_agg}"),
+        )
+        .mark_bar()
+        .encode(
+            x=alt.X(time_unit, title=None),
+            y=alt.Y(f"{sel_agg}:Q", title=None),
+            tooltip=[
+                alt.Tooltip(sel_freq),
+                alt.Tooltip(f"{sel_agg}:Q"),
+            ],
+        )
+    )
+    st.altair_chart(c, width="stretch")
+
+    column_order = [sel_freq]  # date frequency
+    column_order.extend(AGGREGATIONS.keys())
+
+    title = f"{sel_type} Stats per {sel_freq}"
+    st.header(title)
+    st.dataframe(
+        df2.sort_values(sel_freq, ascending=False),
+        hide_index=True,
+        column_order=column_order,
+    )
+    excel_download_buttons(
+        df2[column_order],
+        file_name=f"Strava {title}.xlsx",
+        exclude_index=True,
+    )
+
+
+def active_days(df: pd.DataFrame) -> None:
+    """Active days in selected time resolution."""
+    st.header("Active Days")
+    sel_types = st.multiselect(label="Sports", options=list_sports(df))
+    if sel_types:
+        df = df.query("type in @sel_types")
+
+    year_min, year_max = df["year"].min(), df["year"].max()
+
+    df3 = (
+        df[["year", "date"]]
+        .drop_duplicates()
+        .groupby("year")
+        .count()
+        .rename(columns={"date": "Count"})
+        .reindex(range(year_min, year_max + 1), fill_value=0)
+        .reset_index()
+    )
+
+    df3["date"] = df3.apply(lambda row: dt.date(row["year"], 1, 1), axis=1)
+
+    c = (
+        alt.Chart(df3)
+        .mark_bar()
+        .encode(
+            x=alt.X("year(date):T", title=None),
+            y=alt.Y("Count:Q", title=None),
+            tooltip=[
+                alt.Tooltip("year", title="Year"),
+                alt.Tooltip("Count:Q", title="Active Days"),
+            ],
+        )
+    )
+    st.altair_chart(c, width="stretch")
+
 
 # Add download button
 # No because the required lib vl-convert-python is quite huge
@@ -425,3 +444,7 @@ st.altair_chart(c, width="stretch")
 #         file_name="chart.png",
 #         mime="image/png",
 #     )
+
+
+if __name__ == "__main__":
+    main()
