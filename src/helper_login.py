@@ -28,16 +28,31 @@ def display_strava_auth_link() -> None:
     st.markdown("""This is a modern rewrite of my [old Strava Äpp](https://entorb.net/strava-old/). Currently, only read-only statistics features are implemented. For bulk modify of activities and Excel import, please use the old Äpp.
 """)
 
-    # TODO: how to replace url to old strava app V1 here?
+    # attention: static files are under html/strava/strava-resources
     st.write(
         """
-<a target='_self' href='https://www.strava.com/oauth/authorize?client_id=28009&response_type=code&redirect_uri=https://entorb.net/strava-streamlit/?exchange_token&approval_prompt=force&scope=activity:read_all'>
-<button class="strava-connect-button">
-<img src="/strava/strava-resources/btn_strava_connectwith_light.svg" alt="Connect with Strava">
-</button>
-</a>
-<a  style="margin-left: 100px;" target='_self' href='https://www.strava.com/oauth/authorize?client_id=28009&response_type=code&redirect_uri=https://entorb.net/strava-streamlit/?exchange_token&approval_prompt=force&scope=activity:read_all,activity:write'><i>beta test of write permissions</i></a>
-""",
+<table>
+  <tbody>
+    <tr>
+      <td style="text-align:center;">
+        <a target="_self" href="https://www.strava.com/oauth/authorize?client_id=28009&response_type=code&redirect_uri=https://entorb.net/strava-streamlit/?exchange_token&approval_prompt=force&scope=activity:read_all">
+          <button class="strava-connect-button">
+            <img src="/strava/strava-resources/btn_strava_connect_with_white.svg" alt="Connect with Strava (Read)">
+          </button>
+        </a>
+        <div>Readonly: default</div>
+      </td>
+      <td style="text-align:center;">
+        <a target="_self" href="https://www.strava.com/oauth/authorize?client_id=28009&response_type=code&redirect_uri=https://entorb.net/strava-streamlit/?exchange_token&approval_prompt=force&scope=activity:read_all,activity:write">
+          <button class="strava-connect-button">
+            <img src="/strava/strava-resources/btn_strava_connect_with_orange.svg" alt="Connect with Strava (Write)">
+          </button>
+        </a>
+        <div>Write access: for modifying data</div>
+      </td>
+    </tr>
+  </tbody>
+</table>""",
         unsafe_allow_html=True,
     )
 
@@ -50,16 +65,23 @@ def display_strava_auth_link() -> None:
 * **Data:** The app does not use a database. Your Strava data is only temporarily cached.
 * **Access:** A temporary access token to your Strava profile is used and revoked at logout.
 * **Cookies:** Only a single technical cookie is used for session identification and deleted at end of session. No user tracking.
+"""
+    )
 
+
+# cspell:disable
+st.markdown(
+    """
 ## Feedback
 * 2026-04-26 Robert: Großartige App, lässt mein Daten-Herz höher schlagen!
 * 2025-12-20 Porkchop: This is absolutely amazing, thank you for publishing this!
 * 2025-09-09 John: thanks for creating an awesome export tool.
 * 2025-03-26 Chris: Thank you for this tool.
+# cspell:enable
 
 plus much more at [old App](https://entorb.net/strava-old/)
 """
-    )
+)
 
 
 @track_function_usage
