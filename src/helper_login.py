@@ -50,6 +50,14 @@ def display_strava_auth_link() -> None:
 * **Data:** The app does not use a database. Your Strava data is only temporarily cached.
 * **Access:** A temporary access token to your Strava profile is used and revoked at logout.
 * **Cookies:** Only a single technical cookie is used for session identification and deleted at end of session. No user tracking.
+
+## Feedback
+* 2026-04-26 Robert: Großartige App, lässt mein Daten-Herz höher schlagen!
+* 2025-12-20 Porkchop: This is absolutely amazing, thank you for publishing this!
+* 2025-09-09 John: thanks for creating an awesome export tool.
+* 2025-03-26 Chris: Thank you for this tool.
+
+plus much more at [old App](https://entorb.net/strava-old/)
 """
     )
 
