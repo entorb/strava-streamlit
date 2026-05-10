@@ -10,54 +10,59 @@ from helper_logging import get_logger_from_filename
 _LOGGER = get_logger_from_filename(__file__)
 
 
-col1, _ = st.columns((1, 5))
-if "years" not in st.session_state:
-    st.session_state["years"] = 0
-years = st.session_state["years"]
+def main() -> None:  # noqa: D103
+    col1, _ = st.columns((1, 5))
+    if "years" not in st.session_state:
+        st.session_state["years"] = 0
+    years = st.session_state["years"]
 
-lst = ["Current", "Last", "Last 5", "Last 10", "All"]
-if years == 0:
-    index = 0
-elif years == 1:
-    index = 1
-elif years == 5:  # noqa: PLR2004
-    index = 2
-elif years == 10:  # noqa: PLR2004
-    index = 3
-else:
-    index = 4
+    lst = ["Current", "Last", "Last 5", "Last 10", "All"]
+    if years == 0:
+        index = 0
+    elif years == 1:
+        index = 1
+    elif years == 5:  # noqa: PLR2004
+        index = 2
+    elif years == 10:  # noqa: PLR2004
+        index = 3
+    else:
+        index = 4
 
-sel_years = col1.selectbox(label="Years", options=lst, index=index)
+    sel_years = col1.selectbox(label="Years", options=lst, index=index)
 
-if sel_years == "Current":
-    st.session_state["years"] = 0
-elif sel_years == "Last":
-    st.session_state["years"] = 1
-elif sel_years == "Last 5":
-    st.session_state["years"] = 5
-elif sel_years == "Last 10":
-    st.session_state["years"] = 10
-else:
-    st.session_state["years"] = 100
+    if sel_years == "Current":
+        st.session_state["years"] = 0
+    elif sel_years == "Last":
+        st.session_state["years"] = 1
+    elif sel_years == "Last 5":
+        st.session_state["years"] = 5
+    elif sel_years == "Last 10":
+        st.session_state["years"] = 10
+    else:
+        st.session_state["years"] = 100
 
-with st.spinner(text="Fetching your activities", show_time=True):
-    df = cache_all_activities_and_gears()[0]
+    with st.spinner(text="Fetching your activities", show_time=True):
+        df = cache_all_activities_and_gears()[0]
 
-# export activity_columns
-# lst = sorted(df.columns)
-# Path("activity_columns.txt").write_text("\n".join(lst) + "\n")
+    # export activity_columns
+    # lst = sorted(df.columns)
+    # Path("activity_columns.txt").write_text("\n".join(lst) + "\n")
 
-df2 = (
-    df[["x_year", "x_url"]]
-    .groupby("x_year")
-    .count()
-    .sort_index(ascending=False)
-    .reset_index()
-    .rename(columns={"x_year": "year", "x_url": "count"})
-)
-col1.dataframe(
-    df2,
-    hide_index=True,
-    width="stretch",
-    column_config={"year": st.column_config.NumberColumn(format="%d")},
-)
+    df2 = (
+        df[["x_year", "x_url"]]
+        .groupby("x_year")
+        .count()
+        .sort_index(ascending=False)
+        .reset_index()
+        .rename(columns={"x_year": "year", "x_url": "count"})
+    )
+    col1.dataframe(
+        df2,
+        hide_index=True,
+        width="stretch",
+        column_config={"year": st.column_config.NumberColumn(format="%d")},
+    )
+
+
+if __name__ == "__main__":
+    main()
