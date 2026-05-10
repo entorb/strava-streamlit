@@ -227,6 +227,7 @@ def cache_all_activities_and_gears_in_year_range(
         "x_date",
         "name",
         "type",
+        "x_workout_name",
         "x_url",
         "x_dl",
         "start_date_local",
@@ -311,6 +312,22 @@ def caching_calc_additional_fields(df: pd.DataFrame) -> pd.DataFrame:
     df["x_mi"] = round(df["distance"] / 1000 / 1.60934, 1)  # km -> mile
 
     df["x_elev_%"] = round(df["total_elevation_gain"] / df["x_km"] / 10, 1)
+
+    workout_map = {
+        ("Run", 0): "Recovery",
+        ("Run", 1): "Race",
+        ("Run", 2): "Longrun",
+        ("Ride", 11): "Race",
+        ("Ride", 12): "Workout",
+    }
+    # no workout_type for
+    # Run:workout
+    # Ride:recovery
+    # Swim:race
+    df["x_workout_name"] = df.apply(
+        lambda r: workout_map.get((r["type"], r["workout_type"])), axis=1
+    )
+
     return df
 
 
