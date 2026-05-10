@@ -93,14 +93,70 @@ def _api_get(path: str) -> dict | list:
 
 
 @track_function_usage
-def api_post(path: str, params: dict) -> dict:
+def _api_post(path: str, params: dict) -> dict:
     """Post data to Strava API, used by post_* functions."""
     url = f"{URL_BASE}/{path}"
     _LOGGER.info("API POST %s", url)
     headers = {"Authorization": f"Bearer {st.session_state['TOKEN']}"}
-    resp = requests.post(url, params=params, headers=headers, timeout=(3, 30))
-    resp.raise_for_status()
-    return resp.json()
+    try:
+        resp = requests.post(url, params=params, headers=headers, timeout=(3, 30))
+        resp.raise_for_status()
+        return resp.json()
+    except requests.RequestException as e:
+        print(e)
+    return {}
+
+
+def _api_put(path: str, data: dict) -> dict | list:
+    """Put/Update."""
+    url = f"{URL_BASE}/{path}"
+    headers = {"Authorization": f"Bearer {st.session_state['TOKEN']}"}
+    try:
+        resp = requests.put(url=url, data=data, headers=headers, timeout=(3, 30))
+        resp.raise_for_status()
+        return resp.json()
+    except requests.RequestException as e:
+        print(e)
+    return {}
+
+
+def post_activity(  # noqa: PLR0913
+    act_type: str,
+    name: str,
+    date: str,  # "YYYY-MM-DD HH:MM:SS"
+    duration: int,  # seconds
+    distance: float | None = None,  # meters
+    desc: str | None = None,
+    commute: int | None = None,
+    gear_id: str | None = None,
+    elev_gain: int | None = None,
+) -> dict:
+    """Create a new activity."""
+    date = date.replace(" ", "T") + "Z"
+    date = date.replace("T00:00:00Z", "T00:00:01Z")
+    params = {
+        "name": name.strip(),
+        "type": act_type,
+        "sport_type": act_type,  # do not know why there are 2 fields
+        "start_date_local": date,
+        "elapsed_time": duration,
+        "description": desc.strip() if desc else None,
+        "distance": distance or None,
+        "commute": commute or None,
+        "gear_id": gear_id or None,
+        "elev_gain": elev_gain or None,
+    }
+    params = {k: v for k, v in params.items() if v is not None}
+    return _api_post("activities", params)
+
+
+def set_commute(activity_id: int) -> int:
+    """Set commute flag for activity."""
+    path = "/activities/" + str(activity_id)
+    resp_dict = _api_put(path=path, data={"commute": True})
+    assert type(resp_dict) is dict
+    return activity_id
+    # print(resp_dict["id"], resp_dict["name"])
 
 
 @track_function_usage

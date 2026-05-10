@@ -6,7 +6,7 @@ from zoneinfo import ZoneInfo
 import streamlit as st
 
 from helper_activities_caching import cache_all_activities_and_gears
-from helper_api import api_post
+from helper_api import post_activity
 from helper_logging import (
     get_logger_from_filename,
 )
@@ -24,37 +24,7 @@ if "activity:write" not in st.session_state["API_SCOPE"]:
     st.warning("API scope 'activity:write' missing")
 
 
-def post_activity(  # noqa: PLR0913
-    act_type: str,
-    name: str,
-    date: str,  # "YYYY-MM-DD HH:MM:SS"
-    duration: int,  # seconds
-    distance: float | None = None,  # meters
-    desc: str | None = None,
-    commute: int | None = None,
-    gear_id: str | None = None,
-    elev_gain: int | None = None,
-) -> dict:
-    """Create a new activity."""
-    date = date.replace(" ", "T") + "Z"
-    date = date.replace("T00:00:00Z", "T00:00:01Z")
-    params = {
-        "name": name.strip(),
-        "type": act_type,
-        "sport_type": act_type,  # do not know why there are 2 fields
-        "start_date_local": date,
-        "elapsed_time": duration,
-        "description": desc.strip() if desc else None,
-        "distance": distance or None,
-        "commute": commute or None,
-        "gear_id": gear_id or None,
-        "elev_gain": elev_gain or None,
-    }
-    params = {k: v for k, v in params.items() if v is not None}
-    return api_post("activities", params)
-
-
-def post_act() -> None:
+def create_act_from_template() -> None:
     """Post a new activity from templates."""
     st.header("Post activity")
     my_sport = st.selectbox("Sport", ["Pendelei", "Maloche", "KravMaga", "KravFit"])
@@ -147,7 +117,7 @@ def review_city_bike() -> None:
 
 
 def main() -> None:  # noqa: D103
-    post_act()
+    create_act_from_template()
 
     review_city_bike()
 
