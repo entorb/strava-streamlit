@@ -1,4 +1,4 @@
-"""Internal Stats."""
+"""Internal Statistics."""
 
 import pandas as pd
 import streamlit as st
