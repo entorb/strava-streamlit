@@ -68,20 +68,21 @@ def display_strava_auth_link() -> None:
 """
     )
 
-
-# cspell:disable
-st.markdown(
-    """
+    # cspell:disable
+    st.markdown(
+        """
 ## Feedback
 * 2026-04-26 Robert: Großartige App, lässt mein Daten-Herz höher schlagen!
 * 2025-12-20 Porkchop: This is absolutely amazing, thank you for publishing this!
 * 2025-09-09 John: thanks for creating an awesome export tool.
 * 2025-03-26 Chris: Thank you for this tool.
-# cspell:enable
 
 plus much more at [old App](https://entorb.net/strava-old/)
 """
-)
+    )
+
+
+# cspell:enable
 
 
 @track_function_usage
