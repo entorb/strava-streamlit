@@ -9,8 +9,8 @@ dependencies = [
     "numpy==2.2.3",
     "pandas==2.2.3",
     "pyarrow==20.0.0",
-    "sentry-sdk>=2.58.0",
-    "streamlit>=1.56.0",
+    "sentry-sdk>=2.59.0",
+    "streamlit>=1.57.0",
     "xlsxwriter>=3.2.9",
 ]
 
