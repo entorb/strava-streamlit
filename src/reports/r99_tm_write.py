@@ -54,31 +54,40 @@ def create_act_from_template() -> None:
         proposed_datetime = dt.datetime.combine(last_thursday, dt.time(17, 45))
         duration = 3600 + 900
     elif my_sport in ["Pendelei", "Maloche"]:
-        cols = st.columns(2)
         act_type = "Ride"
         name = my_sport
         commute = 1
         gear_id = "b6686831"
         proposed_datetime = dt.datetime.combine(today, dt.time(7, 30))
-
         proposed_distance = 33.0 if my_sport == "Maloche" else 20.0
-        distance = cols[0].number_input(
-            "KM", step=0.5, min_value=10.0, value=proposed_distance, format="%0.1f"
-        )
-
         proposed_duration = 90 if my_sport == "Maloche" else 70
-        duration = (
-            cols[1].number_input(
-                "Minutes", step=1, min_value=10, value=proposed_duration
-            )
-            * 60
-        )
         if my_sport == "Maloche":
             elev_gain = 90
 
-    sel_datetime = st.datetime_input("Date", value=proposed_datetime)
+    with st.form("post_activity_form", clear_on_submit=True):
+        if my_sport in ["Pendelei", "Maloche"]:
+            cols = st.columns(2)
 
-    if st.button("Submit"):
+            distance = cols[0].number_input(
+                "KM",
+                step=0.5,
+                min_value=10.0,
+                value=proposed_distance,
+                format="%0.1f",
+            )
+
+            duration = (
+                cols[1].number_input(
+                    "Minutes", step=1, min_value=10, value=proposed_duration
+                )
+                * 60
+            )
+
+        sel_datetime = st.datetime_input("Date", value=proposed_datetime)
+
+        submitted = st.form_submit_button("Submit")
+
+    if submitted:
         resp = post_activity(
             act_type=act_type,
             name=name,
@@ -90,6 +99,7 @@ def create_act_from_template() -> None:
             elev_gain=elev_gain,
         )
 
+        st.success(f"Activity '{name}' posted successfully!")
         st.html(
             f"<h2><a target='_blank' href='https://www.strava.com/activities/{resp['id']}'>View at Strava</a></h2>"  # noqa: E501
         )
