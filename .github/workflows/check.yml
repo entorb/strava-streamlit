@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
           fetch-depth: 1 # latest only
@@ -50,7 +50,7 @@ jobs:
         # --cov-report=xml:coverage.xml
 
       - name: Cache pre-commit envs
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.cache/pre-commit
           key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
