@@ -10,7 +10,7 @@ dependencies = [
     "openpyxl>=3.1.5",
     "pandas==2.2.3",
     "pyarrow==20.0.0",
-    "sentry-sdk>=2.63.0",
+    "sentry-sdk>=2.64.0",
     "streamlit>=1.58.0",
     "xlsxwriter>=3.2.9",
 ]
@@ -18,10 +18,11 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pre-commit>=4.6.0",
-    "pytest>=9.1.0",
+    "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
-    "ruff>=0.15.17",
+    "ruff>=0.15.20",
     "tomli-w>=1.2.0",
+    "vulture>=2.16",
     "watchdog>=6.0.0",
 ]
 
