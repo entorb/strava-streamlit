@@ -25,7 +25,6 @@ DATE_TODAY = dt.datetime.now(tz=dt.UTC).date()
 
 
 def main() -> None:  # noqa: D103, PLR0915
-
     df = cache_all_activities_and_gears()[0]
     df = reduce_and_rename_activity_df_for_stats(df)
 
