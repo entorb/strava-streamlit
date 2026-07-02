@@ -164,7 +164,9 @@ def clear_all_caches() -> None:
 
 # this cache is for 2h, while all others are only for 15min
 # caching requires user_id is given as parameter!!!
-@st.cache_data(ttl="2h")  # add persist="disk" if we run into memory issues
+@st.cache_data(
+    ttl="2h", show_spinner="Fetching your activities"
+)  # add persist="disk" if we run into memory issues
 @track_function_usage
 def cache_all_activities_and_gears_in_year_range(
     user_id: int,

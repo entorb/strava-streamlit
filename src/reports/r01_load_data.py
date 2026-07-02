@@ -15,8 +15,7 @@ def main() -> None:  # noqa: D103
     col1, _ = st.columns((1, 5))
     select_years(col1)
 
-    with st.spinner(text="Fetching your activities", show_time=True):
-        df = cache_all_activities_and_gears()[0]
+    df = cache_all_activities_and_gears()[0]
 
     # export activity_columns
     # lst = sorted(df.columns)
