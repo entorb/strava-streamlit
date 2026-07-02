@@ -14,10 +14,15 @@ _LOGGER = get_logger_from_filename(__file__)
 
 
 API_RETRIES = 5
+HTTP_TOO_MANY_REQUESTS = 429
 URL_OAUTH = "https://www.strava.com/api/v3/oauth/token"
 URL_BASE = "https://www.strava.com/api/v3"
 # only used for local development to prevent api calls
 DIR_CACHE = Path("./cache/")
+
+
+class StravaRateLimitError(Exception):
+    """Raised when the Strava API rate limit (HTTP 429) is hit."""
 
 
 @track_function_usage
@@ -84,7 +89,11 @@ def _api_get(path: str) -> dict | list:
             # Raise HTTPError if HTTP request returns an unsuccessful status code
             resp.raise_for_status()
             return resp.json()
-        except requests.RequestException:
+        except requests.RequestException as e:
+            # do not retry on rate limit (HTTP 429), retrying only makes it worse
+            resp = getattr(e, "response", None)
+            if resp is not None and resp.status_code == HTTP_TOO_MANY_REQUESTS:
+                raise StravaRateLimitError from e
             _LOGGER.exception("Attempt %i failed", attempt)
             # If it's the last attempt, raise the exception
             if attempt + 1 == API_RETRIES:
@@ -289,3 +298,25 @@ def fetch_gear_data(gear_id: int, user_id: int) -> dict:
             write_cache_file(cache_file, d=d)
     assert isinstance(d, dict)
     return d
+
+
+@st.cache_data(ttl="60m")
+@track_function_usage
+def fetch_activity_description(activity_id: int, user_id: int) -> str:
+    """
+    Fetch detailed activity data and return its description.
+
+    One API call per activity, so use sparingly.
+    user_id is only included to double-ensure the caching is per user.
+    """
+    _ = user_id  # not used
+    cache_file = f"activity-{activity_id}.json"
+    d = None
+    if get_env() == "DEV":
+        d = read_cache_file(cache_file)
+    if not d:
+        d = _api_get(path=f"activities/{activity_id}")
+        if get_env() == "DEV":
+            write_cache_file(cache_file, d=d)
+    assert isinstance(d, dict)
+    return d.get("description") or ""

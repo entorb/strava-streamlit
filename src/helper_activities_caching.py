@@ -9,7 +9,7 @@ import pandas as pd
 import streamlit as st
 
 from helper import get_env
-from helper_api import fetch_all_activities, fetch_gear_data
+from helper_api import DIR_CACHE, fetch_all_activities, fetch_gear_data
 from helper_logging import get_logger_from_filename, track_function_usage
 from helper_pandas import reorder_cols
 
@@ -131,6 +131,35 @@ def cache_all_activities_and_gears() -> tuple[pd.DataFrame, pd.DataFrame]:
             st.stop()
         df_gear = pd.concat(dfs_gear)
     return df, df_gear
+
+
+@track_function_usage
+def refresh_activities_cache() -> None:
+    """
+    Clear cached activity lists so the next load re-fetches from Strava.
+
+    Gear and per-activity description caches are kept intact (descriptions are
+    expensive to re-fetch due to API rate limits).
+    """
+    cache_all_activities_and_gears_in_year_range.clear()
+    # in DEV the activity-list pages are also cached to disk, remove them too
+    if get_env() == "DEV":
+        for p in DIR_CACHE.glob("activities-page-*.json"):
+            p.unlink()
+
+
+@track_function_usage
+def clear_all_caches() -> None:
+    """
+    Clear all in-memory and on-disk caches, including activity descriptions.
+
+    Intended for local dev to force a full re-fetch from Strava.
+    """
+    st.cache_data.clear()
+    st.cache_resource.clear()
+    if get_env() == "DEV":
+        for p in DIR_CACHE.glob("*.json"):
+            p.unlink()
 
 
 # this cache is for 2h, while all others are only for 15min
