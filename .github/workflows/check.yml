@@ -40,6 +40,9 @@ jobs:
           uv run --frozen ruff format --check
           uv run --frozen ruff check --no-fix --output-format=github
 
+      - name: Run vulture
+        run: uv run vulture
+
       - name: Run pytest unittests
         run: |
           scripts/copy_test_data.sh
