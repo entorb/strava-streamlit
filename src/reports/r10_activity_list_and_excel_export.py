@@ -7,10 +7,8 @@ from math import isnan
 import pandas as pd
 import streamlit as st
 
-from helper import get_env
 from helper_activities_caching import (
     cache_all_activities_and_gears,
-    clear_all_caches,
     get_act_desc_cache_file_path,
     refresh_activities_cache,
 )
@@ -122,25 +120,10 @@ def fetch_and_attach_descriptions(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def main() -> None:  # noqa: C901, D103, PLR0912, PLR0915
-    st.markdown(
-        "Edit at [Strava](https://www.strava.com/athlete/training) or bulk-edit using my [Äpp V1](https://entorb.net/strava-old/)"  # noqa: E501
-    )
+    st.markdown("Edit at [Strava](https://www.strava.com/athlete/training)")
 
-    col_years, col_refresh, col_clear, _ = st.columns((1, 1, 1, 3))
-    select_years(col_years)
-    # vertical spacer so the button aligns with the selectbox input, not its label
-    col_refresh.markdown("<div style='height: 1.7em'></div>", unsafe_allow_html=True)
-    if col_refresh.button("Refresh", help="Re-fetch activities from Strava"):
-        refresh_activities_cache()
-        st.rerun()
-    if get_env() == "DEV":
-        col_clear.markdown("<div style='height: 1.7em'></div>", unsafe_allow_html=True)
-        if col_clear.button(
-            "Clear cache",
-            help="Local dev only: clear ALL caches incl. activity descriptions",
-        ):
-            clear_all_caches()
-            st.rerun()
+    cols = st.columns((1, 5))
+    select_years(cols[0])
 
     df, df_gear = cache_all_activities_and_gears()
 
@@ -217,7 +200,7 @@ def main() -> None:  # noqa: C901, D103, PLR0912, PLR0915
     st.columns(1)
 
     fetch_desc = st.checkbox(
-        "Fetch activity descriptions"
+        "Fetch activity descriptions too"
         f" ({len(df)} activities, 1 Strava API call each, may be slow,"
         " cached for 3 months to reduce API calls.)",
         value=False,
@@ -288,6 +271,10 @@ def main() -> None:  # noqa: C901, D103, PLR0912, PLR0915
     excel_download_buttons(
         df=df, file_name="Strava_Activity_List.xlsx", exclude_index=True
     )
+
+    if st.button("Re-Fetch from Strava", help="Re-fetch activities from Strava"):
+        refresh_activities_cache()
+        st.rerun()
 
     st.header("Gear")
     st.dataframe(df_gear)
