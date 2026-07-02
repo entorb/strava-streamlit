@@ -8,10 +8,9 @@ _LOGGER = get_logger_from_filename(__file__)
 
 
 def main() -> None:  # noqa: D103
-
     st.markdown("""
     * [Feedback](https://entorb.net/contact.php?origin=strava) and ideas for new reports are highly appreciated.
-    * For bulk modify of activities and Excel import, please use the old [Äpp](https://entorb.net/strava-old/).
+    * [SourceCode](https://github.com/entorb/strava-streamlit) can be found at GitHub.
     """)  # noqa: E501
 
 
