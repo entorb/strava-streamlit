@@ -113,9 +113,7 @@ def main() -> None:  # noqa: C901, D103, PLR0912, PLR0915
         refresh_activities_cache()
         st.rerun()
     if get_env() == "DEV":
-        col_clear.markdown(
-            "<div style='height: 1.7em'></div>", unsafe_allow_html=True
-        )
+        col_clear.markdown("<div style='height: 1.7em'></div>", unsafe_allow_html=True)
         if col_clear.button(
             "Clear cache",
             help="Local dev only: clear ALL caches incl. activity descriptions",
