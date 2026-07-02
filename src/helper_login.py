@@ -25,7 +25,7 @@ def display_strava_auth_link() -> None:
     st.title("Login")
 
     # this text is copied from README.md
-    st.markdown("""This is a modern rewrite of my [old Strava Äpp](https://entorb.net/strava-old/). Currently, only read-only statistics features are implemented. For bulk modify of activities and Excel import, please use the old Äpp.
+    st.markdown("""This is a modern rewrite of my [old Strava Äpp](https://entorb.net/strava-old/). For bulk modify of activities, please use the old Äpp.
 """)
 
     # attention: static files are under html/strava/strava-resources
@@ -59,6 +59,11 @@ def display_strava_auth_link() -> None:
     # this text is copied from README.md
     st.markdown(
         """
+## Latest features
+* 2026-07-02 fetching of activity description field for Excel download (optional checkbox)
+* 2026-05-25 Excel import of activities to Strava
+* 2026-05-10 Write commute flag for activities to Strava
+
 ## Privacy
 
 * **Code:** The [source-code](https://github.com/entorb/strava-streamlit/) is open source.
