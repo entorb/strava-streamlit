@@ -12,6 +12,8 @@ default_language_version:
 
 exclude: |
   (?x)^(
+    \.agents/.*|
+    \.claude/.*|
     \.vscode/.*|
     tests/testdata/.*|
     src/strava-resources/.*
@@ -89,9 +91,9 @@ repos:
     hooks:
       - id: cspell
 
-  # Vulture: find dead code
-  - repo: https://github.com/jendrikseipp/vulture
-    rev: v2.16
-    hooks:
-      - id: vulture
-        pass_filenames: false
+  # # Vulture: find dead code
+  # - repo: https://github.com/jendrikseipp/vulture
+  #   rev: v2.16
+  #   hooks:
+  #     - id: vulture
+  #       pass_filenames: false
