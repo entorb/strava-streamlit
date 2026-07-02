@@ -46,6 +46,12 @@ def get_known_locations_file_path() -> Path:  # noqa: D103
 
 
 @track_function_usage
+def get_act_desc_cache_file_path() -> Path:  # noqa: D103
+    user_id = st.session_state["USER_ID"]
+    return get_data_dir() / "act-desc" / f"{user_id}.json"
+
+
+@track_function_usage
 def geo_distance_haversine(
     start: tuple[float, float], end: tuple[float, float]
 ) -> float:
@@ -145,20 +151,6 @@ def refresh_activities_cache() -> None:
     # in DEV the activity-list pages are also cached to disk, remove them too
     if get_env() == "DEV":
         for p in DIR_CACHE.glob("activities-page-*.json"):
-            p.unlink()
-
-
-@track_function_usage
-def clear_all_caches() -> None:
-    """
-    Clear all in-memory and on-disk caches, including activity descriptions.
-
-    Intended for local dev to force a full re-fetch from Strava.
-    """
-    st.cache_data.clear()
-    st.cache_resource.clear()
-    if get_env() == "DEV":
-        for p in DIR_CACHE.glob("*.json"):
             p.unlink()
 
 
