@@ -79,3 +79,30 @@ def select_sport(
     return location.selectbox(
         label="Sport", options=options, key="sel_type", index=index
     )
+
+
+# how many years of activities to load, mapped to st.session_state["years"]
+_YEARS_OPTIONS = ["Current", "Last", "Last 5", "Last 10", "All"]
+_YEARS_LABEL_TO_VALUE = {
+    "Current": 0,
+    "Last": 1,
+    "Last 5": 5,
+    "Last 10": 10,
+    "All": 100,
+}
+_YEARS_VALUE_TO_INDEX = {0: 0, 1: 1, 5: 2, 10: 3}
+
+
+@track_function_usage
+def select_years(location: DeltaGenerator) -> None:
+    """
+    Display a selectbox to choose how many years of activities to load.
+
+    Stores the selection in st.session_state["years"], which is read by
+    cache_all_activities_and_gears().
+    """
+    if "years" not in st.session_state:
+        st.session_state["years"] = 0
+    index = _YEARS_VALUE_TO_INDEX.get(st.session_state["years"], 4)
+    sel = location.selectbox(label="Years", options=_YEARS_OPTIONS, index=index)
+    st.session_state["years"] = _YEARS_LABEL_TO_VALUE[sel]

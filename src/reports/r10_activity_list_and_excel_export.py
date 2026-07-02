@@ -1,22 +1,127 @@
 """Activity List and Excel Export."""
 
+import datetime as dt
 from math import isnan
 
+import pandas as pd
 import streamlit as st
 
+from helper import get_env
 from helper_activities_caching import (
     cache_all_activities_and_gears,
+    clear_all_caches,
+    refresh_activities_cache,
 )
+from helper_api import StravaRateLimitError, fetch_activity_description
 from helper_logging import get_logger_from_filename
-from helper_ui_components import excel_download_buttons, select_sport
+from helper_ui_components import excel_download_buttons, select_sport, select_years
 
 _LOGGER = get_logger_from_filename(__file__)
+
+
+def next_rate_limit_reset(now: dt.datetime) -> dt.datetime:
+    """
+    Return the next time Strava's 15-min rate-limit window resets.
+
+    Strava's short-term limit resets at :00/:15/:30/:45; a few seconds of buffer
+    are added to account for clock skew.
+    """
+    base = now.replace(second=0, microsecond=0)
+    minutes_to_next = 15 - (now.minute % 15)
+    return base + dt.timedelta(minutes=minutes_to_next, seconds=5)
+
+
+@st.fragment(run_every="10s")
+def description_retry_status(ids: list[int]) -> None:
+    """Show fetch progress and a Retry button that re-enables after the cooldown."""
+    descriptions: dict[int, str] = st.session_state.get("descriptions", {})
+    total = len(ids)
+    fetched = sum(1 for i in ids if i in descriptions)
+    cooldown_until = st.session_state.get("desc_cooldown_until")
+    now = dt.datetime.now(tz=dt.UTC)
+    if cooldown_until is not None and now < cooldown_until:
+        mins, secs = divmod(int((cooldown_until - now).total_seconds()), 60)
+        st.warning(
+            f"Strava API rate limit reached: {fetched} of {total} descriptions "
+            f"fetched. Retry available in {mins:02d}:{secs:02d}."
+        )
+        st.button("Retry fetch", disabled=True)
+    else:
+        st.info(f"{fetched} of {total} descriptions fetched, some are still missing.")
+        if st.button("Retry fetch"):
+            st.rerun()
+
+
+def fetch_and_attach_descriptions(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Fetch missing activity descriptions and add them as the x_description column.
+
+    Already fetched descriptions persist in session_state, so they stay visible and
+    are not re-requested. On hitting the rate limit, fetching pauses until the next
+    Strava reset; the retry status/button is rendered by description_retry_status().
+    """
+    user_id = st.session_state["USER_ID"]
+    descriptions: dict[int, str] = st.session_state.setdefault("descriptions", {})
+    ids = [int(i) for i in df.index]
+    total = len(ids)
+
+    now = dt.datetime.now(tz=dt.UTC)
+    cooldown_until = st.session_state.get("desc_cooldown_until")
+    in_cooldown = cooldown_until is not None and now < cooldown_until
+
+    missing = [i for i in ids if i not in descriptions]
+    if missing and not in_cooldown:
+        rate_limited = False
+        progress = st.progress(0.0, text="Fetching activity descriptions ...")
+        for n, activity_id in enumerate(missing):
+            try:
+                descriptions[activity_id] = fetch_activity_description(
+                    activity_id=activity_id, user_id=user_id
+                )
+            except StravaRateLimitError:
+                rate_limited = True
+                st.session_state["desc_cooldown_until"] = next_rate_limit_reset(
+                    dt.datetime.now(tz=dt.UTC)
+                )
+                break
+            progress.progress((n + 1) / len(missing))
+        progress.empty()
+        if not rate_limited:
+            st.session_state.pop("desc_cooldown_until", None)
+
+    df = df.copy()
+    df["x_description"] = [descriptions.get(i, "") for i in ids]
+
+    fetched = sum(1 for i in ids if i in descriptions)
+    if fetched < total:
+        description_retry_status(ids)
+    else:
+        st.success(f"All {total} activity descriptions fetched.")
+    return df
 
 
 def main() -> None:  # noqa: C901, D103, PLR0912, PLR0915
     st.markdown(
         "Edit at [Strava](https://www.strava.com/athlete/training) or bulk-edit using my [Äpp V1](https://entorb.net/strava-old/)"  # noqa: E501
     )
+
+    col_years, col_refresh, col_clear, _ = st.columns((1, 1, 1, 3))
+    select_years(col_years)
+    # vertical spacer so the button aligns with the selectbox input, not its label
+    col_refresh.markdown("<div style='height: 1.7em'></div>", unsafe_allow_html=True)
+    if col_refresh.button("Refresh", help="Re-fetch activities from Strava"):
+        refresh_activities_cache()
+        st.rerun()
+    if get_env() == "DEV":
+        col_clear.markdown(
+            "<div style='height: 1.7em'></div>", unsafe_allow_html=True
+        )
+        if col_clear.button(
+            "Clear cache",
+            help="Local dev only: clear ALL caches incl. activity descriptions",
+        ):
+            clear_all_caches()
+            st.rerun()
 
     df, df_gear = cache_all_activities_and_gears()
 
@@ -91,6 +196,14 @@ def main() -> None:  # noqa: C901, D103, PLR0912, PLR0915
     col7.button("Reset", on_click=reset_filters)
 
     st.columns(1)
+
+    fetch_desc = st.checkbox(
+        "Fetch activity descriptions"
+        f" ({len(df)} activities, 1 Strava API call each, may be slow)",
+        value=False,
+    )
+    if fetch_desc:
+        df = fetch_and_attach_descriptions(df)
 
     # to rename "x_" prefix
     col_names = {}
