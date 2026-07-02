@@ -1,6 +1,7 @@
 """Activity List and Excel Export."""
 
 import datetime as dt
+import json
 from math import isnan
 
 import pandas as pd
@@ -10,6 +11,7 @@ from helper import get_env
 from helper_activities_caching import (
     cache_all_activities_and_gears,
     clear_all_caches,
+    get_act_desc_cache_file_path,
     refresh_activities_cache,
 )
 from helper_api import StravaRateLimitError, fetch_activity_description
@@ -31,10 +33,28 @@ def next_rate_limit_reset(now: dt.datetime) -> dt.datetime:
     return base + dt.timedelta(minutes=minutes_to_next, seconds=5)
 
 
+def _load_descriptions() -> dict[int, str]:
+    p = get_act_desc_cache_file_path()
+    three_months_ago = dt.datetime.now(tz=dt.UTC) - dt.timedelta(days=90)
+    # sweep all cached description files older than 3 months
+    for f in p.parent.glob("*.json"):
+        if dt.datetime.fromtimestamp(f.stat().st_mtime, tz=dt.UTC) < three_months_ago:
+            f.unlink()
+    if not p.exists():
+        return {}
+    return {int(k): v for k, v in json.loads(p.read_text()).items()}
+
+
+def _save_descriptions(descriptions: dict[int, str]) -> None:
+    p = get_act_desc_cache_file_path()
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(descriptions, ensure_ascii=False))
+
+
 @st.fragment(run_every="10s")
 def description_retry_status(ids: list[int]) -> None:
     """Show fetch progress and a Retry button that re-enables after the cooldown."""
-    descriptions: dict[int, str] = st.session_state.get("descriptions", {})
+    descriptions: dict[int, str] = _load_descriptions()
     total = len(ids)
     fetched = sum(1 for i in ids if i in descriptions)
     cooldown_until = st.session_state.get("desc_cooldown_until")
@@ -56,12 +76,12 @@ def fetch_and_attach_descriptions(df: pd.DataFrame) -> pd.DataFrame:
     """
     Fetch missing activity descriptions and add them as the x_description column.
 
-    Already fetched descriptions persist in session_state, so they stay visible and
-    are not re-requested. On hitting the rate limit, fetching pauses until the next
-    Strava reset; the retry status/button is rendered by description_retry_status().
+    Descriptions persist in a JSON file (per user) and are pruned after 3 months.
+    On hitting the rate limit, fetching pauses until the next Strava reset; the
+    retry status/button is rendered by description_retry_status().
     """
     user_id = st.session_state["USER_ID"]
-    descriptions: dict[int, str] = st.session_state.setdefault("descriptions", {})
+    descriptions: dict[int, str] = _load_descriptions()
     ids = [int(i) for i in df.index]
     total = len(ids)
 
@@ -86,6 +106,7 @@ def fetch_and_attach_descriptions(df: pd.DataFrame) -> pd.DataFrame:
                 break
             progress.progress((n + 1) / len(missing))
         progress.empty()
+        _save_descriptions(descriptions)
         if not rate_limited:
             st.session_state.pop("desc_cooldown_until", None)
 
@@ -197,7 +218,8 @@ def main() -> None:  # noqa: C901, D103, PLR0912, PLR0915
 
     fetch_desc = st.checkbox(
         "Fetch activity descriptions"
-        f" ({len(df)} activities, 1 Strava API call each, may be slow)",
+        f" ({len(df)} activities, 1 Strava API call each, may be slow,"
+        " cached for 3 months to reduce API calls.)",
         value=False,
     )
     if fetch_desc:
