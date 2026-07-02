@@ -1,6 +1,6 @@
 # Torben's Strava App V2 using Streamlit
 
-This is a modern rewrite of my [old Strava Äpp](https://entorb.net/strava-old/). Currently, only read-only statistics features are implemented. For bulk modify of activities and Excel import, please use the old Äpp.
+This is a modern rewrite of my [old Strava Äpp](https://entorb.net/strava-old/).
 
 ## Privacy
 
@@ -13,15 +13,12 @@ This is a modern rewrite of my [old Strava Äpp](https://entorb.net/strava-old/)
 
 ### Python version
 
-As my webserver is running Python 3.11, I need to use it locally too. See below.
+As my Uberspace webserver currently only supports Python 3.11, I need to use it locally too. See below.
 
-### Install
+### Run locally
 
-see [install.sh](scripts/install.sh)
-
-### Run
-
-see [run.sh](scripts/run.sh)
+* [install.sh](scripts/install.sh)
+* [run.sh](scripts/run_streamlit.sh)
 
 ### Check Code
 
@@ -58,6 +55,7 @@ If you want unit test coverage reports in SonarQube, you need to run the sonar c
 
 #### Done Feature TODOs
 
+* activity description fetching (requires 1 API call per activity)
 * activity caching: all or selected years only
 * activity geo calculations
 * gear download
@@ -89,31 +87,7 @@ If you want unit test coverage reports in SonarQube, you need to run the sonar c
 
 ## Deployment at Uberspace
 
-### Python version for local dev
-
-As my webserver is running Python 3.11, I need to use it locally too.
-
-Variant 1: use venv
-
-```sh
-.pyenv/versions/3.11.9/bin/python -m venv .venv --prompt $(basename $(pwd))
-source .venv/bin/activate
-```
-
-Variant 2: use global pyenv
-
-```sh
-pyenv global 3.11.9
-eval "$(pyenv init -)"
-```
-
-`.vscode/settings.json`
-
-```json
-{
-    "python.defaultInterpreterPath": ".pyenv/versions/3.11.9/bin/python"
-}
-```
+see [deploy.sh](scripts/deploy.sh)
 
 ### Setup
 
@@ -162,8 +136,4 @@ supervisorctl restart strava-streamlit
  tail -f ~/logs/supervisord.log
 ```
 
-TODO: why is the output first command not showing the logs?
-
-### Deploy update
-
-see [deploy.sh](scripts/deploy.sh)
+TODO: why is the output of first command not showing the logs?

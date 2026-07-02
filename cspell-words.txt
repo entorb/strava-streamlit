@@ -3,6 +3,7 @@ aggfunc
 CALNAME
 CALSCALE
 connectwith
+cooldown
 Crossfit
 DataFrame
 deauthorize
