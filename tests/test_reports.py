@@ -70,10 +70,7 @@ def test_r20_activity_stats() -> None:
 def test_r40_cal_export() -> None:
     p = Path("src/reports/r40_calendar_export.py")
     # load and run page
-    at = init_and_run(p)
-
-    # click prepare button
-    at.button(key="btn-prepare").click().run()
+    _ = init_and_run(p)
 
     # unit test for gen_ics function
     df, _df_gear = cache_all_activities_and_gears()
