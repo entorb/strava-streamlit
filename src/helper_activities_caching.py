@@ -19,6 +19,41 @@ _LOGGER = get_logger_from_filename(__file__)
 DIR_SERVER = "/var/www/virtual/entorb/data-web-pages/strava"
 DIR_LOCAL = "./data"
 
+# column order for activity DataFrames
+COL_ORDER_ACTIVITIES = [
+    "x_date",
+    "name",
+    "type",
+    "x_workout_name",
+    "x_url",
+    "x_dl",
+    "start_date_local",
+    "x_min",
+    "x_km",
+    "x_mi",
+    "total_elevation_gain",
+    "x_elev_%",
+    "x_km/h",
+    "x_mph",
+    "x_max_km/h",
+    "x_max_mph",
+    "x_min/km",
+    "x_min/mi",
+    "x_location_start",
+    "x_location_end",
+    "x_km_start_end",
+    "x_nearest_city_start",
+    "location_country",
+    "x_gear_name",
+    "average_heartrate",
+    "max_heartrate",
+    "average_cadence",
+    "average_watts",
+    "kilojoules",
+    "elev_high",
+    "elev_low",
+    "average_temp",
+]
 
 # TODO: move to config file
 # some global hard coded ones
@@ -131,11 +166,13 @@ def cache_all_activities_and_gears() -> tuple[pd.DataFrame, pd.DataFrame]:
             dfs.append(df2)
             dfs_gear.append(df_gear2)
         # index is id, so concat is safe.
-        df = pd.concat(dfs)
+        dfs = [d for d in dfs if not d.empty]
+        dfs_gear = [d for d in dfs_gear if not d.empty]
+        df = pd.concat(dfs) if dfs else pd.DataFrame()
         if df.empty:
             st.error("No activity data found, please record/upload data at strava.com.")
             st.stop()
-        df_gear = pd.concat(dfs_gear)
+        df_gear = pd.concat(dfs_gear) if dfs_gear else pd.DataFrame()
     return df, df_gear
 
 
@@ -245,42 +282,7 @@ def cache_all_activities_and_gears_in_year_range(
     # geo calculations
     df = caching_geo_calc(df)
 
-    # column ordering
-    col_first = [
-        "x_date",
-        "name",
-        "type",
-        "x_workout_name",
-        "x_url",
-        "x_dl",
-        "start_date_local",
-        "x_min",
-        "x_km",
-        "x_mi",
-        "total_elevation_gain",
-        "x_elev_%",
-        "x_km/h",
-        "x_mph",
-        "x_max_km/h",
-        "x_max_mph",
-        "x_min/km",
-        "x_min/mi",
-        "x_location_start",
-        "x_location_end",
-        "x_km_start_end",
-        "x_nearest_city_start",
-        "location_country",
-        "x_gear_name",
-        "average_heartrate",
-        "max_heartrate",
-        "average_cadence",
-        "average_watts",
-        "kilojoules",
-        "elev_high",
-        "elev_low",
-        "average_temp",
-    ]
-    df = reorder_cols(df, col_first)
+    df = reorder_cols(df, COL_ORDER_ACTIVITIES)
     return df, df_gear
 
 
@@ -308,23 +310,12 @@ def caching_calc_additional_fields(df: pd.DataFrame) -> pd.DataFrame:
     assert max(df["x_week"]) <= 52
 
     # m/s -> min/km = 1 / X / 60 * 1000
-    # df["x_min/km"] = 1 / df["average_speed"] / 60 * 1000
-    df["x_min/km"] = df.apply(
-        lambda row: (
-            round(1 / row["average_speed"] / 60 * 1000, 2)  # type: ignore
-            if row["average_speed"] and row["average_speed"] > 0
-            else None
-        ),
-        axis=1,
-    )
-    df["x_min/mi"] = df.apply(
-        lambda row: (
-            round(1 / row["average_speed"] / 60 * 1000 * 1.60934, 2)  # type: ignore
-            if row["average_speed"] and row["average_speed"] > 0
-            else None
-        ),
-        axis=1,
-    )
+    speed = df["average_speed"]
+    mask = speed > 0
+    df["x_min/km"] = None
+    df.loc[mask, "x_min/km"] = round(1 / speed[mask] / 60 * 1000, 2)
+    df["x_min/mi"] = None
+    df.loc[mask, "x_min/mi"] = round(1 / speed[mask] / 60 * 1000 * 1.60934, 2)
     df["x_km/h"] = round(df["average_speed"] * 3.6, 1)
     df["x_max_km/h"] = round(df["max_speed"] * 3.6, 1)
     df["x_mph"] = round(df["average_speed"] * 3.6 / 1.60934, 1)
@@ -347,9 +338,8 @@ def caching_calc_additional_fields(df: pd.DataFrame) -> pd.DataFrame:
     # Run:workout
     # Ride:recovery
     # Swim:race
-    df["x_workout_name"] = df.apply(
-        lambda r: workout_map.get((r["type"], r["workout_type"])), axis=1
-    )
+    idx = pd.MultiIndex.from_frame(df[["type", "workout_type"]])
+    df["x_workout_name"] = idx.map(workout_map.get)
 
     return df
 
