@@ -1,7 +1,6 @@
 """Calendar Export."""
 
 import datetime as dt
-import io
 
 import pandas as pd
 import streamlit as st
@@ -73,19 +72,12 @@ END:VEVENT
 def main() -> None:  # noqa: D103
     df = cache_all_activities_and_gears()[0]
 
-    col1, col2, _ = st.columns((1, 1, 6))
-    if col1.button(label="ICS Prepare", key="btn-prepare"):
-        buffer = io.BytesIO()
-        buffer.write(gen_ics(df).encode("utf-8"))
-        buffer.seek(0)
-
-        col2.download_button(
-            label="ICS Download",
-            data=buffer,
-            file_name=FILE_NAME,
-            mime="text/calendar",
-        )
-        # Path("/tmp/ActivityList.ics").write_text(cont)
+    st.download_button(
+        label="Download ICS",
+        data=gen_ics(df).encode("utf-8"),
+        file_name=FILE_NAME,
+        mime="text/calendar",
+    )
 
 
 if __name__ == "__main__":
