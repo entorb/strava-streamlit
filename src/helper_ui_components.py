@@ -38,21 +38,21 @@ def create_navigation_menu() -> StreamlitPage:
 def excel_download_buttons(
     df: pd.DataFrame, file_name: str, *, exclude_index: bool
 ) -> None:
-    """Show prepare data and download buttons."""
-    col1, col2, _ = st.columns((1, 1, 6))
-    if col1.button(label="Excel Prepare"):
+    """Download Excel — generated on click via callable data."""
+
+    def _make_excel() -> bytes:
         buffer = io.BytesIO()
         with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
             df.to_excel(writer, sheet_name="Sheet1", index=not exclude_index)
             writer.close()
+        return buffer.getvalue()
 
-            col2.download_button(
-                label="Excel Download",
-                data=buffer,
-                file_name=file_name.replace(" ", "_"),
-                mime="application/vnd.ms-excel",
-            )
-    st.columns(1)
+    st.download_button(
+        label="Download Excel",
+        data=_make_excel,
+        file_name=file_name.replace(" ", "_"),
+        mime="application/vnd.ms-excel",
+    )
 
 
 @track_function_usage
