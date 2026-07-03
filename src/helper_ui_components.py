@@ -60,11 +60,8 @@ def list_sports(df: pd.DataFrame) -> list:
     """Return list of sport types."""
     sports = sorted(df["type"].unique())
     first = ["Run", "Ride", "Swim", "Hike"]
-    for col in reversed(first):
-        if col in sports:
-            sports.remove(col)
-        else:
-            first.remove(col)
+    first = [col for col in first if col in sports]
+    sports = [col for col in sports if col not in first]
     first.extend(sports)
     return first
 

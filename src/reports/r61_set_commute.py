@@ -43,7 +43,7 @@ def main() -> None:
             },
             disabled=["Name", "Date", "x_url", "Bike"],
             hide_index=True,
-            use_container_width=True,
+            width="stretch",
         )
 
         selected = edited[edited["select"]]

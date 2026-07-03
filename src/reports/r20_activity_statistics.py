@@ -33,6 +33,41 @@ AGGREGATIONS = {
     "Heartrate-max": "max",
 }
 
+FREQ_CFG = {
+    "Week": {
+        "groupby": ["year", "week", "type"],
+        "label": lambda df: (
+            df["year"].astype(str) + "-" + df["week"].astype(str).str.zfill(2)
+        ),
+        "date": lambda df: pd.to_datetime(
+            df.apply(
+                lambda row: dt.date.fromisocalendar(row["year"], row["week"], 1), axis=1
+            )
+        ),
+        "drop": ["year", "week"],
+    },
+    "Month": {
+        "groupby": ["year", "month", "type"],
+        "label": lambda df: (
+            df["year"].astype(str) + "-" + df["month"].astype(str).str.zfill(2)
+        ),
+        "date": lambda df: pd.to_datetime(
+            df.apply(lambda row: dt.date(row["year"], row["month"], 1), axis=1)
+        ),
+        "drop": ["year", "month"],
+    },
+    "Quarter": {
+        "groupby": ["year", "quarter", "type"],
+        "label": lambda df: df["year"].astype(str) + "-Q" + df["quarter"].astype(str),
+        "date": lambda df: pd.to_datetime(
+            df.apply(
+                lambda row: dt.date(row["year"], 3 * row["quarter"] - 2, 1), axis=1
+            )
+        ),
+        "drop": ["year", "quarter"],
+    },
+}
+
 
 @track_function_usage
 def generate_empty_df(
@@ -120,69 +155,7 @@ def activity_stats_grouping(
 
     year_min, year_max = df["year"].min(), df["year"].max()
 
-    if freq == "Week":
-        df2 = df.groupby(["year", "week", "type"]).agg(agg)
-        # add missing values
-        df3 = generate_empty_df(
-            sport=sport,
-            freq=freq,
-            year_min=year_min,
-            year_max=year_max,
-            aggregation_name=aggregation_name,
-        )
-        df2 = add_data_and_empty_df(df2, df3, aggregation_name=aggregation_name)
-        # same str column for each freq
-        df2[freq] = df2["year"].astype(str) + "-" + df2["week"].astype(str).str.zfill(2)
-        df2["date"] = pd.to_datetime(
-            df2.apply(
-                lambda row: dt.date.fromisocalendar(row["year"], row["week"], 1), axis=1
-            )
-        )
-        df2 = df2.drop(columns=["year", "week"])
-
-    elif freq == "Month":
-        df2 = df.groupby(["year", "month", "type"]).agg(agg)
-        # add missing values
-        df3 = generate_empty_df(
-            sport=sport,
-            freq=freq,
-            year_min=year_min,
-            year_max=year_max,
-            aggregation_name=aggregation_name,
-        )
-        df2 = add_data_and_empty_df(df2, df3, aggregation_name=aggregation_name)
-        df2[freq] = (
-            df2["year"].astype(str) + "-" + df2["month"].astype(str).str.zfill(2)
-        )
-        df2["date"] = pd.to_datetime(
-            df2.apply(
-                lambda row: dt.date(row["year"], row["month"], 1),
-                axis=1,
-            )
-        )
-        df2 = df2.drop(columns=["year", "month"])
-
-    elif freq == "Quarter":
-        df2 = df.groupby(["year", "quarter", "type"]).agg(agg)
-        # add missing values
-        df3 = generate_empty_df(
-            sport=sport,
-            freq=freq,
-            year_min=year_min,
-            year_max=year_max,
-            aggregation_name=aggregation_name,
-        )
-        df2 = add_data_and_empty_df(df2, df3, aggregation_name=aggregation_name)
-        df2[freq] = df2["year"].astype(str) + "-Q" + df2["quarter"].astype(str)
-        df2["date"] = pd.to_datetime(
-            df2.apply(
-                lambda row: dt.date(row["year"], 3 * row["quarter"] - 2, 1),
-                axis=1,
-            )
-        )
-        df2 = df2.drop(columns=["year", "quarter"])
-
-    elif freq == "Year":
+    if freq == "Year":
         df2 = df.groupby(["year", "type"]).agg(agg)
         df3 = pd.DataFrame(
             {"year": range(year_min, year_max + 1), "type": sport, aggregation_name: 0}
@@ -193,7 +166,21 @@ def activity_stats_grouping(
             axis=1,
         )
         df2["year"] = df2["year"].astype(str)
-        df2 = df2.rename(columns={"year": freq})  # capitalization
+        df2 = df2.rename(columns={"year": freq})
+    else:
+        cfg = FREQ_CFG[freq]
+        df2 = df.groupby(cfg["groupby"]).agg(agg)
+        df3 = generate_empty_df(
+            sport=sport,
+            freq=freq,
+            year_min=year_min,
+            year_max=year_max,
+            aggregation_name=aggregation_name,
+        )
+        df2 = add_data_and_empty_df(df2, df3, aggregation_name=aggregation_name)
+        df2[freq] = cfg["label"](df2)
+        df2["date"] = cfg["date"](df2)
+        df2 = df2.drop(columns=cfg["drop"])
 
     # rounding
     for measure in AGGREGATIONS:

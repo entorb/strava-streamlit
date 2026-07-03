@@ -125,7 +125,6 @@ def init_dev_session_state() -> None:
     st.session_state["TOKEN_EXPIRE"] = int(time() + 24 * 3600)
     st.session_state["TOKEN_REFRESH"] = st.secrets["my_refresh_token"]
     st.session_state["USER_ID"] = st.secrets["my_user_id"]
-    st.session_state["USER_ID"] = st.secrets["my_user_id"]
     st.session_state["API_SCOPE"] = "read,activity:write,activity:read_all"
     d_login_cnt = get_user_login_count()
     d_login_cnt[st.session_state["USER_ID"]] = 1 + d_login_cnt.get(

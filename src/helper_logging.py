@@ -53,7 +53,7 @@ def track_function_usage(func: Callable) -> Callable:
     """Annotation for gathering runtime statistics."""
 
     @wraps(func)
-    def wrapper(*args: tuple, **kwargs: dict):  # noqa: ANN202
+    def wrapper(*args: object, **kwargs: object) -> object:
         start_time = time.time()
         result = func(*args, **kwargs)  # Call the original function
         end_time = time.time()
