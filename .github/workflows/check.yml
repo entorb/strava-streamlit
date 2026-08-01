@@ -35,6 +35,15 @@ jobs:
         with:
           node-version: 24
 
+      - name: Run prek pre-commit
+        uses: j178/prek-action@v2
+
+      - name: Run markdownlint
+        run: npm exec markdownlint-cli2 "**/*.md"
+
+      - name: Run cspell
+        run: npm exec cspell-cli --gitignore --unique --silent .
+
       - name: Run Ruff
         run: |
           uv run --frozen ruff format --check
@@ -51,15 +60,6 @@ jobs:
         # --cov \
         # --cov-report=term-missing \
         # --cov-report=xml:coverage.xml
-
-      - name: Cache pre-commit envs
-        uses: actions/cache@v6
-        with:
-          path: ~/.cache/pre-commit
-          key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
-
-      - name: Run pre-commit
-        run: uv run pre-commit run --all-files
 
       # # for SonarQube coverage report
       # - uses: SonarSource/sonarqube-scan-action@v8

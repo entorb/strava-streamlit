@@ -1,0 +1,8 @@
+ignores:
+  - "**/.venv/**"
+  - "**/node_modules/**"
+  - ".agents/skills/**"
+  - ".claude/skills/**"
+
+config:
+  MD013: false # line-length

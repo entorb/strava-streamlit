@@ -20,3 +20,4 @@ secrets.toml
 src/reports/r99_playground.py
 .claude/skills/developing-with-streamlit
 .agents/skills/developing-with-streamlit
+cspell-words-missing.txt
