@@ -23,7 +23,7 @@ _ = get_env()
 st.session_state["USER_ID"] = 7656541
 
 at = AppTest.from_file(
-    (Path(__file__).parent.parent / "src/helper_activities_caching.py")
+    Path(__file__).parent.parent / "src/helper_activities_caching.py"
 )
 
 hamburg = (53.5715, 10.0110)
