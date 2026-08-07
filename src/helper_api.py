@@ -129,7 +129,7 @@ def _api_put(path: str, data: dict) -> dict | list:
     return {}
 
 
-def post_activity(  # noqa: PLR0913
+def post_activity(  # noqa: PLR0913, PLR0917
     act_type: str,
     name: str,
     date: str,  # "YYYY-MM-DD HH:MM:SS"
@@ -169,7 +169,7 @@ def set_commute(activity_id: int) -> int:
 
 
 @track_function_usage
-def read_cache_file(cache_file: str) -> None | dict | list:
+def read_cache_file(cache_file: str) -> dict | list | None:
     """Read a json cache file, only used for local dev."""
     p = DIR_CACHE / cache_file
     if not p.is_file():
