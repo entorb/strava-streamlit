@@ -44,6 +44,10 @@ jobs:
       - name: Run cspell
         run: npm exec cspell-cli --gitignore --unique --silent .
 
+      - name: Prepare
+        run: |
+          uv sync --frozen --no-build
+
       - name: Run Ruff
         run: |
           uv run --frozen ruff format --check
