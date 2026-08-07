@@ -7,14 +7,14 @@ cd $(dirname $0)/..
 set -e
 
 uv remove numpy pandas pyarrow sentry-sdk streamlit XlsxWriter
-uv remove --dev ruff pre-commit pytest pytest-cov tomli-w vulture watchdog
+uv remove --dev ruff pytest pytest-cov tomli-w vulture watchdog
 
 uv lock --upgrade
 uv sync --upgrade
 
 # pin to old versions due to Uberspace restrictions
 uv add numpy==2.2.3 pandas==2.2.3 pyarrow==20.0.0 sentry-sdk streamlit XlsxWriter
-uv add --dev ruff pre-commit pytest pytest-cov tomli-w vulture watchdog
+uv add --dev ruff pytest pytest-cov tomli-w vulture watchdog
 
 uv lock --upgrade
 uv sync --upgrade
@@ -26,7 +26,7 @@ uv run ruff format
 uv run ruff check --fix
 
 # pre-commit
-uv run pre-commit autoupdate
-uv run pre-commit run --all-files
+prek autoupdate
+prek run --all-files
 
 echo DONE
