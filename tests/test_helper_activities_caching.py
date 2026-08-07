@@ -22,7 +22,9 @@ from helper_activities_caching import (
 _ = get_env()
 st.session_state["USER_ID"] = 7656541
 
-at = AppTest.from_file("src/helper_activities_caching.py")
+at = AppTest.from_file(
+    (Path(__file__).parent.parent / "src/helper_activities_caching.py")
+)
 
 hamburg = (53.5715, 10.0110)
 munich = (48.1492, 11.5860)

@@ -12,7 +12,8 @@ from helper import get_env
 warnings.filterwarnings("ignore", message=".*streamlit.runtime.scriptrunner_utils.*")
 _ = get_env()
 
-sys.path.insert(0, (Path(__file__).parent.parent / "src").as_posix())
+REPO = Path(__file__).parent.parent
+sys.path.insert(0, (REPO / "src").as_posix())
 sys.path.insert(0, (Path(__file__).parent.parent / "src" / "reports").as_posix())
 from helper_activities_caching import cache_all_activities_and_gears
 
@@ -42,7 +43,7 @@ def init_and_run(path: Path) -> AppTest:
 # tests
 def test_all_pages() -> None:
     """Open all pages and check for errors and warnings."""
-    for p in sorted(Path("src/reports").glob("*.py")):
+    for p in sorted((REPO / "src/reports").glob("*.py")):
         f = p.stem
         t = f[4:]
         print(t)
@@ -50,14 +51,14 @@ def test_all_pages() -> None:
 
 
 def test_r05_current_year() -> None:
-    p = Path("src/reports/r05_current_year.py")
+    p = REPO / "src/reports/r05_current_year.py"
     at = init_and_run(p)
     at.session_state["sel_types"] = ["Run", "Ride"]
     run_and_assert_no_problems(at, p)
 
 
 def test_r20_activity_stats() -> None:
-    p = Path("src/reports/r20_activity_statistics.py")
+    p = REPO / "src/reports/r20_activity_statistics.py"
     at = init_and_run(p)
     at.session_state["sel_freq"] = "Quarter"
     run_and_assert_no_problems(at, p)
@@ -68,7 +69,7 @@ def test_r20_activity_stats() -> None:
 
 
 def test_r40_cal_export() -> None:
-    p = Path("src/reports/r40_calendar_export.py")
+    p = REPO / "src/reports/r40_calendar_export.py"
     # load and run page
     _ = init_and_run(p)
 
@@ -80,7 +81,7 @@ def test_r40_cal_export() -> None:
 
 
 def test_r50_known_locations() -> None:
-    p = Path("src/reports/r50_known_locations.py")
+    p = REPO / "src/reports/r50_known_locations.py"
     # load and run page
     at = init_and_run(p)
 
