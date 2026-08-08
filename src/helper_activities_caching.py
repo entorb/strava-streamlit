@@ -221,6 +221,9 @@ def cache_all_activities_and_gears_in_year_range(
         if col not in df.columns:
             df[col] = None
 
+    # round elevation gain
+    df["total_elevation_gain"] = df["total_elevation_gain"].round(0)
+
     # set int types (before set_index)
     cols = ["id", "utc_offset", "moving_time", "elapsed_time", "total_elevation_gain"]
     for col in cols:
