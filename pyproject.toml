@@ -17,6 +17,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "pyright>=1.1.411",
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
     "ruff>=0.16.2",
@@ -34,6 +35,16 @@ source = ["src"]
 
 [tool.coverage.report]
 exclude_lines = ["pragma: no cover", "if __name__ == \"__main__\":"]
+
+[tool.uv]
+# pyarrow cannot be updated beyond 20.0.0 (pinned by pandas==2.2.3 compatibility)
+[tool.uv.audit]
+# cspell:disable
+ignore = ["GHSA-rgxp-2hwp-jwgg"]
+# cspell:enable
+
+[tool.pyright]
+include = ["src"]
 
 [tool.vulture]
 paths = ["src"]

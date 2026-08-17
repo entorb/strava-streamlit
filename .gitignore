@@ -1,23 +1,18 @@
-# python
-__pycache__/
+.agents/skills/developing-with-streamlit
+.claude/skills/developing-with-streamlit
 .coverage
 .DS_Store
-.venv/
-.pytest_cache/
+/.pytest_cache/
+/.venv/
+/cache/
+/cacheReal/
+/data/
+/dataReal/
+__pycache__/
 coverage_report/
-
-# project dirs
-cache/
-cacheReal/
-data/
-dataReal/
-
-# files
+cspell-words-missing.txt
 download.sh
 requirements-all.txt
 requirements.txt
 secrets.toml
 src/reports/r99_playground.py
-.claude/skills/developing-with-streamlit
-.agents/skills/developing-with-streamlit
-cspell-words-missing.txt
