@@ -18,11 +18,11 @@ exclude = '''
 '''
 
 [[repos]]
+repo = "builtin"
 hooks = [
-  {
-    id = "check-added-large-files",
-    args = ["--maxkb=500"]
-  },
+  { id = "check-added-large-files", args = [
+    "--maxkb=500",
+  ] },
   { id = "check-case-conflict" },
   { id = "check-executables-have-shebangs" },
   { id = "check-illegal-windows-names" },
@@ -38,19 +38,16 @@ hooks = [
   { id = "destroyed-symlinks" },
   { id = "detect-private-key" },
   { id = "end-of-file-fixer" },
-  {
-    id = "file-contents-sorter",
-    files = "^(.gitignore|cspell-words.txt)$",
-    args = ["--ignore-case"]
-  },
+  { id = "file-contents-sorter", files = "^(.gitignore|cspell-words.txt)$", args = [
+    "--ignore-case",
+  ] },
   { id = "fix-byte-order-marker" },
-  {
-    id = "mixed-line-ending",
-    args = ["--fix=lf"]
-  },
+  { id = "mixed-line-ending", args = [
+    "--fix=lf",
+  ] },
   { id = "requirements-txt-fixer" },
-  { id = "trailing-whitespace" }
-]repo = "builtin"
+  { id = "trailing-whitespace" },
+]
 
 [[repos]]
 repo = "https://github.com/gitleaks/gitleaks"
