@@ -38,7 +38,7 @@ repos:
       - id: detect-private-key
       - id: end-of-file-fixer
       - id: file-contents-sorter
-        files: ^(cspell-words.txt)$
+        files: ^(.gitignore|cspell-words.txt)$
         args: ["--ignore-case"]
       - id: fix-byte-order-marker
       - id: mixed-line-ending
