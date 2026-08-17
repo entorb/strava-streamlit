@@ -1,12 +1,13 @@
 ---
 $schema: https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json
-version: "0.2"
+version: '0.2'
 language: en-US
+useCache: true
 useGitignore: true
 
 dictionaryDefinitions:
   - name: cspell-words
-    path: "./cspell-words.txt"
+    path: cspell-words.txt
     addWords: true
 
 dictionaries:
@@ -14,10 +15,11 @@ dictionaries:
   - python
 
 ignorePaths:
-  - ".*"
-  - "LICENSE"
-  - "cspell.config.yaml"
-  - "tests/testdata/.*"
-  - "requirements.txt"
-  - "src/strava-resources/*"
-  - "uv.lock"
+  - '.*'
+  - 'cspell-words.txt'
+  - 'cspell.config.yaml'
+  - 'LICENSE'
+  - 'tests/testdata/.*'
+  - 'requirements.txt'
+  - 'src/strava-resources/*'
+  - 'uv.lock'
