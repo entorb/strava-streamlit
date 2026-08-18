@@ -19,21 +19,21 @@ def main() -> None:  # noqa: D103
     col1, col2 = st.columns(2)
     col1.header("Edit")
     kl = get_known_locations(users_only=True)
-    df = pd.DataFrame(kl, columns=("Lat", "Lon", "Name"))
-    df = df[["Name", "Lat", "Lon"]].sort_values("Name")
+    df = pd.DataFrame(kl, columns=["Lat", "Lon", "Name"])  # type: ignore[arg-type]
+    df = df.loc[:, ["Name", "Lat", "Lon"]].sort_values(by=["Name"])
     # st.dataframe(df, hide_index=True)
 
     df_edited = col1.data_editor(df, hide_index=True, num_rows="dynamic")
     if col1.button("Save", key="btn-save"):
-        df2 = df_edited[["Lat", "Lon", "Name"]]
-        df2[["Lat", "Lon"]] = df2[["Lat", "Lon"]].replace(0, np.nan)
-        df2["Name"] = df2["Name"].str.strip().replace("", np.nan)
-        df2["Name"] = df2["Name"].str.replace(r"[\s\n\r]+", "", regex=True)
+        df2 = df_edited.loc[:, ["Lat", "Lon", "Name"]]
+        df2.loc[:, ["Lat", "Lon"]] = df2.loc[:, ["Lat", "Lon"]].replace(0, np.nan)  # type: ignore
+        df2["Name"] = df2["Name"].str.strip().replace("", np.nan)  # type: ignore
+        df2["Name"] = df2["Name"].str.replace(r"[\s\n\r]+", "", regex=True)  # type: ignore
         df2 = df2.dropna()
         # trim and round
-        df2["Lat"] = df2["Lat"].clip(lower=-180, upper=180).round(4)
-        df2["Lon"] = df2["Lon"].clip(lower=-90, upper=90).round(4)
-        df2 = df2.sort_values("Name")
+        df2["Lat"] = df2["Lat"].clip(lower=-180.0, upper=180.0).round(4)  # type: ignore
+        df2["Lon"] = df2["Lon"].clip(lower=-90.0, upper=90.0).round(4)  # type: ignore
+        df2 = df2.sort_values(by=["Name"])
         path_kl = get_known_locations_file_path()
         df2.to_csv(path_kl, sep=" ", index=False, header=False, lineterminator="\n")
         st.rerun()
@@ -77,7 +77,7 @@ def main() -> None:  # noqa: D103
         if count < 5:  # noqa: PLR2004
             break
 
-    df = pd.DataFrame(data, columns=("Lat", "Lon", "Count"))
+    df = pd.DataFrame(data, columns=["Lat", "Lon", "Count"])  # type: ignore[arg-type]
     zoom = 16
     df["Map"] = df.apply(
         lambda row: (

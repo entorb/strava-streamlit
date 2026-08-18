@@ -42,9 +42,8 @@ def excel_download_buttons(
 
     def _make_excel() -> bytes:
         buffer = io.BytesIO()
-        with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
+        with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:  # type: ignore[arg-type]
             df.to_excel(writer, sheet_name="Sheet1", index=not exclude_index)
-            writer.close()
         return buffer.getvalue()
 
     st.download_button(

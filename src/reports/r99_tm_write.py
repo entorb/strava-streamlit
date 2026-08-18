@@ -42,6 +42,8 @@ def create_act_from_template() -> None:
     commute = None
     gear_id = None
     elev_gain = None
+    proposed_distance = None
+    proposed_duration = None
 
     if my_sport == "KravMaga":
         act_type = "Crossfit"
@@ -76,12 +78,11 @@ def create_act_from_template() -> None:
                 format="%0.1f",
             )
 
-            duration = (
-                cols[1].number_input(
-                    "Minutes", step=1, min_value=10, value=proposed_duration
-                )
-                * 60
+            duration_min = cols[1].number_input(
+                "Minutes", step=1, min_value=10, value=proposed_duration
             )
+            assert duration_min is not None
+            duration = int(duration_min) * 60
 
         sel_datetime = st.datetime_input("Date", value=proposed_datetime)
 
@@ -92,7 +93,7 @@ def create_act_from_template() -> None:
             act_type=act_type,
             name=name,
             date=sel_datetime.isoformat(),  # 2026-05-09T17:45:00Z
-            duration=int(duration),
+            duration=duration,
             distance=distance * 1000 if distance else distance,  # km -> m
             commute=commute,
             gear_id=gear_id,
