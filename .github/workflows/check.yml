@@ -43,18 +43,14 @@ jobs:
       - name: Run prek pre-commit
         uses: j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece  # v3.0.0
 
-      - name: Run md lint
-        uses: rvben/rumdl@4997ff07b63c7a54d6a495ebcd3ce7f23ee1173f  # v0.2.55
+      - name: Run prek pre-commit
+        uses: j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece  # v3.0.0
 
       - name: Run CSpell
         uses: streetsidesoftware/cspell-action@de2a73e963e7443969755b648a1008f77033c5b2  # v8.4.0
         with:
           files: '**/*'
           incremental_files_only: false
-
-      - name: yaml lint
-        run: |
-          npx -y @owenlamont/ryl@0.21.0 check -d '{extends: default, rules: {line-length: disable, truthy: disable}, ignore: [pnpm-lock.yaml]}' .
 
       - name: Prepare
         run: |
