@@ -1,10 +1,5 @@
 {
   // Python settings
-  "python.analysis.autoSearchPaths": true,
-  "python.analysis.diagnosticSeverityOverrides": {
-    "reportMissingImports": "none"
-  },
-  "python.analysis.extraPaths": ["${workspaceFolder}/src"],
   "python.defaultInterpreterPath": ".venv/bin/python",
   "python.terminal.activateEnvironment": true,
   // Python pytest settings
@@ -17,6 +12,5 @@
     "connectionId": "entorb",
     "projectKey": "entorb_strava-streamlit"
   },
-  "sonarlint.testFilePattern": "./tests/**",
-  "cSpell.words": ["testpaths"]
+  "sonarlint.testFilePattern": "./tests/**"
 }
