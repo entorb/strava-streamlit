@@ -1,3 +1,4 @@
+---
 name: Check Code
 
 on:
@@ -21,12 +22,12 @@ jobs:
       contents: read
     steps:
 
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
-          fetch-depth: 1 # latest only
+          fetch-depth: 1  # latest only
 
-      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d  # v10.0.1
         with:
           enable-cache: true
           cache-dependency-glob: |
@@ -34,13 +35,13 @@ jobs:
             uv.lock
 
       - name: Run prek pre-commit
-        uses: j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece # v3.0.0
+        uses: j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece  # v3.0.0
 
       - name: Run md lint
-        uses: rvben/rumdl@4997ff07b63c7a54d6a495ebcd3ce7f23ee1173f # v0.2.55
+        uses: rvben/rumdl@4997ff07b63c7a54d6a495ebcd3ce7f23ee1173f  # v0.2.55
 
       - name: Run CSpell
-        uses: streetsidesoftware/cspell-action@de2a73e963e7443969755b648a1008f77033c5b2 # v8.4.0
+        uses: streetsidesoftware/cspell-action@de2a73e963e7443969755b648a1008f77033c5b2  # v8.4.0
         with:
           files: '**/*'
           incremental_files_only: false
@@ -66,7 +67,7 @@ jobs:
         # --cov-report=term-missing \
         # --cov-report=xml:coverage.xml
 
-      # # for SonarQube coverage report
-      # - uses: SonarSource/sonarqube-scan-action@v8
-      #   env:
-      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        # # for SonarQube coverage report
+        # - uses: SonarSource/sonarqube-scan-action@v8
+        #   env:
+        #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
