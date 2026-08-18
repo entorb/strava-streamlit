@@ -91,7 +91,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
                 for col in (k for k, v in COLS.items() if v == "Int64"):
                     imported[col] = imported[col].astype("Int64")
                 for col in (k for k, v in COLS.items() if v == "object"):
-                    imported[col] = imported[col].fillna("").astype(str)
+                    imported[col] = imported[col].fillna("").astype(str)  # type: ignore[union-attr]
                 st.session_state.df = imported
                 st.success(f"Loaded {len(imported)} rows.")
         except Exception as e:  # noqa: BLE001
@@ -111,7 +111,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
     st.session_state.df = edited_df
 
     # --- Submit ---
-    rows_to_submit = edited_df.dropna(subset=["Name", "Date", "Duration (s)", "Type"])
+    rows_to_submit = edited_df.dropna(subset=["Name", "Date", "Duration (s)", "Type"])  # type: ignore[arg-type]
     if rows_to_submit.empty:
         return
 
@@ -121,27 +121,33 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
         errors = []
         responses = []
         for _, row in rows_to_submit.iterrows():
-            name = row["Name"]
+            name = str(row["Name"])  # type: ignore
             try:
-                distance = row["Distance (m)"]
-                gear_id = row["Gear ID"] or None
-                elev_gain = (
-                    row["Elevation gain"] if pd.notna(row["Elevation gain"]) else None
-                )
-                commute = bool(row["Commute"])
+                distance = row["Distance (m)"]  # type: ignore
+                gear_id = str(row["Gear ID"]) or None  # type: ignore
+                elev_gain_val = row["Elevation gain"]  # type: ignore
+                # Convert to float or None - handle pd.NA and None
+                if elev_gain_val is None:  # type: ignore[arg-type]
+                    elev_gain = None
+                else:
+                    try:
+                        elev_gain = float(elev_gain_val)
+                    except (TypeError, ValueError):
+                        elev_gain = None
+                commute = bool(row["Commute"])  # type: ignore
 
-                date_str = pd.Timestamp(row["Date"]).strftime("%Y-%m-%d %H:%M:%S")
+                date_str = pd.Timestamp(row["Date"]).strftime("%Y-%m-%d %H:%M:%S")  # type: ignore
 
                 resp = post_activity(
-                    act_type=row["Type"],
+                    act_type=str(row["Type"]),  # type: ignore
                     name=name,
                     date=date_str,
-                    duration=int(row["Duration (s)"]),
-                    distance=distance if pd.notna(distance) else None,
-                    desc=row["Description"] or None,
+                    duration=int(row["Duration (s)"]),  # type: ignore
+                    distance=float(distance) if pd.notna(distance) else None,  # type: ignore[arg-type]
+                    desc=str(row["Description"]) or None,  # type: ignore
                     commute=commute,
                     gear_id=gear_id,
-                    elev_gain=elev_gain,
+                    elev_gain=int(elev_gain) if elev_gain else None,  # type: ignore[arg-type]
                 )
                 responses.append(
                     {

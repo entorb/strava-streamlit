@@ -13,4 +13,4 @@ def reorder_cols(df: pd.DataFrame, col_first: list[str]) -> pd.DataFrame:
     cols = df.columns.to_list()
     col_first = [col for col in col_first if col in cols]
     cols = [col for col in cols if col not in col_first]
-    return df[col_first + cols]
+    return df.loc[:, col_first + cols]
