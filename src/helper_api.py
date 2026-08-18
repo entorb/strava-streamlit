@@ -129,7 +129,7 @@ def _api_put(path: str, data: dict) -> dict | list:
     return {}
 
 
-def post_activity(  # noqa: PLR0913
+def post_activity(  # noqa: PLR0913 PLR0917
     act_type: str,
     name: str,
     date: str,  # "YYYY-MM-DD HH:MM:SS"
