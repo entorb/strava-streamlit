@@ -142,7 +142,7 @@ def activity_stats_grouping(
 
     if sport != "ALL":
         # if not ALL sports, filter on one sport
-        df = df[df["type"] == sport]
+        df = df.loc[df["type"] == sport].copy()
     else:  # ALL
         sport = "Run"
 
@@ -153,16 +153,20 @@ def activity_stats_grouping(
         agg = AGGREGATIONS
         aggregation_name = "Count"
 
-    year_min, year_max = df["year"].min(), df["year"].max()
+    year_min, year_max = int(df["year"].min()), int(df["year"].max())  # type: ignore
 
     if freq == "Year":
         df2 = df.groupby(["year", "type"]).agg(agg)
         df3 = pd.DataFrame(
-            {"year": range(year_min, year_max + 1), "type": sport, aggregation_name: 0}
+            {
+                "year": list(range(year_min, year_max + 1)),
+                "type": sport,
+                aggregation_name: 0,
+            }
         ).set_index(["year", "type"])
         df2 = add_data_and_empty_df(df2, df3, aggregation_name=aggregation_name)
         df2["date"] = df2.apply(
-            lambda row: dt.date(row["year"], 1, 1),
+            lambda row: dt.date(int(row["year"]), 1, 1),  # type: ignore
             axis=1,
         )
         df2["year"] = df2["year"].astype(str)
@@ -204,11 +208,11 @@ def get_cell(
     df: pd.DataFrame, sport: str, period: str, agg: str, sel_freq: str
 ) -> float | int:
     """Extract a cell."""
-    df2 = df[(df[sel_freq] == period) & (df["Sport"] == sport)]
-    lst = df2[agg].head(1).to_list()
+    df2 = df.loc[(df[sel_freq] == period) & (df["Sport"] == sport)]
+    lst = df2[agg].head(1).tolist()
     if len(lst) == 0:
         return 0
-    return lst[0]
+    return float(lst[0])
 
 
 def main() -> None:  # noqa: D103
@@ -389,15 +393,15 @@ def active_days(df: pd.DataFrame) -> None:
     if sel_types:
         df = df.query("type in @sel_types")
 
-    year_min, year_max = df["year"].min(), df["year"].max()
+    year_min, year_max = int(df["year"].min()), int(df["year"].max())  # type: ignore
 
     df3 = (
-        df[["year", "date"]]
+        df.loc[:, ["year", "date"]]
         .drop_duplicates()
         .groupby("year")
         .count()
-        .rename(columns={"date": "Count"})
-        .reindex(range(year_min, year_max + 1), fill_value=0)
+        .rename(columns={"date": "Count"})  # type: ignore[arg-type]
+        .reindex(list(range(year_min, year_max + 1)), fill_value=0)
         .reset_index()
     )
 

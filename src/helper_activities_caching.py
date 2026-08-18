@@ -240,7 +240,8 @@ def cache_all_activities_and_gears_in_year_range(
     df = df.set_index("id")
 
     # init empty df_gear of minimum columns
-    df_gear = pd.DataFrame(columns=("id", "name", "nickname")).set_index("id")
+    df_gear = pd.DataFrame(columns=["id", "name", "nickname"])  # type: ignore[arg-type]
+    df_gear = df_gear.set_index("id")
 
     if df.empty:
         return (df, df_gear)
@@ -316,17 +317,17 @@ def caching_calc_additional_fields(df: pd.DataFrame) -> pd.DataFrame:
     speed = df["average_speed"]
     mask = speed > 0
     df["x_min/km"] = None
-    df.loc[mask, "x_min/km"] = round(1 / speed[mask] / 60 * 1000, 2)
+    df.loc[mask, "x_min/km"] = (1 / speed[mask] / 60 * 1000).round(2)
     df["x_min/mi"] = None
-    df.loc[mask, "x_min/mi"] = round(1 / speed[mask] / 60 * 1000 * 1.60934, 2)
-    df["x_km/h"] = round(df["average_speed"] * 3.6, 1)
-    df["x_max_km/h"] = round(df["max_speed"] * 3.6, 1)
-    df["x_mph"] = round(df["average_speed"] * 3.6 / 1.60934, 1)
-    df["x_max_mph"] = round(df["max_speed"] * 3.6 / 1.60934, 1)
+    df.loc[mask, "x_min/mi"] = (1 / speed[mask] / 60 * 1000 * 1.60934).round(2)
+    df["x_km/h"] = (df["average_speed"] * 3.6).round(1)
+    df["x_max_km/h"] = (df["max_speed"] * 3.6).round(1)
+    df["x_mph"] = (df["average_speed"] * 3.6 / 1.60934).round(1)
+    df["x_max_mph"] = (df["max_speed"] * 3.6 / 1.60934).round(1)
 
-    df["x_min"] = round(df["moving_time"] / 60, 1)
-    df["x_km"] = round(df["distance"] / 1000, 1)
-    df["x_mi"] = round(df["distance"] / 1000 / 1.60934, 1)  # km -> mile
+    df["x_min"] = (df["moving_time"] / 60).round(1)
+    df["x_km"] = (df["distance"] / 1000).round(1)
+    df["x_mi"] = (df["distance"] / 1000 / 1.60934).round(1)  # km -> mile
 
     df["x_elev_%"] = round(df["total_elevation_gain"] / df["x_km"] / 10, 1)
 
@@ -341,7 +342,7 @@ def caching_calc_additional_fields(df: pd.DataFrame) -> pd.DataFrame:
     # Run:workout
     # Ride:recovery
     # Swim:race
-    idx = pd.MultiIndex.from_frame(df[["type", "workout_type"]])
+    idx = pd.MultiIndex.from_frame(pd.DataFrame(df[["type", "workout_type"]]))
     df["x_workout_name"] = idx.map(workout_map.get)
 
     return df
@@ -553,24 +554,23 @@ def reduce_and_rename_activity_df_for_stats(df: pd.DataFrame) -> pd.DataFrame:
     VirtualRide -> Ride, Walk -> Hike
     """
     # reduce
-    df = df[
-        [
-            "type",
-            "x_date",
-            "x_year",
-            "x_quarter",
-            "x_month",
-            "x_week",
-            "x_min",
-            "x_km",
-            "total_elevation_gain",
-            "x_elev_%",
-            "x_km/h",
-            "average_heartrate",
-            "max_heartrate",
-            "x_max_km/h",
-        ]
+    cols = [
+        "type",
+        "x_date",
+        "x_year",
+        "x_quarter",
+        "x_month",
+        "x_week",
+        "x_min",
+        "x_km",
+        "total_elevation_gain",
+        "x_elev_%",
+        "x_km/h",
+        "average_heartrate",
+        "max_heartrate",
+        "x_max_km/h",
     ]
+    df = df.loc[:, cols]
 
     # rename
     df = df.rename(
