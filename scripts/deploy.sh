@@ -28,7 +28,6 @@ rsync -ruzv --no-links --delete --delete-excluded --exclude __pycache__ --exclud
 # static files are under strava/
 rsync -uz src/strava-resources/*.svg entorb@entorb.net:html/strava/strava-resources/
 
-
 echo installing packages
 ssh entorb@entorb.net "pip3.11 install --user -r strava-streamlit/requirements.txt > /dev/null"
 

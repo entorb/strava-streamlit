@@ -10,6 +10,6 @@ status=$?
 
 # tail because summary is at bottom
 if [ $status -ne 0 ]; then
-    tail -n 100 "$out"
+  tail -n 100 "$out"
 fi
 exit $status

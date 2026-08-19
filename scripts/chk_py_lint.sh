@@ -9,7 +9,7 @@ uv run --no-build ruff format --quiet >"$out" 2>&1 && uv run --no-build ruff che
 status=$?
 
 if [ $status -ne 0 ]; then
-    echo "Issues remaining, you can try:\nuv run ruff check --fix --unsafe-fixes"
-    head -n 100 "$out"
+  echo "Issues remaining, you can try:\nuv run ruff check --fix --unsafe-fixes"
+  head -n 100 "$out"
 fi
 exit $status

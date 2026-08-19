@@ -38,6 +38,7 @@ rumdl
 ruzv
 scriptrunner
 selectbox
+shfmt
 SonarCloud
 SonarQube
 startsecs
