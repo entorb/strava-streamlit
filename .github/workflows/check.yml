@@ -1,0 +1,76 @@
+---
+name: Check Code
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 1  # latest only
+
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d  # v10.0.1
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            pyproject.toml
+            uv.lock
+
+      # - name: Gitleaks
+      #   uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e  # v3.0.0
+
+      - name: cleanup after Gitleaks
+        run: rm -rf results.sarif
+
+      - name: Run prek pre-commit
+        uses: j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece  # v3.0.0
+
+      - name: Run CSpell
+        uses: streetsidesoftware/cspell-action@de2a73e963e7443969755b648a1008f77033c5b2  # v8.4.0
+        with:
+          files: '**/*'
+          incremental_files_only: false
+
+      - name: Prepare
+        run: |
+          uv sync --frozen --no-build
+
+      - name: Run Ruff
+        run: |
+          uv run --frozen ruff format --check
+          uv run --frozen ruff check --no-fix --output-format=github
+
+      - name: Run vulture
+        run: uv run vulture
+
+      - name: Run pytest unittests
+        run: |
+          scripts/copy_test_data.sh
+          cp .streamlit/secrets-EXAMPLE.toml .streamlit/secrets.toml
+          uv run --frozen pytest
+        # --cov \
+        # --cov-report=term-missing \
+        # --cov-report=xml:coverage.xml
+
+        # # for SonarQube coverage report
+        # - uses: SonarSource/sonarqube-scan-action@v8
+        #   env:
+        #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
