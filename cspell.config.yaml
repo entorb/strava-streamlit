@@ -12,12 +12,12 @@ dictionaries:
   - python
 language: en-US
 ignorePaths:
-  - '/.vscode/'
-  - 'cspell-words.txt'
-  - 'cspell.config.yaml'
-  - '/LICENSE'
   - '.*'
-  - 'tests/testdata/.*'
-  - 'requirements.txt'
-  - 'src/strava-resources/*'
-  - 'uv.lock'
+  - /.vscode/
+  - /LICENSE
+  - cspell-words.txt
+  - cspell.config.yaml
+  - tests/testdata/.*
+  - requirements.txt
+  - src/strava-resources/*
+  - uv.lock
