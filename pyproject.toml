@@ -1,0 +1,52 @@
+[project]
+name = "strava-streamlit"
+version = "0.1.0"
+description = " Strava Äpp V2 using Streamlit"
+readme = "README.md"
+requires-python = ">=3.11"
+
+dependencies = [
+    "numpy==2.2.3",
+    "openpyxl>=3.1.5",
+    "pandas==2.2.3",
+    "pyarrow==20.0.0",
+    "sentry-sdk>=2.66.1",
+    "streamlit>=1.61.1",
+    "xlsxwriter>=3.2.9",
+]
+
+[dependency-groups]
+dev = [
+    "pyright>=1.1.411",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.16.2",
+    "tomli-w>=1.2.0",
+    "vulture>=2.16",
+    "watchdog>=6.0.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = "src"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["src"]
+
+[tool.coverage.report]
+exclude_lines = ["pragma: no cover", "if __name__ == \"__main__\":"]
+
+[tool.uv]
+# pyarrow cannot be updated beyond 20.0.0 (pinned by pandas==2.2.3 compatibility)
+[tool.uv.audit]
+# cspell:disable
+ignore = ["GHSA-rgxp-2hwp-jwgg"]
+# cspell:enable
+
+[tool.pyright]
+include = ["src"]
+
+[tool.vulture]
+paths = ["src"]
+# exclude = ["src/models.py"]
+ignore_names = ["_LOGGER"]
