@@ -3,7 +3,7 @@
 import tomllib
 from pathlib import Path
 
-import tomli_w  # pip install tomli-w
+import tomli_w
 
 p_in = Path(__file__).parent.parent / ".streamlit/config.toml"
 p_out = p_in.parent / "config-prod.toml"

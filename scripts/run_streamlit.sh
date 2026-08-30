@@ -1,5 +1,5 @@
 #!/bin/sh
-cd $(dirname $0)/..
+cd "$(dirname "$0")/.."
 
 uv run -m streamlit run src/main.py
 
