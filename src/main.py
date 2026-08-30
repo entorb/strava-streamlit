@@ -37,9 +37,7 @@ def init_sentry() -> None:
 
 def init_matomo() -> None:
     """Initialize Matomo access stats, via JavaScript snippet."""
-    import streamlit.components.v1 as components  # noqa: PLC0415
-
-    components.html(
+    st.html(
         """
 <script>
 var _paq = window._paq = window._paq || [];
@@ -53,8 +51,7 @@ _paq.push(['enableLinkTracking']);
     g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
 })();
 </script>
-    """,
-        height=0,
+    """
     )
 
 
