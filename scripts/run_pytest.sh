@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # ensure we are in the root dir
-cd $(dirname $0)/..
+cd "$(dirname "$0")/.."
 
 sh scripts/copy_test_data.sh
 
