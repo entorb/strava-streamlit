@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # ensure we are in the root dir
-cd $(dirname $0)/..
+cd "$(dirname "$0")/.."
 
 # exit upon error
 set -e
@@ -18,7 +18,7 @@ sh scripts/run_pytest.sh
 
 echo copying
 # config.toml -> config-prod.toml
-python3 scripts/config_convert.py
+uv run --no-build scripts/config_convert.py
 rsync -uz .streamlit/config-prod.toml entorb@entorb.net:strava-streamlit/.streamlit/config.toml
 rsync -uz .streamlit/secrets.toml entorb@entorb.net:strava-streamlit/.streamlit/secrets.toml
 rsync -uz requirements.txt entorb@entorb.net:strava-streamlit/
