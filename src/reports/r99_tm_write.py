@@ -49,11 +49,11 @@ def create_act_from_template() -> None:
         act_type = "Crossfit"
         name = "Krav Maga @ Level Up Gym"
         proposed_datetime = dt.datetime.combine(last_monday, dt.time(18, 0))
-        duration = 3600
+        duration = 3600 + 900
     elif my_sport == "KravFit":
         act_type = "Crossfit"
         name = "Krav Fit @ Level Up Gym"
-        proposed_datetime = dt.datetime.combine(last_thursday, dt.time(17, 45))
+        proposed_datetime = dt.datetime.combine(last_thursday, dt.time(18, 0))
         duration = 3600 + 900
     elif my_sport in ["Pendelei", "Maloche"]:
         act_type = "Ride"
