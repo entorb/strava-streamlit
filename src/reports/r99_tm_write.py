@@ -44,6 +44,7 @@ def create_act_from_template() -> None:
     elev_gain = None
     proposed_distance = None
     proposed_duration = None
+    proposed_elev_gain = None
 
     if my_sport == "KravMaga":
         act_type = "Crossfit"
@@ -63,12 +64,11 @@ def create_act_from_template() -> None:
         proposed_datetime = dt.datetime.combine(today, dt.time(7, 30))
         proposed_distance = 33.0 if my_sport == "Maloche" else 20.0
         proposed_duration = 90 if my_sport == "Maloche" else 70
-        if my_sport == "Maloche":
-            elev_gain = 90
+        proposed_elev_gain = 90
 
     with st.form("post_activity_form", clear_on_submit=True):
         if my_sport in ["Pendelei", "Maloche"]:
-            cols = st.columns(2)
+            cols = st.columns(3)
 
             distance = cols[0].number_input(
                 "KM",
@@ -83,6 +83,10 @@ def create_act_from_template() -> None:
             )
             assert duration_min is not None
             duration = int(duration_min) * 60
+
+            elev_gain = cols[2].number_input(
+                "Elevation (m)", step=10, min_value=0, value=proposed_elev_gain
+            )
 
         sel_datetime = st.datetime_input("Date", value=proposed_datetime)
 
