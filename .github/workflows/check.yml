@@ -3,6 +3,8 @@ name: Check Code
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "0 5 * * 0"  # Sunday 05:00 UTC, audit alert
   push:
     branches: ["main", "renovate/**"]
   pull_request:
