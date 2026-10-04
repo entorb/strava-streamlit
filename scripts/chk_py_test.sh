@@ -1,12 +1,12 @@
 #!/bin/sh
+set -e
+cd "$(dirname "$0")/.."
 
-# ensure we are in the root dir
-cd "$(dirname "$0")/.." || exit 1
 out=$(mktemp)
 trap 'rm -f "$out"' EXIT INT TERM
 
-uv run --no-build pytest --quiet --tb=short >"$out" 2>&1
-status=$?
+status=0
+uv run --no-build pytest --quiet --tb=short >"$out" 2>&1 || status=$?
 
 # tail because summary is at bottom
 if [ $status -ne 0 ]; then

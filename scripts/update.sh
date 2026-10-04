@@ -1,10 +1,6 @@
 #!/bin/sh
-
-# ensure we are in the root dir
-cd "$(dirname "$0")/.." || exit 1
-
-# exit upon error
 set -e
+cd "$(dirname "$0")/.."
 
 uv remove numpy pandas pyarrow sentry-sdk streamlit XlsxWriter
 uv remove --dev ruff pytest pytest-cov tomli-w vulture watchdog
