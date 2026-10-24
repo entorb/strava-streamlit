@@ -22,7 +22,7 @@ uv run ruff format
 uv run ruff check --fix
 
 # pre-commit
-prek autoupdate
+prek autoupdate --cooldown-days 7
 prek run --all-files
 
 echo DONE
