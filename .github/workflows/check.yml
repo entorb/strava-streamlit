@@ -29,7 +29,7 @@ jobs:
           persist-credentials: false
           fetch-depth: 1  # latest only
 
-      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d  # v10.0.1
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884  # v10.3.0
         with:
           enable-cache: true
           cache-dependency-glob: |
@@ -42,12 +42,12 @@ jobs:
       #   run: rm -rf results.sarif
 
       - name: Run prek pre-commit
-        uses: j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece  # v3.0.0
+        uses: j178/prek-action@1382ad72dea72f9d53832f2bcb65b3e87a947204  # v3.0.1
         with:
           extra-args: --all-files --quiet
 
       - name: Run CSpell
-        uses: streetsidesoftware/cspell-action@e0668cf020899e887ee8ad4d173c31738a79eae8  # v9.0.1
+        uses: streetsidesoftware/cspell-action@6f3c77c1406bc930f944ba97e9801a22e42caf58  # v9.1.0
         with:
           files: '**/*'
           incremental_files_only: false
