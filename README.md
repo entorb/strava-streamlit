@@ -1,5 +1,8 @@
 # Torben's Strava App V2 using Streamlit
 
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=entorb_strava-streamlit&metric=ncloc)](https://sonarcloud.io/summary/overall?id=entorb_strava-streamlit)
+[![Security issues](https://sonarcloud.io/api/project_badges/measure?project=entorb_todo&metric=software_quality_security_issues)](https://sonarcloud.io/summary/overall?id=entorb_strava-streamlit)
+
 This is a modern rewrite of my [old Strava Äpp](https://entorb.net/strava-old/).
 
 ## Privacy
@@ -36,6 +39,8 @@ see [.streamlit/secrets.toml](.streamlit/secrets-EXAMPLE.toml)
 ### SonarQube Code Analysis
 
 At [sonarcloud.io](https://sonarcloud.io/summary/overall?id=entorb_template-python&branch=main)
+
+[![SonarQube Cloud](https://sonarcloud.io/images/project_badges/sonarcloud-light.svg)](https://sonarcloud.io/summary/overall?id=entorb_strava-streamlit)
 
 ## TODOs
 
