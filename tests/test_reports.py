@@ -7,10 +7,7 @@ from pathlib import Path
 
 from streamlit.testing.v1 import AppTest
 
-from helper import get_env
-
 warnings.filterwarnings("ignore", message=".*streamlit.runtime.scriptrunner_utils.*")
-_ = get_env()
 
 REPO = Path(__file__).parent.parent
 sys.path.insert(0, (REPO / "src").as_posix())
@@ -21,7 +18,6 @@ from helper_activities_caching import cache_all_activities_and_gears
 # helpers
 def init_report(path: Path) -> AppTest:
     at = AppTest.from_file(path)
-    at.session_state["ENV"] = "DEV"
     at.session_state["USER_ID"] = 7656541
     at.session_state["API_SCOPE"] = "read,activity:write,activity:read_all"
     return at

@@ -9,7 +9,7 @@ import streamlit as st
 # needs to be first streamlit command, so placed before the imports
 st.set_page_config(page_title="Strava Äpp V2", page_icon=None, layout="wide")
 
-from helper import get_env
+from helper import ENV
 from helper_logging import get_logger_from_filename, init_logging
 from helper_login import (
     init_dev_session_state,
@@ -29,7 +29,7 @@ def init_sentry() -> None:
 
     sentry_sdk.init(
         dsn=st.secrets["sentry_dsn"],
-        environment=get_env(),
+        environment=ENV,
         send_default_pii=True,
         traces_sample_rate=0.0,
     )
@@ -56,11 +56,11 @@ _paq.push(['enableLinkTracking']);
 
 
 def main() -> None:  # noqa: D103
-    if get_env() == "PROD":
+    if ENV == "PROD":
         init_sentry()
         init_matomo()
 
-    if get_env() == "DEV":
+    if ENV == "Local":
         init_dev_session_state()
 
     if "TOKEN" not in st.session_state:
