@@ -8,7 +8,7 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-from helper import get_env
+from helper import ENV
 from helper_api import DIR_CACHE, fetch_all_activities, fetch_gear_data
 from helper_logging import get_logger_from_filename, track_function_usage
 from helper_pandas import reorder_cols
@@ -71,7 +71,7 @@ KNOWN_LOCATIONS = [
 @track_function_usage
 def get_data_dir() -> Path:
     """Get date path, dependent on env."""
-    return Path(DIR_SERVER if get_env() == "PROD" else DIR_LOCAL)
+    return Path(DIR_SERVER if ENV == "PROD" else DIR_LOCAL)
 
 
 @track_function_usage
@@ -186,7 +186,7 @@ def refresh_activities_cache() -> None:
     """
     cache_all_activities_and_gears_in_year_range.clear()
     # in DEV the activity-list pages are also cached to disk, remove them too
-    if get_env() == "DEV":
+    if ENV == "Local":
         for p in DIR_CACHE.glob("activities-page-*.json"):
             p.unlink()
 
