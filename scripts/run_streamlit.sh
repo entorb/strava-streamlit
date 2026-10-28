@@ -2,7 +2,7 @@
 set -e
 cd "$(dirname "$0")/.."
 
-uv run -m streamlit run src/main.py
+APP_ENV=Local uv run -m streamlit run src/main.py
 
 # # my webserver uses 3.11, so I use it for local dev too.
 # pyenv global 3.11
