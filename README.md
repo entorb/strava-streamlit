@@ -3,7 +3,7 @@
 [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=entorb_strava-streamlit&metric=ncloc)](https://sonarcloud.io/summary/overall?id=entorb_strava-streamlit)
 [![Security issues](https://sonarcloud.io/api/project_badges/measure?project=entorb_todo&metric=software_quality_security_issues)](https://sonarcloud.io/summary/overall?id=entorb_strava-streamlit)
 
-This is a modern rewrite of my [old Strava Äpp](https://entorb.net/strava-old/).
+This is a modern rewrite of my [old Strava Äpp](https://github.com/entorb/strava-perl/).
 
 ## Privacy
 

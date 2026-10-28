@@ -16,7 +16,7 @@ uv sync                               # install/update deps
 
 - **Flat imports** — `src/` on `sys.path` (pytest config), no `__init__.py`. Import as `from helper_xxx import foo`.
 - **Dynamic pages** — `src/reports/rNN_name.py` with `main()` = new page. `r99*` = admin-only (gated by `my_user_id` in `st.secrets`).
-- **Env detection** — `ENV` (`helper.py`) = PROD or Local. Local enables local JSON caching + admin pages.
+- **Env detection** — `ENV` (`helper.py`) = PROD or Local, from env var `APP_ENV` (unset: PROD). Local enables local JSON caching + admin pages.
 - **No database** — strava API responses cached as JSON in `cache/`. Locations in `data/knownLocations/*.txt`. City DB in `data/city-gps.dat`.
 - **Caching** — `@st.cache_data(ttl="2h")` on activity fetch, `user_id` param in cache key for isolation.
 - **Instrumentation** — `@track_function_usage` decorator wraps functions; call stats visible on `r99_internal_stats.py`.
