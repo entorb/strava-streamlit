@@ -3,6 +3,7 @@
 # ruff: noqa: PLR2004
 
 import math
+from getpass import getuser
 from pathlib import Path
 
 import pandas as pd
@@ -16,7 +17,7 @@ from helper_pandas import reorder_cols
 _LOGGER = get_logger_from_filename(__file__)
 
 
-DIR_SERVER = "/var/www/virtual/entorb/data-web-pages/strava"
+DIR_SERVER = Path("/var/www/virtual") / getuser() / "data-web-pages/strava"
 DIR_LOCAL = "./data"
 
 # column order for activity DataFrames
