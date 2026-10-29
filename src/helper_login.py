@@ -3,6 +3,8 @@
 # ruff: noqa: E501
 
 import subprocess
+from getpass import getuser
+from pathlib import Path
 from time import time
 
 import streamlit as st
@@ -16,17 +18,13 @@ from helper_logging import (
 )
 
 _LOGGER = get_logger_from_filename(__file__)
-PATH_WEBSTATS_SCRIPT = "/var/www/virtual/entorb/web-stats.py"
+PATH_WEBSTATS_SCRIPT = Path("/var/www/virtual") / getuser() / "web-stats.py"
 
 
 @track_function_usage
 def display_strava_auth_link() -> None:
     """Display link for Strava auth."""
     st.title("Login")
-
-    # this text is copied from README.md
-    st.markdown("""This is a modern rewrite of my [old Strava Äpp](https://entorb.net/strava-old/). For bulk modify of activities, please use the old Äpp.
-""")
 
     # attention: static files are under html/strava/strava-resources
     st.write(
@@ -82,7 +80,7 @@ def display_strava_auth_link() -> None:
 * 2025-09-09 John: thanks for creating an awesome export tool.
 * 2025-03-26 Chris: Thank you for this tool.
 
-plus much more at [old App](https://entorb.net/strava-old/)
+plus much more at [old App](https://github.com/entorb/strava-perl)
 """
     )
 
