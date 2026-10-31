@@ -8,9 +8,7 @@ updates:
       interval: quarterly
     cooldown:
       default-days: 7
-    labels:
-      - dependencies
     groups:
       github-actions:
         patterns:
-          - '*'
+          - "*"
