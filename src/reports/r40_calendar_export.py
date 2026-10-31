@@ -44,10 +44,13 @@ METHOD:PUBLISH
         start_date_str = start_date.strftime("%Y%m%dT%H%M%SZ")
         end_date_str = end_date.strftime("%Y%m%dT%H%M%SZ")
 
-        location = row.x_nearest_city_start or "unknown"  # type: ignore[attr-defined]
+        # pandas 3 string dtype: missing = NaN (truthy), so check notna
+        city = row.x_nearest_city_start  # type: ignore[attr-defined]
+        location = city if pd.notna(city) and city else "unknown"
         for col in ("location_city", "location_state", "location_country"):
-            if getattr(row, col):
-                location += "," + getattr(row, col)
+            val = getattr(row, col)
+            if pd.notna(val) and val:
+                location += "," + val
 
         row_id = row.id  # type: ignore[attr-defined]
         row_type = row.type  # type: ignore[attr-defined]

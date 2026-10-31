@@ -18,19 +18,19 @@ sh scripts/run_pytest.sh
 echo copying
 # config.toml -> config-prod.toml
 uv run --no-build scripts/config_convert.py
-rsync -uz .streamlit/config-prod.toml entorb@entorb.net:be/strava-streamlit/.streamlit/config.toml
-rsync -uz .streamlit/secrets.toml entorb@entorb.net:be/strava-streamlit/.streamlit/secrets.toml
-rsync -uz requirements.txt entorb@entorb.net:be/strava-streamlit/
-rsync -uz activity_columns.txt entorb@entorb.net:be/strava-streamlit/
-rsync -ruzv --no-links --delete --delete-excluded --exclude __pycache__ --exclude r99_Playground.py src/ entorb@entorb.net:be/strava-streamlit/src/
+rsync -uz .streamlit/config-prod.toml entorb@mab.uberspace.de:be/strava-streamlit/.streamlit/config.toml
+rsync -uz .streamlit/secrets.toml entorb@mab.uberspace.de:be/strava-streamlit/.streamlit/secrets.toml
+rsync -uz requirements.txt entorb@mab.uberspace.de:be/strava-streamlit/
+rsync -uz activity_columns.txt entorb@mab.uberspace.de:be/strava-streamlit/
+rsync -ruzv --no-links --delete --delete-excluded --exclude __pycache__ --exclude r99_Playground.py src/ entorb@mab.uberspace.de:be/strava-streamlit/src/
 
 # static files are under strava/
-rsync -uz src/strava-resources/*.svg entorb@entorb.net:html/strava/strava-resources/
+rsync -uz src/strava-resources/*.svg entorb@mab.uberspace.de:html/strava/strava-resources/
 
 echo installing packages
-ssh entorb@entorb.net "pip3.11 install --user -r be/strava-streamlit/requirements.txt > /dev/null"
+ssh entorb@mab.uberspace.de "pip3.14 install --user -r be/strava-streamlit/requirements.txt > /dev/null"
 
 echo restarting strava-streamlit
-ssh entorb@entorb.net "supervisorctl restart streamlit-strava"
+ssh entorb@mab.uberspace.de "supervisorctl restart streamlit-strava"
 
 echo DONE

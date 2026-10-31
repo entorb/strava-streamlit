@@ -3,11 +3,14 @@
 import logging
 import time
 from collections import defaultdict
-from collections.abc import Callable
 from functools import wraps
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import streamlit as st
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 def init_logging() -> None:

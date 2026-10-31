@@ -194,9 +194,8 @@ def refresh_activities_cache() -> None:
 
 # this cache is for 2h, while all others are only for 15min
 # caching requires user_id is given as parameter!!!
-@st.cache_data(
-    ttl="2h", show_spinner="Fetching your activities"
-)  # add persist="disk" if we run into memory issues
+# max_entries: expired ttl entries are only evicted lazily, so cap to avoid OOM
+@st.cache_data(ttl="2h", max_entries=20, show_spinner="Fetching your activities")
 @track_function_usage
 def cache_all_activities_and_gears_in_year_range(
     user_id: int,
@@ -262,7 +261,7 @@ def cache_all_activities_and_gears_in_year_range(
 
     # date parsing
     df["start_date_local"] = pd.to_datetime(df["start_date_local"]).dt.tz_localize(None)
-    assert df["start_date_local"].dtype == "datetime64[ns]", df[
+    assert pd.api.types.is_datetime64_dtype(df["start_date_local"]), df[
         "start_date_local"
     ].dtype
 
@@ -526,7 +525,7 @@ def cities_into_1deg_geo_boxes() -> (  # noqa: C901
     return boxes
 
 
-@st.cache_data(ttl="15m")
+@st.cache_data(ttl="15m", max_entries=10_000)
 @track_function_usage
 def search_closest_city(latlng: tuple[float, float]) -> str | None:
     """Search in 1x1 deg box of cities for closest city."""
