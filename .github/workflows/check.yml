@@ -31,6 +31,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d  # v10.0.1
         with:
+          version-file: pyproject.toml
           enable-cache: true
           cache-dependency-glob: |
             pyproject.toml
@@ -63,6 +64,9 @@ jobs:
 
       - name: Run vulture
         run: uv run vulture
+
+      - name: Run py audit
+        run: uv audit --preview-features audit
 
       - name: Run pytest unittests
         run: |
