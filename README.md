@@ -14,10 +14,6 @@ This is a modern rewrite of my [old Strava Äpp](https://github.com/entorb/strav
 
 ## Repo Setup
 
-### Python version
-
-As my Uberspace webserver currently only supports Python 3.11, I need to use it locally too. See below.
-
 ### Run locally
 
 * [install.sh](scripts/install.sh)
@@ -81,50 +77,6 @@ At [sonarcloud.io](https://sonarcloud.io/summary/overall?id=entorb_template-pyth
 * Strava logos and buttons
 * API response caching for local dev environment
 * unit tests using dummy activity data
-
-## Deployment at Uberspace
-
-see [deploy.sh](scripts/deploy.sh)
-
-### Setup
-
-see <https://entorb.net/wickie/Uberspace#Streamlit>
-
-```sh
-mkdir ~/strava-streamlit
-
-# run scripts/deploy.sh
-
-pip3.11 install --user streamlit -r strava-streamlit/requirements.txt
-
-# start it manually (stop by ctrl+c)
-streamlit run main.py
-
-# add web backend
-uberspace web backend set /strava-streamlit --http --port 8501
-```
-
-verify it is working via browser <https://entorb.net/strava-streamlit>
-
-stop streamlit via `ctrl+c`
-
-create service `vim ~/etc/services.d/strava-streamlit.ini`
-
-```ini
-[program:strava-streamlit]
-directory=%(ENV_HOME)s/strava-streamlit
-command=python3.11 -O -m streamlit run src/main.py
-loglevel=info
-```
-
-start service
-
-```sh
-supervisorctl reread
-supervisorctl update
-supervisorctl status
-supervisorctl restart strava-streamlit
-```
 
 ### Check log
 
