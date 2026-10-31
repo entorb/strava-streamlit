@@ -3,8 +3,8 @@
 import datetime as dt
 import json
 from math import isnan
+from typing import TYPE_CHECKING
 
-import pandas as pd
 import streamlit as st
 
 from helper_activities_caching import (
@@ -15,6 +15,9 @@ from helper_activities_caching import (
 from helper_api import StravaRateLimitError, fetch_activity_description
 from helper_logging import get_logger_from_filename
 from helper_ui_components import excel_download_buttons, select_sport, select_years
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 _LOGGER = get_logger_from_filename(__file__)
 

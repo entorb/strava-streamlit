@@ -132,7 +132,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
                 else:
                     try:
                         elev_gain = float(elev_gain_val)
-                    except (TypeError, ValueError):
+                    except TypeError, ValueError:
                         elev_gain = None
                 commute = bool(row["Commute"])  # type: ignore
 

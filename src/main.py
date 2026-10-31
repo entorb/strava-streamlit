@@ -18,7 +18,8 @@ from helper_login import (
 )
 from helper_ui_components import create_navigation_menu
 
-MEASURE_MEMORY = True
+# tracemalloc is process-global and slows every allocation, so not in PROD
+MEASURE_MEMORY = ENV == "Local"
 init_logging()
 _LOGGER = get_logger_from_filename(__file__)
 
@@ -86,7 +87,7 @@ def main() -> None:  # noqa: D103
         log_line = f"stats: {pagename},{round(time_end - time_start, 1)}s"
 
         if MEASURE_MEMORY:
-            max_bytes = tracemalloc.get_traced_memory()[0]
+            max_bytes = tracemalloc.get_traced_memory()[1]
             tracemalloc.stop()
             log_line += f",{round(max_bytes / 1_048_576, 1)}MB"
         _LOGGER.info(log_line)

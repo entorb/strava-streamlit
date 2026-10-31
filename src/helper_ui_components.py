@@ -2,13 +2,16 @@
 
 import io
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pandas as pd
 import streamlit as st
-from streamlit.delta_generator import DeltaGenerator
-from streamlit.navigation.page import StreamlitPage
 
 from helper_logging import get_logger_from_filename, track_function_usage
+
+if TYPE_CHECKING:
+    from streamlit.delta_generator import DeltaGenerator
+    from streamlit.navigation.page import StreamlitPage
 
 _LOGGER = get_logger_from_filename(__file__)
 

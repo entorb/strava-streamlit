@@ -279,7 +279,7 @@ def fetch_all_activities(year_start: int, year_end: int) -> list[dict]:
     return lst_all_activities
 
 
-@st.cache_data(ttl="60m")
+@st.cache_data(ttl="60m", max_entries=1_000)
 @track_function_usage
 def fetch_gear_data(gear_id: int, user_id: int) -> dict:
     """
@@ -300,7 +300,7 @@ def fetch_gear_data(gear_id: int, user_id: int) -> dict:
     return d
 
 
-@st.cache_data(ttl="60m")
+@st.cache_data(ttl="60m", max_entries=1_000)
 @track_function_usage
 def fetch_activity_description(activity_id: int, user_id: int) -> str:
     """

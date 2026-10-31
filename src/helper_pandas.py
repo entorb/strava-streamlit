@@ -1,8 +1,11 @@
 """Helper: Pandas."""
 
-import pandas as pd
+from typing import TYPE_CHECKING
 
 from helper_logging import get_logger_from_filename, track_function_usage
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 _LOGGER = get_logger_from_filename(__file__)
 

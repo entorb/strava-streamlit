@@ -14,6 +14,7 @@ if [ $status -eq 0 ]; then
   if [ "$lines" -gt 2 ]; then
     head -n 10 "$out"
   fi
+  echo OK
 else
   head -n 100 "$out"
 fi
