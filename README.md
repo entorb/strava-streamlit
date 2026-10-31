@@ -17,7 +17,7 @@ This is a modern rewrite of my [old Strava Äpp](https://github.com/entorb/strav
 ### Run locally
 
 * [install.sh](scripts/install.sh)
-* [run.sh](scripts/run_streamlit.sh)
+* [run.sh](scripts/run.sh)
 
 ### Check Code
 
