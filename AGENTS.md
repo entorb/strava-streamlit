@@ -39,5 +39,5 @@ Key notes:
 
 ## Lint & constraints
 
-- Python 3.11 (`.python-version`, pre-commit default)
+- Python 3.14
 - Ruff: 88 cols, ALL lints, select ignores. `ruff.toml` is source of truth.
