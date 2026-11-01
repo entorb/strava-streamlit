@@ -7,6 +7,8 @@ requires-python = ">=3.14,<3.15"
 
 dependencies = [
     "openpyxl>=3.1.5",
+    "pandas>=3.1.0",
+    "requests>=2.34.2",
     "sentry-sdk>=2.73.0",
     "streamlit>=1.66.1",
     "xlsxwriter>=3.3.0",
@@ -14,6 +16,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "pandas-stubs>=3.0.5.260914",
     "pyright>=1.1.411",
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
