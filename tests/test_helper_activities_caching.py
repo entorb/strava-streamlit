@@ -46,6 +46,11 @@ def test_check_is_known_location() -> None:
     assert check_is_known_location((49.59, 11.03), known_locations) == "ER-ObiKreisel"
 
 
+def test_get_known_locations_no_global_mutation() -> None:
+    # repeated calls must not grow the shared KNOWN_LOCATIONS list
+    assert len(get_known_locations()) == len(get_known_locations())
+
+
 def test_fetch_all_activities() -> None:
     _ = fetch_all_activities(year_start=0, year_end=0)
     assert not at.exception

@@ -52,14 +52,14 @@ def get_page_count() -> dict[str, int]:
     return {}
 
 
-def track_function_usage(func: Callable) -> Callable:
+def track_function_usage[**P, R](func: Callable[P, R]) -> Callable[P, R]:
     """Annotation for gathering runtime statistics."""
 
     @wraps(func)
-    def wrapper(*args: object, **kwargs: object) -> object:
-        start_time = time.time()
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+        start_time = time.perf_counter()
         result = func(*args, **kwargs)  # Call the original function
-        end_time = time.time()
+        end_time = time.perf_counter()
         call_stats = get_call_stats()
         call_stats[func.__name__]["calls"] += 1
         call_stats[func.__name__]["total_time"] += end_time - start_time

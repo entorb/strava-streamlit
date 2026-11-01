@@ -124,10 +124,14 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
             name = str(row["Name"])  # type: ignore
             try:
                 distance = row["Distance (m)"]  # type: ignore
-                gear_id = str(row["Gear ID"]) or None  # type: ignore
+                # pandas 3: empty cell = NaN, str(NaN) = "nan", so check notna
+                gear_val = row["Gear ID"]  # type: ignore
+                gear_id = str(gear_val) if pd.notna(gear_val) and gear_val else None
+                desc_val = row["Description"]  # type: ignore
+                desc = str(desc_val) if pd.notna(desc_val) and desc_val else None
                 elev_gain_val = row["Elevation gain"]  # type: ignore
                 # Convert to float or None - handle pd.NA and None
-                if elev_gain_val is None:  # type: ignore[arg-type]
+                if pd.isna(elev_gain_val):  # type: ignore[arg-type]
                     elev_gain = None
                 else:
                     try:
@@ -144,7 +148,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
                     date=date_str,
                     duration=int(row["Duration (s)"]),  # type: ignore
                     distance=float(distance) if pd.notna(distance) else None,  # type: ignore[arg-type]
-                    desc=str(row["Description"]) or None,  # type: ignore
+                    desc=desc,
                     commute=commute,
                     gear_id=gear_id,
                     elev_gain=int(elev_gain) if elev_gain else None,  # type: ignore[arg-type]

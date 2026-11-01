@@ -53,7 +53,8 @@ def excel_download_buttons(
         label="Download Excel",
         data=_make_excel,
         file_name=file_name.replace(" ", "_"),
-        mime="application/vnd.ms-excel",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        on_click="ignore",
     )
 
 

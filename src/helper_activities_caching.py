@@ -430,7 +430,8 @@ def caching_geo_calc(df: pd.DataFrame) -> pd.DataFrame:
 @track_function_usage
 def get_known_locations(*, users_only: bool = False) -> list[tuple[float, float, str]]:
     """Get known locations from global and user stored data."""
-    lst_known_locations = KNOWN_LOCATIONS if users_only is False else []
+    # copy: appending must not mutate the global list shared by all users
+    lst_known_locations = [] if users_only else list(KNOWN_LOCATIONS)
 
     p = get_known_locations_file_path()
     if p.is_file():

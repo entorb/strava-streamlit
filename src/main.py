@@ -10,6 +10,7 @@ import streamlit as st
 st.set_page_config(page_title="Strava Äpp V2", page_icon=None, layout="wide")
 
 from helper import ENV
+from helper_api import StravaUnauthorizedError
 from helper_logging import get_logger_from_filename, init_logging
 from helper_login import (
     init_dev_session_state,
@@ -52,7 +53,8 @@ _paq.push(['enableLinkTracking']);
     g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
 })();
 </script>
-    """
+    """,
+        unsafe_allow_javascript=True,
     )
 
 
@@ -96,6 +98,11 @@ def main() -> None:  # noqa: D103
 if __name__ == "__main__":
     try:
         main()
+    except StravaUnauthorizedError:
+        _LOGGER.warning("Strava token unauthorized (revoked or deleted)")
+        st.session_state.clear()
+        st.warning("Strava access expired or revoked, please reload and log in again.")
+        st.stop()
     except Exception as e:
         # automatically triggered by logger.exception
         # sentry_sdk.capture_exception(e)

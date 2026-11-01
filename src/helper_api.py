@@ -14,6 +14,8 @@ _LOGGER = get_logger_from_filename(__file__)
 
 
 API_RETRIES = 5
+HTTP_BAD_REQUEST = 400
+HTTP_UNAUTHORIZED = 401
 HTTP_TOO_MANY_REQUESTS = 429
 URL_OAUTH = "https://www.strava.com/api/v3/oauth/token"
 URL_BASE = "https://www.strava.com/api/v3"
@@ -23,6 +25,10 @@ DIR_CACHE = Path("./cache/")
 
 class StravaRateLimitError(Exception):
     """Raised when the Strava API rate limit (HTTP 429) is hit."""
+
+
+class StravaUnauthorizedError(Exception):
+    """Raised on HTTP 401, e.g. token revoked by re-login or app deauthorized."""
 
 
 @track_function_usage
@@ -59,7 +65,9 @@ def api_post_token_refresh() -> dict:
         "refresh_token": st.session_state["TOKEN_REFRESH"],
     }
     resp = requests.post(URL_OAUTH, json=d, timeout=15)
-    # st.write(resp.text)
+    # refresh token revoked (app deauthorized / re-login elsewhere)
+    if resp.status_code in {HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED}:
+        raise StravaUnauthorizedError
     resp.raise_for_status()
     return resp.json()
 
@@ -94,6 +102,9 @@ def _api_get(path: str) -> dict | list:
             resp = getattr(e, "response", None)
             if resp is not None and resp.status_code == HTTP_TOO_MANY_REQUESTS:
                 raise StravaRateLimitError from e
+            # token revoked/deleted, retrying is pointless
+            if resp is not None and resp.status_code == HTTP_UNAUTHORIZED:
+                raise StravaUnauthorizedError from e
             _LOGGER.exception("Attempt %i failed", attempt)
             # If it's the last attempt, raise the exception
             if attempt + 1 == API_RETRIES:
@@ -107,26 +118,18 @@ def _api_post(path: str, params: dict) -> dict:
     url = f"{URL_BASE}/{path}"
     _LOGGER.info("API POST %s", url)
     headers = {"Authorization": f"Bearer {st.session_state['TOKEN']}"}
-    try:
-        resp = requests.post(url, params=params, headers=headers, timeout=(3, 30))
-        resp.raise_for_status()
-        return resp.json()
-    except requests.RequestException as e:
-        print(e)
-    return {}
+    resp = requests.post(url, params=params, headers=headers, timeout=(3, 30))
+    resp.raise_for_status()
+    return resp.json()
 
 
 def _api_put(path: str, data: dict) -> dict | list:
     """Put/Update."""
     url = f"{URL_BASE}/{path}"
     headers = {"Authorization": f"Bearer {st.session_state['TOKEN']}"}
-    try:
-        resp = requests.put(url=url, data=data, headers=headers, timeout=(3, 30))
-        resp.raise_for_status()
-        return resp.json()
-    except requests.RequestException as e:
-        print(e)
-    return {}
+    resp = requests.put(url=url, data=data, headers=headers, timeout=(3, 30))
+    resp.raise_for_status()
+    return resp.json()
 
 
 def post_activity(  # noqa: PLR0913 PLR0917
@@ -165,7 +168,6 @@ def set_commute(activity_id: int) -> int:
     resp_dict = _api_put(path=path, data={"commute": True})
     assert type(resp_dict) is dict
     return activity_id
-    # print(resp_dict["id"], resp_dict["name"])
 
 
 @track_function_usage
@@ -185,28 +187,6 @@ def write_cache_file(cache_file: str, d: dict | list) -> None:
     p = DIR_CACHE / cache_file
     with p.open("w", encoding="utf-8", newline="\n") as fh:
         json.dump(d, fh, ensure_ascii=False, sort_keys=False, indent=2)
-
-
-# no caching, as only performed once upon login
-# @track_function_usage
-# def fetch_athlete_info() -> str:
-#     """
-#     Get athlete ID and username and set in session_state.
-
-#     Deprecated: not used any more, since also included in api_post_oauth()
-#     """
-#     cache_file = "athlete.json"
-#     d = None
-#     if ENV == "Local":
-#         d = read_cache_file(cache_file)
-#     if not d:
-#         d = _api_get(path="athlete")
-#         if ENV == "Local":
-#             write_cache_file(cache_file, d=d)
-#     assert type(d) is dict
-#     st.session_state["USER_ID"] = d["id"]
-#     st.session_state["USERNAME"] = d.get("username", "no username")
-#     return st.session_state["USERNAME"]
 
 
 # not caching this raw data
