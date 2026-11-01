@@ -142,7 +142,7 @@ def handle_token_refresh(d: dict) -> None:
 @track_function_usage
 def token_refresh_if_needed() -> None:
     """Trigger token refresh if needed."""
-    if time() > st.session_state["TOKEN_EXPIRE"] - 120:
+    if time() > st.session_state["TOKEN_EXPIRE"] - 600:
         st.header("Token Refresh")
         d = api_post_token_refresh()
         handle_token_refresh(d)
@@ -163,8 +163,7 @@ def logout() -> None:
     """Logout and unset all local access data."""
     if ENV == "PROD":
         api_post_deauthorize()
-    for key in st.session_state:
-        del st.session_state[key]
+    st.session_state.clear()
     # no st.logout() needed, as st.login is not used
 
     st.write("Logged Out")
