@@ -14,8 +14,10 @@ elbtunnel
 entorb
 erlangen
 fillna
+getrusage
 heartrate
 iloc
+initargs
 isna
 itertuples
 kreisel
@@ -24,6 +26,7 @@ latlng
 levelname
 logfile
 matomo
+maxrss
 notna
 numpy
 officedocument
@@ -37,6 +40,7 @@ pyenv
 pyproject
 pytest
 pythonpath
+refetched
 rumdl
 ruzv
 scriptrunner
@@ -48,6 +52,7 @@ spreadsheetml
 startsecs
 strava
 streamlit
+subheaders
 supervisorctl
 supervisord
 testdata
