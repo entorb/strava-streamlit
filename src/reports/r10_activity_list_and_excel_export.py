@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 import streamlit as st
 
 from helper_activities_caching import (
+    FILE_CACHE_DAYS,
     cache_all_activities_and_gears,
     get_act_desc_cache_file_path,
     refresh_activities_cache,
@@ -36,10 +37,10 @@ def next_rate_limit_reset(now: dt.datetime) -> dt.datetime:
 
 def _load_descriptions() -> dict[int, str]:
     p = get_act_desc_cache_file_path()
-    three_months_ago = dt.datetime.now(tz=dt.UTC) - dt.timedelta(days=90)
-    # sweep all cached description files older than 3 months
+    expired = dt.datetime.now(tz=dt.UTC) - dt.timedelta(days=FILE_CACHE_DAYS)
+    # sweep all cached description files not touched (login) for FILE_CACHE_DAYS
     for f in p.parent.glob("*.json"):
-        if dt.datetime.fromtimestamp(f.stat().st_mtime, tz=dt.UTC) < three_months_ago:
+        if dt.datetime.fromtimestamp(f.stat().st_mtime, tz=dt.UTC) < expired:
             f.unlink()
     if not p.exists():
         return {}
@@ -77,7 +78,7 @@ def fetch_and_attach_descriptions(df: pd.DataFrame) -> pd.DataFrame:
     """
     Fetch missing activity descriptions and add them as the x_description column.
 
-    Descriptions persist in a JSON file (per user) and are pruned after 3 months.
+    Descriptions persist in a JSON file per user, pruned FILE_CACHE_DAYS after login.
     On hitting the rate limit, fetching pauses until the next Strava reset; the
     retry status/button is rendered by description_retry_status().
     """
@@ -205,7 +206,7 @@ def main() -> None:  # noqa: C901, D103, PLR0912, PLR0915
     fetch_desc = st.checkbox(
         "Fetch activity descriptions too"
         f" ({len(df)} activities, 1 Strava API call each, may be slow,"
-        " cached for 3 months to reduce API calls.)",
+        f" cached for {FILE_CACHE_DAYS} days to reduce API calls.)",
         value=False,
     )
     if fetch_desc:

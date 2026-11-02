@@ -10,6 +10,7 @@ from time import time
 import streamlit as st
 
 from helper import ENV
+from helper_activities_caching import FILE_CACHE_DAYS, get_act_desc_cache_file_path
 from helper_api import api_post_deauthorize, api_post_oauth, api_post_token_refresh
 from helper_logging import (
     get_logger_from_filename,
@@ -58,6 +59,7 @@ def display_strava_auth_link() -> None:
     st.markdown(
         """
 ## Latest features
+* 2026-11-02 Performance tuning: activities fetched in parallel, gear and activity descriptions cached on disk for 90 days since last use
 * 2026-07-02 fetching of activity description field for Excel download (optional checkbox)
 * 2026-05-25 Excel import of activities to Strava
 * 2026-05-10 Write commute flag for activities to Strava
@@ -105,6 +107,10 @@ def handle_redirect() -> None:
     st.session_state["TOKEN_REFRESH"] = d["refresh_token"]
     st.session_state["USER_ID"] = user_id
     st.session_state["USERNAME"] = d["athlete"].get("username", "no username")
+    # renew description cache on login, unless already expired (then swept on load)
+    p = get_act_desc_cache_file_path()
+    if p.exists() and time() - p.stat().st_mtime < FILE_CACHE_DAYS * 86400:
+        p.touch()
     d_login_cnt = get_user_login_count()
     d_login_cnt[user_id] = 1 + d_login_cnt.get(user_id, 0)
 
