@@ -13,14 +13,13 @@ from helper_activities_caching import (
     FILE_CACHE_DAYS,
     cache_all_activities_and_gears,
     check_is_known_location,
-    cities_into_1deg_geo_boxes,
     delete_gear_cache,
     fetch_all_activities,
     fetch_gears_file_cached,
     geo_distance_haversine,
     get_gear_cache_file_path,
     get_known_locations,
-    read_city_db,
+    load_cities_in_boxes,
     reduce_geo_precision,
     search_closest_city,
 )
@@ -63,22 +62,19 @@ def test_fetch_all_activities() -> None:
     assert not at.exception
 
 
-def test_read_city_db() -> None:
-    lst = read_city_db()
-    assert len(lst) == 4
-
-
-def test_cities_into_1deg_geo_boxes() -> None:
-    boxes = cities_into_1deg_geo_boxes()
-    assert len(boxes) == 16
-    assert boxes[(53, 10)][0][2] == "EU-DE-HH-Hamburg"
-    assert boxes[(53, 9)][0][2] == "EU-DE-HH-Hamburg"
-    assert boxes[(54, 10)][0][2] == "EU-DE-HH-Hamburg"
-    assert boxes[(54, 9)][0][2] == "EU-DE-HH-Hamburg"
+def test_load_cities_in_boxes() -> None:
+    assert sum(len(v) for v in load_cities_in_boxes({(53, 10), (51, 13)}).values()) == 2
+    assert load_cities_in_boxes(set()) == {}
 
 
 def test_search_closest_city() -> None:
-    assert search_closest_city((53.5, 10.0)) == "EU-DE-HH-Hamburg"
+    lat_lng = (53.5, 10.0)
+    cities = load_cities_in_boxes({(53, 10)})
+    assert search_closest_city(lat_lng, cities) == "EU-DE-HH-Hamburg"
+    # across box border: Hamburg is in box (53, 10), point in (54, 9)
+    cities = load_cities_in_boxes({(53, 10), (54, 9)})
+    assert search_closest_city((54.01, 9.99), cities) == "EU-DE-HH-Hamburg"
+    assert search_closest_city((0.0, 0.0), cities) is None
 
 
 def test_cache_all_activities_and_gears() -> None:
@@ -141,12 +137,14 @@ def test_delete_gear_cache_only_own_user(monkeypatch) -> None:
     get_gear_cache_file_path(2).unlink()
 
 
-def test_read_city_db_skips_malformed_lines(monkeypatch, tmp_path) -> None:
+def test_load_cities_skips_malformed_lines(monkeypatch, tmp_path) -> None:
     import helper_activities_caching as hac  # noqa: PLC0415
 
     (tmp_path / "city-gps.dat").write_text(
-        "# comment\nbroken,line\nEU,DE,HH,Hamburg,53.5,10.0\nEU,DE,X,Y,1,2,extra\n",
+        "# comment\nbroken,line\nEU,DE,HH,Hamburg,53.5,10.0\nEU,DE,X,Y,53,10,extra\n",
         encoding="utf-8",
     )
     monkeypatch.setattr(hac, "get_data_dir", lambda: tmp_path)
-    assert read_city_db() == [(53.5, 10.0, "EU-DE-HH-Hamburg")]
+    assert load_cities_in_boxes({(53, 10)}) == {
+        (53, 10): [(53.5, 10.0, "EU-DE-HH-Hamburg")]
+    }

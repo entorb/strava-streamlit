@@ -5,7 +5,6 @@
 import datetime as dt
 import json
 import math
-from functools import lru_cache
 from getpass import getuser
 from pathlib import Path
 
@@ -437,10 +436,12 @@ def caching_geo_calc(df: pd.DataFrame) -> pd.DataFrame:
         for e in end
     ]
 
-    # 4. search for nearest city
-    df["x_nearest_city_start"] = [
-        search_closest_city(reduce_geo_precision(s, 2)) if s else None for s in start
-    ]
+    # 4. search for nearest city, once per rounded location
+    rounded = [reduce_geo_precision(s, 2) if s else None for s in start]
+    unique = {r for r in rounded if r}
+    cities = load_cities_in_boxes(set().union(*(_boxes_around(*r) for r in unique)))
+    city_of = {r: search_closest_city(r, cities) for r in unique}
+    df["x_nearest_city_start"] = [city_of[r] if r else None for r in rounded]
     return df
 
 
@@ -478,88 +479,57 @@ def check_is_known_location(
     return None
 
 
-# no cache for raw data
+def _box(lat: float, lon: float) -> tuple[int, int]:
+    """1x1 degree box of a coordinate."""
+    return math.floor(lat), math.floor(lon)
+
+
+def _boxes_around(lat: float, lon: float) -> set[tuple[int, int]]:
+    """Own box and its 8 neighbors, so the closest city across a border is found."""
+    b_lat, b_lon = _box(lat, lon)
+    return {
+        (b_lat + d_lat, b_lon + d_lon) for d_lat in (-1, 0, 1) for d_lon in (-1, 0, 1)
+    }
+
+
 @track_function_usage
-def read_city_db() -> list[tuple[float, float, str]]:
-    """Read city database."""
-    p = get_data_dir() / "city-gps.dat"
-    lst = []
-    for line in p.read_text(encoding="utf-8").strip().split("\n"):
-        if line.startswith("#"):
-            continue
-        parts = line.split(",")
-        if len(parts) != 6:  # skip malformed lines
-            continue
-        continent, country, subdivision, city, lat, lng = parts
-        name = f"{continent}-{country}-{subdivision}-{city}".replace(";", "")
-        lst.append((float(lat), float(lng), name))
-    return lst
+def load_cities_in_boxes(
+    boxes: set[tuple[int, int]],
+) -> dict[tuple[int, int], list[tuple[float, float, str]]]:
+    """
+    Stream the city DB, keep only cities inside the given 1x1 degree boxes.
+
+    Not cached and not fully loaded: the full DB costs ~30MB RAM, which OOM-killed
+    PROD. Only called from the 2h cached activity calculation.
+    """
+    cities: dict[tuple[int, int], list[tuple[float, float, str]]] = {}
+    if not boxes:
+        return cities
+    with (get_data_dir() / "city-gps.dat").open(encoding="utf-8") as fh:
+        for line in fh:
+            if line.startswith("#"):
+                continue
+            parts = line.rstrip("\n").split(",")
+            if len(parts) != 6:  # skip malformed lines
+                continue
+            continent, country, subdivision, city, lat_s, lon_s = parts
+            lat, lon = float(lat_s), float(lon_s)
+            box = _box(lat, lon)
+            if box in boxes:
+                name = f"{continent}-{country}-{subdivision}-{city}".replace(";", "")
+                cities.setdefault(box, []).append((lat, lon, name))
+    return cities
 
 
-@st.cache_resource
-@track_function_usage
-def cities_into_1deg_geo_boxes() -> (  # noqa: C901
-    dict[tuple[float, float], list[tuple[float, float, str]]]
-):
-    """Stack cities into boxes of 1x1 degree for faster lookup."""
-    # boxes of 1 degree
-    boxes = {}
-
-    for line in read_city_db():
-        lat, lon, _ = line
-        lat0, lon0 = int(lat), int(lon)
-        offset = 0.5
-        # lat
-        lat1 = int(lat - offset)
-        if lat1 == lat0:  # same box, so try + instead
-            lat1 = int(lat + offset)
-            if lat1 == lat0:  # still same box, so city must be at center
-                lat1 = None
-        if lat1 and (lat1 > 90 or lat1 < -90):
-            lat1 = None
-        # lon
-        lon1 = int(lon - offset)
-        if lon1 == lon0:  # same box, so try + instead
-            lon1 = int(lon + offset)
-            if lon1 == lon0:
-                lon1 = None  # still same box, so city must be at center
-
-        if lon1 and (lon1 > 180 or lon1 < -180):
-            lon1 = None
-        t = (lat0, lon0)
-        boxes.setdefault(t, []).append(line)
-        if lat1:
-            t = (lat1, lon0)
-            boxes.setdefault(t, []).append(line)
-        if lon1:
-            t = (lat0, lon1)
-            boxes.setdefault(t, []).append(line)
-        if lat1 and lon1:
-            t = (lat1, lon1)
-            boxes.setdefault(t, []).append(line)
-
-    return boxes
-
-
-# pure function, no user data: lru_cache is much cheaper than st.cache_data per row
-@lru_cache(maxsize=10_000)
-def search_closest_city(latlng: tuple[float, float]) -> str | None:
-    """Search in 1x1 deg box of cities for closest city."""
-    boxes = cities_into_1deg_geo_boxes()
-    lat, lon = latlng
-    latlng = (int(lat), int(lon))
-    if latlng not in boxes:
+def search_closest_city(
+    latlng: tuple[float, float],
+    cities: dict[tuple[int, int], list[tuple[float, float, str]]],
+) -> str | None:
+    """Closest city in own and neighbor boxes, cities from load_cities_in_boxes()."""
+    candidates = [c for b in _boxes_around(*latlng) for c in cities.get(b, [])]
+    if not candidates:
         return None
-    closest_city_dist = 999
-    closest_city_name = None
-    lst = boxes[latlng]
-    for line in lst:
-        city_lat, city_lng, city_name = line
-        dist = geo_distance_haversine((lat, lon), (city_lat, city_lng))
-        if dist < closest_city_dist:
-            closest_city_dist = dist
-            closest_city_name = city_name
-    return closest_city_name
+    return min(candidates, key=lambda c: geo_distance_haversine(latlng, c[:2]))[2]
 
 
 @track_function_usage
