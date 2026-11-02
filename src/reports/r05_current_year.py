@@ -66,27 +66,12 @@ def main() -> None:  # noqa: D103, PLR0915
     active_days = df[["date"]].drop_duplicates().count().iloc[0]
 
     cols = st.columns(5)
-    # headers
-    cols[0].subheader("Activities")
-    cols[1].subheader("Active Days")
-    cols[2].subheader("Time")
-    cols[3].subheader("Distance")
-    cols[4].subheader("Elevation")
-
     # current data
-    cols[0].metric(label="Activities", value=cnt_activities, label_visibility="hidden")
-    cols[1].metric(label="Active Days", value=active_days, label_visibility="hidden")
-    cols[2].metric(
-        label="Hours", value=f"{round(hour_sum)} h", label_visibility="hidden"
-    )
-    cols[3].metric(
-        label="Distance", value=f"{round(km_sum)} km", label_visibility="hidden"
-    )
-    cols[4].metric(
-        label="Elevation",
-        value=f"{round(elev_km_sum, 1)} km",
-        label_visibility="hidden",
-    )
+    cols[0].metric(label="Activities", value=cnt_activities, border=True)
+    cols[1].metric(label="Active Days", value=active_days, border=True)
+    cols[2].metric(label="Time", value=f"{round(hour_sum)} h", border=True)
+    cols[3].metric(label="Distance", value=f"{round(km_sum)} km", border=True)
+    cols[4].metric(label="Elevation", value=f"{round(elev_km_sum, 1)} km", border=True)
 
     # comparisons
     cols[1].metric(
@@ -129,27 +114,27 @@ def main() -> None:  # noqa: D103, PLR0915
         cols[0].metric(
             label="Activities",
             value=f"{round(cnt_activities / year_ratio)}",
-            label_visibility="hidden",
+            border=True,
         )
         cols[1].metric(
             label="Active Days",
             value=f"{round(active_days / year_ratio)}",
-            label_visibility="hidden",
+            border=True,
         )
         cols[2].metric(
-            label="Hours",
+            label="Time",
             value=f"{round(hour_sum / year_ratio)} h",
-            label_visibility="hidden",
+            border=True,
         )
         cols[3].metric(
             label="Distance",
             value=f"{round(km_sum / year_ratio)} km",
-            label_visibility="hidden",
+            border=True,
         )
         cols[4].metric(
             label="Elevation",
             value=f"{round(elev_km_sum / year_ratio)} km",
-            label_visibility="hidden",
+            border=True,
         )
 
 

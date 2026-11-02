@@ -75,7 +75,9 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
 
     # --- Excel upload ---
     uploaded = st.file_uploader("Import activities from Excel", type=["xlsx", "xls"])
-    if uploaded:
+    # import each file only once, else every rerun overwrites the user's edits
+    if uploaded and uploaded.file_id != st.session_state.get("import_file_id"):
+        st.session_state["import_file_id"] = uploaded.file_id
         try:
             imported = pd.read_excel(
                 uploaded,
@@ -92,23 +94,22 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
                     imported[col] = imported[col].astype("Int64")
                 for col in (k for k, v in COLS.items() if v == "object"):
                     imported[col] = imported[col].fillna("").astype(str)  # type: ignore[union-attr]
-                st.session_state.df = imported
+                _set_source(imported)
                 st.success(f"Loaded {len(imported)} rows.")
         except Exception as e:  # noqa: BLE001
             st.error(f"Failed to read Excel file: {e}")
 
-    if "df" not in st.session_state:
-        st.session_state.df = pd.DataFrame(
-            {col: pd.Series(dtype=t) for col, t in COLS.items()}
-        )
+    if "import_df" not in st.session_state:
+        _set_source(_empty_df())
 
+    # source stays fixed, edits live in the widget state (keyed by version)
     edited_df = st.data_editor(
-        st.session_state.df,
+        st.session_state["import_df"],
         column_config=column_config,
         num_rows="dynamic",
         width="content",
+        key=f"import_editor_{st.session_state['import_ver']}",
     )
-    st.session_state.df = edited_df
 
     # --- Submit ---
     rows_to_submit = edited_df.dropna(subset=["Name", "Date", "Duration (s)", "Type"])  # type: ignore[arg-type]
@@ -117,10 +118,10 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
 
     st.write(f"Ready to submit {len(rows_to_submit)} activities.")
 
-    if st.button("Submit to Strava", type="primary"):
-        errors = []
+    if st.button("Submit to Strava", type="primary", icon=":material/upload:"):
         responses = []
-        for _, row in rows_to_submit.iterrows():
+        posted = []
+        for idx, row in rows_to_submit.iterrows():
             name = str(row["Name"])  # type: ignore
             try:
                 distance = row["Distance (m)"]  # type: ignore
@@ -153,6 +154,10 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
                     gear_id=gear_id,
                     elev_gain=int(elev_gain) if elev_gain else None,  # type: ignore[arg-type]
                 )
+                # drop posted rows from source right away, so a re-click or an
+                # interrupted run does not create duplicates at Strava
+                posted.append(idx)
+                _set_source(edited_df.drop(index=posted))
                 responses.append(
                     {
                         # "id": resp.get("id"),
@@ -171,7 +176,6 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
                     }
                 )
             except Exception as e:
-                errors.append(name)
                 st.error(f"Failed to post '{name}': {e}")
                 _LOGGER.exception("Failed to post activity '%s'", name)
 
@@ -186,10 +190,15 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
                 hide_index=True,
             )
 
-        if not errors:
-            st.session_state.df = pd.DataFrame(
-                {col: pd.Series(dtype=t) for col, t in COLS.items()}
-            )
+
+def _empty_df() -> pd.DataFrame:
+    return pd.DataFrame({col: pd.Series(dtype=t) for col, t in COLS.items()})
+
+
+def _set_source(df: pd.DataFrame) -> None:
+    """Replace data_editor source, new version key resets the editor's edits."""
+    st.session_state["import_df"] = df
+    st.session_state["import_ver"] = st.session_state.get("import_ver", 0) + 1
 
 
 if __name__ == "__main__":

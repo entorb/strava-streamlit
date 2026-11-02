@@ -14,6 +14,8 @@ with p_in.open("rb") as fh:
 o["server"]["fileWatcherType"] = "none"
 o["server"]["baseUrlPath"] = "/strava-streamlit"
 del o["server"]["address"]
+# no tracebacks for users
+o["client"]["showErrorDetails"] = "none"
 
 with p_out.open("wb") as fh:
     tomli_w.dump(o, fh)

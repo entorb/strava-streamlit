@@ -139,3 +139,14 @@ def test_delete_gear_cache_only_own_user(monkeypatch) -> None:
     assert not get_gear_cache_file_path(1).exists()
     assert get_gear_cache_file_path(2).exists()
     get_gear_cache_file_path(2).unlink()
+
+
+def test_read_city_db_skips_malformed_lines(monkeypatch, tmp_path) -> None:
+    import helper_activities_caching as hac  # noqa: PLC0415
+
+    (tmp_path / "city-gps.dat").write_text(
+        "# comment\nbroken,line\nEU,DE,HH,Hamburg,53.5,10.0\nEU,DE,X,Y,1,2,extra\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(hac, "get_data_dir", lambda: tmp_path)
+    assert read_city_db() == [(53.5, 10.0, "EU-DE-HH-Hamburg")]

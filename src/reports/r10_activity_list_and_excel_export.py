@@ -35,22 +35,26 @@ def next_rate_limit_reset(now: dt.datetime) -> dt.datetime:
     return base + dt.timedelta(minutes=minutes_to_next, seconds=5)
 
 
-def _load_descriptions() -> dict[int, str]:
-    p = get_act_desc_cache_file_path()
+def _sweep_descriptions() -> None:
+    """Delete all users' description files not touched (login) for FILE_CACHE_DAYS."""
     expired = dt.datetime.now(tz=dt.UTC) - dt.timedelta(days=FILE_CACHE_DAYS)
-    # sweep all cached description files not touched (login) for FILE_CACHE_DAYS
-    for f in p.parent.glob("*.json"):
+    for f in get_act_desc_cache_file_path().parent.glob("*.json"):
         if dt.datetime.fromtimestamp(f.stat().st_mtime, tz=dt.UTC) < expired:
             f.unlink()
+
+
+def _load_descriptions() -> dict[int, str]:
+    p = get_act_desc_cache_file_path()
     if not p.exists():
         return {}
-    return {int(k): v for k, v in json.loads(p.read_text()).items()}
+    data = json.loads(p.read_text(encoding="utf-8"))
+    return {int(k): v for k, v in data.items()}
 
 
 def _save_descriptions(descriptions: dict[int, str]) -> None:
     p = get_act_desc_cache_file_path()
     p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(json.dumps(descriptions, ensure_ascii=False))
+    p.write_text(json.dumps(descriptions, ensure_ascii=False), encoding="utf-8")
 
 
 @st.fragment(run_every="10s")
@@ -83,6 +87,8 @@ def fetch_and_attach_descriptions(df: pd.DataFrame) -> pd.DataFrame:
     retry status/button is rendered by description_retry_status().
     """
     user_id = st.session_state["USER_ID"]
+    # sweep here, not in _load_descriptions, as that also runs in the 10s fragment
+    _sweep_descriptions()
     descriptions: dict[int, str] = _load_descriptions()
     ids = [int(i) for i in df.index]
     total = len(ids)
@@ -126,8 +132,7 @@ def fetch_and_attach_descriptions(df: pd.DataFrame) -> pd.DataFrame:
 def main() -> None:  # noqa: C901, D103, PLR0912, PLR0915
     st.markdown("Edit at [Strava](https://www.strava.com/athlete/training)")
 
-    cols = st.columns((1, 5))
-    select_years(cols[0])
+    select_years()
 
     df, df_gear = cache_all_activities_and_gears()
 
@@ -143,7 +148,9 @@ def main() -> None:  # noqa: C901, D103, PLR0912, PLR0915
         st.session_state.sel_km = 0
         st.session_state.sel_elev = 0
 
-    col1, col2, col3, col4, col5, col6, col7 = st.columns((1, 1, 1, 1, 1, 0.5, 0.5))
+    col1, col2, col3, col4, col5, col6, col7 = st.columns(
+        (1, 1, 1, 1, 1, 0.5, 0.5), vertical_alignment="bottom"
+    )
 
     sel_type = select_sport(df, col1)
 
@@ -197,11 +204,11 @@ def main() -> None:  # noqa: C901, D103, PLR0912, PLR0915
             df = df.query("total_elevation_gain > @sel_elev")
     if df.empty:
         st.stop()
-    sel_km = col6.selectbox(label="km/mi", options=["km", "mi"])
+    sel_km = col6.segmented_control(
+        label="Unit", options=["km", "mi"], default="km", required=True
+    )
 
-    col7.button("Reset", on_click=reset_filters)
-
-    st.columns(1)
+    col7.button("Reset", on_click=reset_filters, icon=":material/restart_alt:")
 
     fetch_desc = st.checkbox(
         "Fetch activity descriptions too"
@@ -276,7 +283,11 @@ def main() -> None:  # noqa: C901, D103, PLR0912, PLR0915
         df=df, file_name="Strava_Activity_List.xlsx", exclude_index=True
     )
 
-    if st.button("Re-Fetch from Strava", help="Re-fetch activities from Strava"):
+    if st.button(
+        "Re-Fetch from Strava",
+        help="Re-fetch activities from Strava",
+        icon=":material/refresh:",
+    ):
         refresh_activities_cache()
         st.rerun()
 

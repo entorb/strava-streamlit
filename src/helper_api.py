@@ -224,8 +224,6 @@ def fetch_all_activities(year_start: int, year_end: int) -> list[dict]:
     year_start=5, year_end=0 -> previous 5 years
     """
     page = 1
-    lst_all_activities = []
-
     date_today = dt.datetime.now(tz=dt.UTC).date()
     if year_start == 0:  # this year only
         after = int(
@@ -245,8 +243,15 @@ def fetch_all_activities(year_start: int, year_end: int) -> list[dict]:
             ).timestamp()
         )
 
-    # 2 pages in parallel; worker threads need script ctx for st.session_state TOKEN
     fetch = partial(fetch_activities_page, year=year_start, after=after, before=before)
+    # page 1 alone: most ranges fit in 1 page, rate limit is per app (all users)
+    lst_all_activities = fetch(page)
+    # shortcut: short page = last page; if Strava sends short non-last
+    # pages, activities get lost. Then stop on empty page instead.
+    if len(lst_all_activities) < PER_PAGE:
+        return lst_all_activities
+    page = 2
+    # then 2 pages in parallel; worker threads need script ctx for session TOKEN
     ctx = get_script_run_ctx()
     with ThreadPoolExecutor(
         2, initializer=add_script_run_ctx, initargs=(None, ctx)
@@ -254,8 +259,6 @@ def fetch_all_activities(year_start: int, year_end: int) -> list[dict]:
         while True:
             lst1, lst2 = pool.map(fetch, (page, page + 1))
             lst_all_activities.extend(lst1)
-            # shortcut: short page = last page; if Strava sends short non-last
-            # pages, activities get lost. Then stop on empty page instead.
             if len(lst1) < PER_PAGE:
                 break
             lst_all_activities.extend(lst2)
@@ -267,7 +270,7 @@ def fetch_all_activities(year_start: int, year_end: int) -> list[dict]:
 
 @st.cache_data(ttl="60m", max_entries=1_000)
 @track_function_usage
-def fetch_gear_data(gear_id: int, user_id: int) -> dict:
+def fetch_gear_data(gear_id: str, user_id: int) -> dict:
     """
     Fetch gear info and return name.
 

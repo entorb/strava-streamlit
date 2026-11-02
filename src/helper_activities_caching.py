@@ -5,6 +5,7 @@
 import datetime as dt
 import json
 import math
+from functools import lru_cache
 from getpass import getuser
 from pathlib import Path
 
@@ -103,7 +104,7 @@ def delete_gear_cache(user_id: int) -> None:
     """Delete this user's gear file and in-memory gear entries, not other users'."""
     p = get_gear_cache_file_path(user_id)
     if p.exists():
-        for gear_id in json.loads(p.read_text()):
+        for gear_id in json.loads(p.read_text(encoding="utf-8")):
             fetch_gear_data.clear(gear_id=gear_id, user_id=user_id)
         p.unlink()
 
@@ -124,17 +125,17 @@ def fetch_gears_file_cached(gear_ids: list[str], user_id: int) -> dict[str, dict
     gears: dict[str, dict] = {}
     if p.exists():
         p.touch()  # renew expiry on use
-        gears = json.loads(p.read_text())
+        gears = json.loads(p.read_text(encoding="utf-8"))
     missing = [g for g in gear_ids if g not in gears]
     for gear_id in missing:
         gears[gear_id] = fetch_gear_data(gear_id=gear_id, user_id=user_id)
     if missing:
         p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(json.dumps(gears, ensure_ascii=False))
+        p.write_text(json.dumps(gears, ensure_ascii=False), encoding="utf-8")
     return {g: gears[g] for g in gear_ids}
 
 
-@track_function_usage
+# no @track_function_usage on per-row hot paths, overhead
 def geo_distance_haversine(
     start: tuple[float, float], end: tuple[float, float]
 ) -> float:
@@ -163,7 +164,6 @@ def geo_distance_haversine(
     return r * c
 
 
-@track_function_usage
 def reduce_geo_precision(loc: tuple[float, float], digits: int) -> tuple[float, float]:  # noqa: D103
     lat = round(loc[0], digits)
     lon = round(loc[1], digits)
@@ -225,12 +225,13 @@ def cache_all_activities_and_gears() -> tuple[pd.DataFrame, pd.DataFrame]:
 
 
 @track_function_usage
-def refresh_activities_cache() -> None:
+def refresh_activities_cache(*, delete_dev_files: bool = True) -> None:
     """
     Clear this user's cached activity lists so the next load re-fetches.
 
     Gear and per-activity description caches are kept intact (descriptions are
     expensive to re-fetch due to API rate limits).
+    delete_dev_files=False: only recompute from local page files, no API calls.
     """
     user_id = st.session_state["USER_ID"]
     # only this user's entries; keep in sync with cache_all_activities_and_gears()
@@ -239,7 +240,7 @@ def refresh_activities_cache() -> None:
             user_id=user_id, year_start=year_start, year_end=year_end
         )
     # in DEV the activity-list pages are also cached to disk, remove them too
-    if ENV == "Local":
+    if ENV == "Local" and delete_dev_files:
         for p in DIR_CACHE.glob("activities-page-*.json"):
             p.unlink()
 
@@ -247,7 +248,8 @@ def refresh_activities_cache() -> None:
 # this cache is for 2h, while all others are only for 15min
 # caching requires user_id is given as parameter!!!
 # max_entries: expired ttl entries are only evicted lazily, so cap to avoid OOM
-@st.cache_data(ttl="2h", max_entries=20, show_spinner="Fetching your activities")
+# 5 year ranges per user -> ~40 users; eviction = refetch = app wide rate limit
+@st.cache_data(ttl="2h", max_entries=200, show_spinner="Fetching your activities")
 @track_function_usage
 def cache_all_activities_and_gears_in_year_range(
     user_id: int,
@@ -268,7 +270,7 @@ def cache_all_activities_and_gears_in_year_range(
     df = pd.DataFrame(fetch_all_activities(year_start=year_start, year_end=year_end))
 
     # ensure all expected columns are there, even if df is empty
-    cont = Path("activity_columns.txt").read_text().strip().split()
+    cont = Path("activity_columns.txt").read_text(encoding="utf-8").strip().split()
     for col in cont:
         if col not in df.columns:
             df[col] = None
@@ -397,82 +399,48 @@ def caching_calc_additional_fields(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def _round_latlng(latlng: list | None, digits: int) -> tuple[float, float] | None:
+    """Round [lat, lng] to digits, None if no GPS (Strava sends [])."""
+    if latlng is None or len(latlng) != 2:
+        return None
+    return reduce_geo_precision((latlng[0], latlng[1]), digits)
+
+
 @track_function_usage
 def caching_geo_calc(df: pd.DataFrame) -> pd.DataFrame:
-    """Geo distance calculations."""
-    # for each row in df, calc new column x_km_start_end via geo_distance_haversine
-    #  using values of columns start_latlng and end_latlng if they are not null
-
+    """Geo calculations: rounding, start-end distance, known locations, city."""
+    # list comprehensions instead of df.apply(axis=1): no per-row Series overhead
     # 1. rounding
-    df["start_latlng"] = df.apply(
-        lambda row: (
-            reduce_geo_precision(tuple(row["start_latlng"]), 4)
-            if len(row["start_latlng"]) == 2  # type: ignore
-            else None
-        ),
-        axis=1,
-    )
-    df["end_latlng"] = df.apply(
-        lambda row: (
-            reduce_geo_precision(tuple(row["end_latlng"]), 4)
-            if len(row["end_latlng"]) == 2  # type: ignore
-            else None
-        ),
-        axis=1,
-    )
+    start = [_round_latlng(x, 4) for x in df["start_latlng"]]
+    end = [_round_latlng(x, 4) for x in df["end_latlng"]]
+    df["start_latlng"] = pd.Series(start, index=df.index, dtype=object)
+    df["end_latlng"] = pd.Series(end, index=df.index, dtype=object)
 
-    # 2 dist start-end
-    df["x_km_start_end"] = df.apply(
-        lambda row: (
-            round(
-                geo_distance_haversine(
-                    tuple(row["start_latlng"]), tuple(row["end_latlng"])
-                ),
-                1,
-            )  # type: ignore
-            if row["start_latlng"]
-            and row["end_latlng"]
-            and len(row["start_latlng"]) == 2
-            and len(row["end_latlng"]) == 2
-            else None
-        ),
-        axis=1,
-    )
+    # 2. dist start-end
+    df["x_km_start_end"] = [
+        round(geo_distance_haversine(s, e), 1) if s and e else None
+        for s, e in zip(start, end, strict=True)
+    ]
 
-    # 3.1 is start a known location?
+    # 3. is start/end a known location?
     known_locations = get_known_locations()
-    df["x_location_start"] = df.apply(
-        lambda row: (
-            check_is_known_location(
-                reduce_geo_precision(tuple(row["start_latlng"]), 3), known_locations
-            )  # type: ignore
-            if row["start_latlng"] and len(row["start_latlng"]) == 2
-            else None
-        ),
-        axis=1,
-    )
-    # 3.2 is end a known location?
-    df["x_location_end"] = df.apply(
-        lambda row: (
-            check_is_known_location(
-                reduce_geo_precision(tuple(row["end_latlng"]), 3), known_locations
-            )  # type: ignore
-            if row["end_latlng"] and len(row["end_latlng"]) == 2
-            else None
-        ),
-        axis=1,
-    )
+    df["x_location_start"] = [
+        check_is_known_location(reduce_geo_precision(s, 3), known_locations)
+        if s
+        else None
+        for s in start
+    ]
+    df["x_location_end"] = [
+        check_is_known_location(reduce_geo_precision(e, 3), known_locations)
+        if e
+        else None
+        for e in end
+    ]
 
     # 4. search for nearest city
-    df["x_nearest_city_start"] = df.apply(
-        lambda row: (
-            search_closest_city(reduce_geo_precision(tuple(row["start_latlng"]), 2))  # type: ignore
-            if row["start_latlng"] and len(row["start_latlng"]) == 2
-            else None
-        ),
-        axis=1,
-    )
-
+    df["x_nearest_city_start"] = [
+        search_closest_city(reduce_geo_precision(s, 2)) if s else None for s in start
+    ]
     return df
 
 
@@ -484,13 +452,12 @@ def get_known_locations(*, users_only: bool = False) -> list[tuple[float, float,
 
     p = get_known_locations_file_path()
     if p.is_file():
-        for line in p.read_text().strip().split("\n"):
+        for line in p.read_text(encoding="utf-8").strip().split("\n"):
             lat, lon, name = line.split(" ", 2)  # maxsplit=2 gives 3 parts
             lst_known_locations.append((float(lat), float(lon), name))
     return lst_known_locations
 
 
-@track_function_usage
 def check_is_known_location(
     latlng: tuple[float, float], known_locations: list[tuple[float, float, str]]
 ) -> str | None:
@@ -517,16 +484,15 @@ def read_city_db() -> list[tuple[float, float, str]]:
     """Read city database."""
     p = get_data_dir() / "city-gps.dat"
     lst = []
-    for line in p.read_text().strip().split("\n"):
+    for line in p.read_text(encoding="utf-8").strip().split("\n"):
         if line.startswith("#"):
             continue
-        parts = line.split(",", 6)
-        if len(parts) == 6:
-            continent, country, subdivision, city, lat, lng = parts
-        name = f"{continent}-{country}-{subdivision}-{city}".replace(",", "").replace(  # type: ignore
-            ";", ""
-        )
-        lst.append((float(lat), float(lng), name))  # type: ignore
+        parts = line.split(",")
+        if len(parts) != 6:  # skip malformed lines
+            continue
+        continent, country, subdivision, city, lat, lng = parts
+        name = f"{continent}-{country}-{subdivision}-{city}".replace(";", "")
+        lst.append((float(lat), float(lng), name))
     return lst
 
 
@@ -575,8 +541,8 @@ def cities_into_1deg_geo_boxes() -> (  # noqa: C901
     return boxes
 
 
-@st.cache_data(ttl="15m", max_entries=10_000)
-@track_function_usage
+# pure function, no user data: lru_cache is much cheaper than st.cache_data per row
+@lru_cache(maxsize=10_000)
 def search_closest_city(latlng: tuple[float, float]) -> str | None:
     """Search in 1x1 deg box of cities for closest city."""
     boxes = cities_into_1deg_geo_boxes()

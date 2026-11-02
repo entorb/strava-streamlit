@@ -27,7 +27,7 @@ def logout_and_delete() -> None:
     p = get_act_desc_cache_file_path()
     if st.session_state.get("del_desc") and p.exists():
         # only this user's in-memory entries, not other users'
-        for activity_id in json.loads(p.read_text()):
+        for activity_id in json.loads(p.read_text(encoding="utf-8")):
             fetch_activity_description.clear(
                 activity_id=int(activity_id), user_id=user_id
             )
@@ -39,7 +39,7 @@ def main() -> None:  # noqa: D103
     st.checkbox("Delete cached gear data", value=False, key="del_gear")
     if get_act_desc_cache_file_path().exists():
         st.checkbox("Delete cached activity descriptions", value=False, key="del_desc")
-    st.button("Logout", on_click=logout_and_delete)
+    st.button("Logout", on_click=logout_and_delete, icon=":material/logout:")
 
 
 if __name__ == "__main__":

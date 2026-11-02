@@ -16,4 +16,17 @@ def test_fetch_all_activities_stops_at_short_page(monkeypatch) -> None:
 
     monkeypatch.setattr(helper_api, "fetch_activities_page", fake)
     assert len(fetch_all_activities(year_start=0, year_end=0)) == 3 * PER_PAGE + 7
-    assert sorted(pages) == [1, 2, 3, 4]
+    # page 1 alone, then pairs (2,3), (4,5)
+    assert sorted(pages) == [1, 2, 3, 4, 5]
+
+
+def test_fetch_all_activities_single_page_one_call(monkeypatch) -> None:
+    pages = []
+
+    def fake(page: int, **_) -> list[dict]:
+        pages.append(page)
+        return [{}] * 7
+
+    monkeypatch.setattr(helper_api, "fetch_activities_page", fake)
+    assert len(fetch_all_activities(year_start=0, year_end=0)) == 7
+    assert pages == [1]
