@@ -34,6 +34,8 @@ def init_sentry() -> None:
         environment=ENV,
         send_default_pii=False,
         traces_sample_rate=0.0,
+        # auto integrations import every installed SDK (RAM), errors come via logging
+        auto_enabling_integrations=False,
     )
 
 
