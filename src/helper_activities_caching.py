@@ -2,6 +2,8 @@
 
 # ruff: noqa: PLR2004
 
+import datetime as dt
+import json
 import math
 from getpass import getuser
 from pathlib import Path
@@ -69,6 +71,10 @@ KNOWN_LOCATIONS = [
 ]
 
 
+# gear and description cache files are deleted after this many days without use
+FILE_CACHE_DAYS = 90
+
+
 @track_function_usage
 def get_data_dir() -> Path:
     """Get date path, dependent on env."""
@@ -85,6 +91,47 @@ def get_known_locations_file_path() -> Path:  # noqa: D103
 def get_act_desc_cache_file_path() -> Path:  # noqa: D103
     user_id = st.session_state["USER_ID"]
     return get_data_dir() / "act-desc" / f"{user_id}.json"
+
+
+@track_function_usage
+def get_gear_cache_file_path(user_id: int) -> Path:  # noqa: D103
+    return get_data_dir() / "gear" / f"{user_id}.json"
+
+
+@track_function_usage
+def delete_gear_cache(user_id: int) -> None:
+    """Delete this user's gear file and in-memory gear entries, not other users'."""
+    p = get_gear_cache_file_path(user_id)
+    if p.exists():
+        for gear_id in json.loads(p.read_text()):
+            fetch_gear_data.clear(gear_id=gear_id, user_id=user_id)
+        p.unlink()
+
+
+@track_function_usage
+def fetch_gears_file_cached(gear_ids: list[str], user_id: int) -> dict[str, dict]:
+    """
+    Return {gear_id: gear} for gear_ids, persisted per user in a JSON file.
+
+    Files unused for FILE_CACHE_DAYS are deleted, so gear renames show up later.
+    """
+    p = get_gear_cache_file_path(user_id)
+    max_age = dt.timedelta(days=FILE_CACHE_DAYS)
+    now = dt.datetime.now(tz=dt.UTC)
+    for f in p.parent.glob("*.json"):
+        if now - dt.datetime.fromtimestamp(f.stat().st_mtime, tz=dt.UTC) > max_age:
+            f.unlink()
+    gears: dict[str, dict] = {}
+    if p.exists():
+        p.touch()  # renew expiry on use
+        gears = json.loads(p.read_text())
+    missing = [g for g in gear_ids if g not in gears]
+    for gear_id in missing:
+        gears[gear_id] = fetch_gear_data(gear_id=gear_id, user_id=user_id)
+    if missing:
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(json.dumps(gears, ensure_ascii=False))
+    return {g: gears[g] for g in gear_ids}
 
 
 @track_function_usage
@@ -180,12 +227,17 @@ def cache_all_activities_and_gears() -> tuple[pd.DataFrame, pd.DataFrame]:
 @track_function_usage
 def refresh_activities_cache() -> None:
     """
-    Clear cached activity lists so the next load re-fetches from Strava.
+    Clear this user's cached activity lists so the next load re-fetches.
 
     Gear and per-activity description caches are kept intact (descriptions are
     expensive to re-fetch due to API rate limits).
     """
-    cache_all_activities_and_gears_in_year_range.clear()
+    user_id = st.session_state["USER_ID"]
+    # only this user's entries; keep in sync with cache_all_activities_and_gears()
+    for year_start, year_end in ((0, 0), (1, 0), (5, 1), (10, 5), (100, 10)):
+        cache_all_activities_and_gears_in_year_range.clear(
+            user_id=user_id, year_start=year_start, year_end=year_end
+        )
     # in DEV the activity-list pages are also cached to disk, remove them too
     if ENV == "Local":
         for p in DIR_CACHE.glob("activities-page-*.json"):
@@ -270,15 +322,12 @@ def cache_all_activities_and_gears_in_year_range(
     df = caching_calc_additional_fields(df)
 
     # gear
-    gear_ids = df["gear_id"].dropna().unique()
-    d_id_name = {}
-    lst_gear = []
-    for gear_id in gear_ids:
-        d_gear = fetch_gear_data(gear_id=gear_id, user_id=user_id)
-        lst_gear.append(d_gear)
-        d_id_name[gear_id] = d_gear["name"]
-    if lst_gear:
-        df_gear = pd.DataFrame(lst_gear).set_index("id").sort_index()
+    gears = fetch_gears_file_cached(
+        gear_ids=list(df["gear_id"].dropna().unique()), user_id=user_id
+    )
+    d_id_name = {gear_id: d["name"] for gear_id, d in gears.items()}
+    if gears:
+        df_gear = pd.DataFrame(list(gears.values())).set_index("id").sort_index()
 
     # convert gear_id to name
     df["x_gear_name"] = df["gear_id"].map(d_id_name)

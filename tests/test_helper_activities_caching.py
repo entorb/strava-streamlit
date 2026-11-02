@@ -1,17 +1,24 @@
+import os
 import sys
+import time
 from math import isnan
 from pathlib import Path
+from unittest.mock import Mock
 
 import streamlit as st
 from streamlit.testing.v1 import AppTest
 
 sys.path.insert(0, (Path(__file__).parent.parent / "src").as_posix())
 from helper_activities_caching import (
+    FILE_CACHE_DAYS,
     cache_all_activities_and_gears,
     check_is_known_location,
     cities_into_1deg_geo_boxes,
+    delete_gear_cache,
     fetch_all_activities,
+    fetch_gears_file_cached,
     geo_distance_haversine,
+    get_gear_cache_file_path,
     get_known_locations,
     read_city_db,
     reduce_geo_precision,
@@ -92,3 +99,43 @@ def test_cache_all_activities_and_gears_2() -> None:
     assert df["x_mi"].iat[1] * 10 == 189, df["x_mi"].iat[1]
     # swim
     assert isnan(df["x_elev_%"].iat[2]) is True, df["x_elev_%"].iat[2]
+
+
+def test_fetch_gears_file_cached(monkeypatch) -> None:
+    import helper_activities_caching as hac  # noqa: PLC0415
+
+    p = get_gear_cache_file_path(1)
+    p.unlink(missing_ok=True)
+    monkeypatch.setattr(hac, "fetch_gear_data", lambda gear_id, **_: {"id": gear_id})
+    assert fetch_gears_file_cached(["g1"], 1) == {"g1": {"id": "g1"}}
+    old = time.time() - (FILE_CACHE_DAYS + 1) * 86400
+    os.utime(p, (old, old))
+    assert p.exists()
+
+    def boom(gear_id, user_id):  # noqa: ARG001
+        raise AssertionError
+
+    # expired file -> deleted and refetched
+    monkeypatch.setattr(hac, "fetch_gear_data", lambda **_: {"id": "new"})
+    assert fetch_gears_file_cached(["g1"], 1) == {"g1": {"id": "new"}}
+    # fresh file -> no API call, use renews mtime
+    monkeypatch.setattr(hac, "fetch_gear_data", boom)
+    old = time.time() - (FILE_CACHE_DAYS - 1) * 86400
+    os.utime(p, (old, old))
+    assert fetch_gears_file_cached(["g1"], 1) == {"g1": {"id": "new"}}
+    assert p.stat().st_mtime > time.time() - 60
+    p.unlink()
+
+
+def test_delete_gear_cache_only_own_user(monkeypatch) -> None:
+    import helper_activities_caching as hac  # noqa: PLC0415
+
+    fake = Mock(side_effect=lambda gear_id, **_: {"id": gear_id})
+    monkeypatch.setattr(hac, "fetch_gear_data", fake)
+    fetch_gears_file_cached(["g1"], 1)
+    fetch_gears_file_cached(["g2"], 2)
+    delete_gear_cache(1)
+    fake.clear.assert_called_once_with(gear_id="g1", user_id=1)
+    assert not get_gear_cache_file_path(1).exists()
+    assert get_gear_cache_file_path(2).exists()
+    get_gear_cache_file_path(2).unlink()

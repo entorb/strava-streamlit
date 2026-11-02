@@ -2,10 +2,13 @@
 
 import datetime as dt
 import json
+from concurrent.futures import ThreadPoolExecutor
+from functools import partial
 from pathlib import Path
 
 import requests
 import streamlit as st
+from streamlit.runtime.scriptrunner import add_script_run_ctx, get_script_run_ctx
 
 from helper import ENV
 from helper_logging import get_logger_from_filename, track_function_usage
@@ -14,6 +17,7 @@ _LOGGER = get_logger_from_filename(__file__)
 
 
 API_RETRIES = 5
+PER_PAGE = 200
 HTTP_BAD_REQUEST = 400
 HTTP_UNAUTHORIZED = 401
 HTTP_TOO_MANY_REQUESTS = 429
@@ -202,7 +206,7 @@ def fetch_activities_page(
 
     if lst is None:
         lst = _api_get(
-            path=f"athlete/activities?per_page=200&page={page}&before={before}&after={after}"
+            path=f"athlete/activities?per_page={PER_PAGE}&page={page}&before={before}&after={after}"
         )
         if ENV == "Local":
             write_cache_file(cache_file, d=lst)
@@ -214,7 +218,7 @@ def fetch_activities_page(
 @track_function_usage
 def fetch_all_activities(year_start: int, year_end: int) -> list[dict]:
     """
-    Loop over fetch_activities_page unless the result is empty.
+    Loop over fetch_activities_page, 2 pages in parallel, until a short page.
 
     year_start:0 -> this year
     year_start=5, year_end=0 -> previous 5 years
@@ -241,21 +245,23 @@ def fetch_all_activities(year_start: int, year_end: int) -> list[dict]:
             ).timestamp()
         )
 
-    while True:
-        # st.write(f"Downloading page {page}")
-
-        lst = fetch_activities_page(
-            page=page, year=year_start, after=after, before=before
-        )
-        if len(lst) == 0:
-            break
-        lst_all_activities.extend(lst)
-        page += 1
-        # dev debug: only one page
-        # if st.session_state["USERNAME"] == "entorb":
-        #     break
-        # if ENV == "Local":
-        #     break
+    # 2 pages in parallel; worker threads need script ctx for st.session_state TOKEN
+    fetch = partial(fetch_activities_page, year=year_start, after=after, before=before)
+    ctx = get_script_run_ctx()
+    with ThreadPoolExecutor(
+        2, initializer=add_script_run_ctx, initargs=(None, ctx)
+    ) as pool:
+        while True:
+            lst1, lst2 = pool.map(fetch, (page, page + 1))
+            lst_all_activities.extend(lst1)
+            # shortcut: short page = last page; if Strava sends short non-last
+            # pages, activities get lost. Then stop on empty page instead.
+            if len(lst1) < PER_PAGE:
+                break
+            lst_all_activities.extend(lst2)
+            if len(lst2) < PER_PAGE:
+                break
+            page += 2
     return lst_all_activities
 
 
