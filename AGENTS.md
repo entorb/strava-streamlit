@@ -5,39 +5,65 @@ Streamlit app for Strava activity analysis. Flat package, no database, dynamic p
 ## Commands
 
 ```sh
-uv run -m streamlit run src/main.py   # run app
-ruff format && ruff check --fix       # lint + format
+uv run -m streamlit run src/main.py         # run app (APP_ENV=Local for dev)
+uv run ruff format && uv run ruff check --fix  # lint + format
+uv run pyright                              # type check (CI runs it, keep 0 errors)
 scripts/copy_test_data.sh && uv run pytest  # seed test data, run tests
-uv run pre-commit run --all-files     # all hooks
-uv sync                               # install/update deps
+scripts/run_checks.sh                       # all scripts/chk_*.sh (lint, types, dead code, audit, tests, prek)
+uv sync                                     # install/update deps
 ```
+
+- `python` is not on PATH: use `uv run python`.
+- Pre-commit hooks run via `prek` (`scripts/chk_pre-commit.sh`), not `pre-commit`.
 
 ## Architecture
 
 - **Flat imports** — `src/` on `sys.path` (pytest config), no `__init__.py`. Import as `from helper_xxx import foo`.
-- **Dynamic pages** — `src/reports/rNN_name.py` with `main()` = new page. `r99*` = admin-only (gated by `my_user_id` in `st.secrets`).
-- **Env detection** — `ENV` (`helper.py`) = PROD or Local, from env var `APP_ENV` (unset: PROD). Local enables local JSON caching + admin pages.
-- **No database** — strava API responses cached as JSON in `cache/`. Locations in `data/knownLocations/*.txt`. City DB in `data/city-gps.dat`.
-- **Caching** — `@st.cache_data(ttl="2h")` on activity fetch, `user_id` param in cache key for isolation.
-- **Instrumentation** — `@track_function_usage` decorator wraps functions; call stats visible on `r99_internal_stats.py`.
+- **Dynamic pages** — `src/reports/rNN_name.py` with `main()` = new page (keep the `main()` wrapper, project convention). Title from file name (`.title()`, title case), icon from `_PAGE_ICONS` in `helper_ui_components.py`. `r99*` = admin-only (gated by `my_user_id` in `st.secrets`).
+- **Env detection** — `ENV` (`helper.py`) = PROD or Local, from env var `APP_ENV` (unset: PROD). Local enables local JSON caching + admin pages, skips OAuth (`init_dev_session_state`).
+- **No database**
+  - Local dev only: raw API responses as JSON in `cache/` (`activities-page-*`, `gear-*`, `activity-*`).
+  - Per-user files under `get_data_dir()` (PROD: `/var/www/virtual/<user>/data-web-pages/strava`, Local: `data/`): `knownLocations/{uid}.txt`, `gear/{uid}.json`, `act-desc/{uid}.json`. Gear + descriptions expire after `FILE_CACHE_DAYS` (90) without use.
+  - City DB in `data/city-gps.dat`.
+- **Caching**
+  - `@st.cache_data` must take `user_id` as param, so cache entries are per user. Clear only the user's own entries (`func.clear(user_id=...)`).
+  - Activities: `cache_all_activities_and_gears_in_year_range` (2h ttl, 5 year ranges per user). After writes to Strava or known locations, call `refresh_activities_cache(delete_dev_files=False)`.
+  - Pure functions without user data: `functools.lru_cache`, not `st.cache_data` (per call overhead).
+- **Strava API** (`helper_api.py`) — rate limits are per app, shared by all users: minimize calls. 429 → `StravaRateLimitError`, 401 → `StravaUnauthorizedError` (handled in `main.py`).
+- **Instrumentation** — `@track_function_usage` decorator wraps functions; call stats visible on `r99_internal_stats.py`. Do not put it on per-row hot functions (geo calcs).
+- **Errors** — PROD shows a generic error, details go to Sentry (`send_default_pii=False`).
 
 ## Testing
 
 - Seed test data first: `scripts/copy_test_data.sh` (rsync `tests/testdata/` into `cache/` and `data/`)
-- Smoke tests via `streamlit.testing.v1.AppTest` in `tests/test_reports.py`
-- Unit tests in `tests/test_r20_activity_stats.py`, `tests/test_helper_activities_caching.py`
-- CI runs: `ruff format --check` → `ruff check` → pytest → pre-commit
+- Smoke tests via `streamlit.testing.v1.AppTest` in `tests/test_reports.py` (opens every page, asserts no exception/error/warning)
+- Unit tests in `tests/test_helper_api.py`, `tests/test_helper_activities_caching.py`, `tests/test_r20_activity_stats.py`
+- CI (`.github/workflows/check.yml`): prek hooks → cspell → ruff format check → ruff check → pyright → vulture → uv audit → pytest
+- New words in code/docs: add to `cspell-words.txt` (CSpell runs in CI)
 
-## Streamlit best practices
+## Streamlit skill
 
-Existing skill at `.agents/skills/developing-with-streamlit/SKILL.md` covers: caching, layouts, theming, selection widgets, session state, CCv2, performance. Load it for Streamlit-specific work.
+Load the Streamlit skill before any Streamlit work (widgets, layout, caching, performance, review):
 
-Key notes:
+- Skill `developing-with-streamlit` (routing skill), or read the version-matched docs bundled in the installed package:
+  `.agents/skills/developing-with-streamlit/SKILL.md` (local symlink into `.venv/lib/python3.14/site-packages/streamlit/.agents/skills/`, gitignored; update the link after Python upgrades).
+- `SKILL.md` routes to `references/*.md`; for reviews start with `references/best-practices.md` and `references/performance.md`.
+- Look up exact API signatures locally: `uv run streamlit docs st.<command>`.
 
-- `use_container_width` deprecated → use `width="stretch"`
-- Config at `.streamlit/config.toml` (dev) and `.streamlit/config-prod.toml` (deployed)
+Conventions applied here:
+
+- `width="stretch"`/`"content"`, never `use_container_width`.
+- Material icons (`icon=":material/xxx:"`) on pages and buttons. Title Case for page titles, headers, subheaders, labels and buttons (project choice, overrides the skill's sentence-case advice).
+- 2–5 options: `st.segmented_control(..., required=True)` instead of selectbox/radio.
+- Rows mixing inputs and buttons: `st.columns(..., vertical_alignment="bottom")`.
+- HTML via `st.html`, not `st.markdown(unsafe_allow_html=True)`.
+- `st.data_editor`: keep the source DataFrame fixed in session_state, never write the editor output back into it; reset via a versioned `key` (see `r62_excel_import.py`).
+- `st.download_button(data=callable, on_click="ignore")` for generated files.
+- Config: `.streamlit/config.toml` (dev). `.streamlit/config-prod.toml` is generated by `scripts/config_convert.py` (called from `scripts/deploy.sh`): change prod settings there.
 
 ## Lint & constraints
 
-- Python 3.14
+- Python 3.14 only: PEP 649 deferred annotations (no `from __future__ import annotations`, `TYPE_CHECKING` imports in annotations are fine), PEP 695 generics, PEP 758 `except A, B:`.
+- File I/O: always `encoding="utf-8"` (`read_text`, `write_text`, `open`, `to_csv`).
+- pandas 3 (Copy-on-Write, string dtype: missing = NaN, use `pd.notna`).
 - Ruff: 88 cols, ALL lints, select ignores. `ruff.toml` is source of truth.
