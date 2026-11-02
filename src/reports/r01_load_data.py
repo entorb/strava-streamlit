@@ -12,8 +12,8 @@ _LOGGER = get_logger_from_filename(__file__)
 
 
 def main() -> None:  # noqa: D103
+    select_years()
     col1, _ = st.columns((1, 5))
-    select_years(col1)
 
     df = cache_all_activities_and_gears()[0]
 

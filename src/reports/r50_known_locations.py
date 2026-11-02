@@ -9,6 +9,7 @@ from helper_activities_caching import (
     get_known_locations,
     get_known_locations_file_path,
     reduce_geo_precision,
+    refresh_activities_cache,
 )
 from helper_logging import get_logger_from_filename
 
@@ -24,18 +25,28 @@ def main() -> None:  # noqa: D103
     # st.dataframe(df, hide_index=True)
 
     df_edited = col1.data_editor(df, hide_index=True, num_rows="dynamic")
-    if col1.button("Save", key="btn-save"):
+    if col1.button("Save", key="btn-save", icon=":material/save:"):
         df2 = df_edited.loc[:, ["Lat", "Lon", "Name"]]
         df2.loc[:, ["Lat", "Lon"]] = df2.loc[:, ["Lat", "Lon"]].replace(0, np.nan)  # type: ignore
         df2["Name"] = df2["Name"].str.strip().replace("", np.nan)  # type: ignore
         df2["Name"] = df2["Name"].str.replace(r"[\s\n\r]+", "", regex=True)  # type: ignore
         df2 = df2.dropna()
         # trim and round
-        df2["Lat"] = df2["Lat"].clip(lower=-180.0, upper=180.0).round(4)  # type: ignore
-        df2["Lon"] = df2["Lon"].clip(lower=-90.0, upper=90.0).round(4)  # type: ignore
+        df2["Lat"] = df2["Lat"].clip(lower=-90.0, upper=90.0).round(4)  # type: ignore
+        df2["Lon"] = df2["Lon"].clip(lower=-180.0, upper=180.0).round(4)  # type: ignore
         df2 = df2.sort_values(by=["Name"])
         path_kl = get_known_locations_file_path()
-        df2.to_csv(path_kl, sep=" ", index=False, header=False, lineterminator="\n")
+        path_kl.parent.mkdir(parents=True, exist_ok=True)
+        df2.to_csv(
+            path_kl,
+            sep=" ",
+            index=False,
+            header=False,
+            lineterminator="\n",
+            encoding="utf-8",
+        )
+        # x_location_* columns are computed in the cached activity DataFrame
+        refresh_activities_cache(delete_dev_files=False)
         st.rerun()
 
     col2.header("Map Links")

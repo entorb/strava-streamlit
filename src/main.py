@@ -32,7 +32,7 @@ def init_sentry() -> None:
     sentry_sdk.init(
         dsn=st.secrets["sentry_dsn"],
         environment=ENV,
-        send_default_pii=True,
+        send_default_pii=False,
         traces_sample_rate=0.0,
     )
 
@@ -107,5 +107,9 @@ if __name__ == "__main__":
         # automatically triggered by logger.exception
         # sentry_sdk.capture_exception(e)
         _LOGGER.exception("Exception:")
-        st.exception(e)
+        # no tracebacks for users in PROD, Sentry has the details
+        if ENV == "PROD":
+            st.error("Unexpected error, it was logged. Please reload and try again.")
+        else:
+            st.exception(e)
         st.stop()

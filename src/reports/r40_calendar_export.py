@@ -83,6 +83,7 @@ def main() -> None:  # noqa: D103
 
     st.download_button(
         label="Download ICS",
+        icon=":material/download:",
         data=gen_ics(df).encode("utf-8"),
         file_name=FILE_NAME,
         mime="text/calendar",

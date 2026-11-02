@@ -15,6 +15,22 @@ if TYPE_CHECKING:
 
 _LOGGER = get_logger_from_filename(__file__)
 
+# page file name without rNN_ prefix -> icon, unknown pages get a default icon
+_PAGE_ICONS = {
+    "load_data": ":material/download:",
+    "current_year": ":material/today:",
+    "activity_list_and_excel_export": ":material/table_view:",
+    "activity_statistics": ":material/bar_chart:",
+    "calendar_export": ":material/calendar_month:",
+    "known_locations": ":material/location_on:",
+    "set_commute": ":material/commute:",
+    "excel_import": ":material/upload_file:",
+    "contact": ":material/mail:",
+    "logout": ":material/logout:",
+    "internal_stats": ":material/monitoring:",
+    "tm_write": ":material/edit:",
+}
+
 
 @track_function_usage
 def create_navigation_menu() -> StreamlitPage:
@@ -32,7 +48,8 @@ def create_navigation_menu() -> StreamlitPage:
         ):
             continue
 
-        lst.append(st.Page(page=f"reports/{f}.py", title=t))
+        icon = _PAGE_ICONS.get(f[4:], ":material/description:")
+        lst.append(st.Page(page=f"reports/{f}.py", title=t, icon=icon))
     pg = st.navigation(lst)
     return pg
 
@@ -51,6 +68,7 @@ def excel_download_buttons(
 
     st.download_button(
         label="Download Excel",
+        icon=":material/download:",
         data=_make_excel,
         file_name=file_name.replace(" ", "_"),
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -90,19 +108,23 @@ _YEARS_LABEL_TO_VALUE = {
     "Last 10": 10,
     "All": 100,
 }
-_YEARS_VALUE_TO_INDEX = {0: 0, 1: 1, 5: 2, 10: 3}
+_YEARS_VALUE_TO_LABEL = {v: k for k, v in _YEARS_LABEL_TO_VALUE.items()}
 
 
 @track_function_usage
-def select_years(location: DeltaGenerator) -> None:
+def select_years() -> None:
     """
-    Display a selectbox to choose how many years of activities to load.
+    Display a segmented control to choose how many years of activities to load.
 
     Stores the selection in st.session_state["years"], which is read by
     cache_all_activities_and_gears().
     """
     if "years" not in st.session_state:
         st.session_state["years"] = 0
-    index = _YEARS_VALUE_TO_INDEX.get(st.session_state["years"], 4)
-    sel = location.selectbox(label="Years", options=_YEARS_OPTIONS, index=index)
+    sel = st.segmented_control(
+        label="Years",
+        options=_YEARS_OPTIONS,
+        default=_YEARS_VALUE_TO_LABEL.get(st.session_state["years"], "All"),
+        required=True,
+    )
     st.session_state["years"] = _YEARS_LABEL_TO_VALUE[sel]

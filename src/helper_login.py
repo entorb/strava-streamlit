@@ -28,7 +28,7 @@ def display_strava_auth_link() -> None:
     st.title("Login")
 
     # attention: static files are under html/strava/strava-resources
-    st.write(
+    st.html(
         """
 <table>
   <tbody>
@@ -51,8 +51,7 @@ def display_strava_auth_link() -> None:
       </td>
     </tr>
   </tbody>
-</table>""",
-        unsafe_allow_html=True,
+</table>"""
     )
 
     # this text is copied from README.md
@@ -114,10 +113,15 @@ def handle_redirect() -> None:
     d_login_cnt = get_user_login_count()
     d_login_cnt[user_id] = 1 + d_login_cnt.get(user_id, 0)
 
-    st.session_state["API_SCOPE"] = st.query_params["scope"]
+    st.session_state["API_SCOPE"] = st.query_params.get("scope", "")
 
-    # increase the login counter via web-stats script
-    subprocess.run([PATH_WEBSTATS_SCRIPT, "strava-streamlit"], check=False, shell=False)  # noqa: S603
+    # increase the login counter via web-stats script, must not break login
+    try:
+        subprocess.run(  # noqa: S603
+            [PATH_WEBSTATS_SCRIPT, "strava-streamlit"], check=False, shell=False
+        )
+    except OSError:
+        _LOGGER.exception("web-stats script failed")
 
     # remove url parameters
     st.query_params.clear()
@@ -149,10 +153,8 @@ def handle_token_refresh(d: dict) -> None:
 def token_refresh_if_needed() -> None:
     """Trigger token refresh if needed."""
     if time() > st.session_state["TOKEN_EXPIRE"] - 600:
-        st.header("Token Refresh")
         d = api_post_token_refresh()
         handle_token_refresh(d)
-        # st.write(d)
 
 
 @track_function_usage

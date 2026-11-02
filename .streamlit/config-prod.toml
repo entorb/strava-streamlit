@@ -5,7 +5,7 @@ level = "info"
 messageFormat = "%(asctime)s	%(levelname)s	%(name)s	%(message)s"
 
 [client]
-showErrorDetails = "full"
+showErrorDetails = "none"
 
 [runner]
 

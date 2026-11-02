@@ -219,10 +219,14 @@ def main() -> None:  # noqa: D103
     df = cache_all_activities_and_gears()[0]
     df = reduce_and_rename_activity_df_for_stats(df)
 
-    cols = st.columns((1, 1, 3, 1))
+    cols = st.columns((1.5, 1, 3, 0.5), vertical_alignment="bottom")
 
-    sel_freq = cols[0].selectbox(
-        label="sel_freq", options=("Year", "Quarter", "Month", "Week"), key="sel_freq"
+    sel_freq = cols[0].segmented_control(
+        label="Frequency",
+        options=("Year", "Quarter", "Month", "Week"),
+        default="Year",
+        required=True,
+        key="sel_freq",
     )
     sel_agg = cols[1].selectbox(
         label="Aggregation",
