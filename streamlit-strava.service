@@ -1,0 +1,12 @@
+[Install]
+WantedBy=default.target
+
+[Service]
+Environment="APP_ENV=PROD"
+# limit glibc malloc arenas: less fragmentation from per-session threads
+Environment="MALLOC_ARENA_MAX=2"
+WorkingDirectory=/home/entorb8/be/strava-streamlit
+ExecStart=python3.14 -O -m streamlit run src/main.py
+Restart=always
+RestartSec=5
+
