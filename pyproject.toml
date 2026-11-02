@@ -23,7 +23,8 @@ dev = [
     "ruff>=0.17.2",
     "tomli-w>=1.2.0",
     "vulture>=2.16",
-    "watchdog>=6.0.0",
+    "watchdog>=6.0.0; sys_platform != 'darwin'",
+    "watchdog>=7.0.0; sys_platform == 'darwin'",  # cp314 macOS wheels
 ]
 
 [tool.pytest.ini_options]
@@ -39,11 +40,9 @@ exclude_lines = ["pragma: no cover", "if __name__ == \"__main__\":"]
 [tool.uv]
 required-version = "~=0.13.6"
 exclude-newer = "7 days"
-
-[tool.uv.audit]
-# cspell:disable
-ignore = ["GHSA-rgxp-2hwp-jwgg"]
-# cspell:enable
+# watchdog 7.0.0: first release with cp314 macOS wheels
+# TODO: remove after 07.11.26
+exclude-newer-package = { watchdog = false }
 
 [tool.pyright]
 include = ["src"]
