@@ -1,0 +1,87 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["security:only-security-updates"],
+  "timezone": "Europe/Berlin",
+  "minimumReleaseAge": "7 days",
+  "minimumReleaseAgeBehaviour": "timestamp-optional",
+  "semanticCommits": "enabled",
+  "labels": ["dependencies"],
+  "rangeStrategy": "bump",
+  "internalChecksFilter": "strict",
+  "automerge": true,
+  "automergeType": "branch",
+  "prHourlyLimit": 5,
+  "prConcurrentLimit": 10,
+  "vulnerabilityAlerts": {
+    "addLabels": ["security"],
+    "automerge": false
+  },
+  "dependencyDashboardOSVVulnerabilitySummary": "all",
+  "pre-commit": {
+    "enabled": true
+  },
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["* 18-23 * * 6"]
+  },
+  "packageRules": [
+    {
+      "description": "Override Mend-hosted global approval rule",
+      "matchPackageNames": ["*"],
+      "dependencyDashboardApproval": false
+    },
+    {
+      "description": "keep Python at 3.14 (requires-python, .python-version, CI)",
+      "matchPackageNames": ["python"],
+      "allowedVersions": "<3.15"
+    },
+    {
+      "groupName": "github-actions",
+      "matchManagers": ["github-actions"],
+      "enabled": true,
+      "separateMajorMinor": false,
+      "separateMinorPatch": false,
+      "schedule": ["* 0-18 * * 6"]
+    },
+    {
+      "matchManagers": ["pre-commit"],
+      "groupName": "pre-commit hooks",
+      "enabled": true,
+      "separateMajorMinor": false,
+      "separateMinorPatch": false,
+      "schedule": ["* 0-18 * * 6"]
+    },
+    {
+      "description": "dev group, project.dependencies are bumped by scripts/update.sh",
+      "groupName": "tools-py",
+      "matchManagers": ["pep621"],
+      "matchDepTypes": ["dependency-groups"],
+      "enabled": true,
+      "separateMajorMinor": false,
+      "separateMinorPatch": false,
+      "schedule": ["* 0-18 * * 6"]
+    },
+    {
+      "groupName": "tools-js",
+      "matchManagers": ["npm"],
+      "matchPackageNames": [
+        "@biomejs/biome",
+        "@eslint/**",
+        "@playwright/**",
+        "@typescript-eslint/**",
+        "@vitest/**",
+        "eslint-plugin-*",
+        "eslint",
+        "knip",
+        "playwright",
+        "typescript-eslint",
+        "vitest",
+        "vue-tsc"
+      ],
+      "enabled": true,
+      "separateMajorMinor": false,
+      "separateMinorPatch": false,
+      "schedule": ["* 0-18 * * 6"]
+    }
+  ]
+}

@@ -2,27 +2,30 @@
 set -e
 cd "$(dirname "$0")/.."
 
-uv remove sentry-sdk streamlit XlsxWriter
-uv remove --dev ruff pytest pytest-cov tomli-w vulture watchdog
+echo "## Python Packages"
+# bump [project].dependencies (==) to latest; dev group is bumped by Renovate (tools-py),
+# uv upgrade cannot yet do dependency groups (astral-sh/uv#20783)
+uv upgrade
+uv sync --no-build --upgrade
 
-uv lock --upgrade
-uv sync --upgrade
+uv run --no-build python scripts/gen_requirements.py
 
-# pin to old versions due to Uberspace restrictions
-uv add sentry-sdk streamlit XlsxWriter
-uv add --dev ruff pytest pytest-cov tomli-w vulture watchdog
+echo "## Code checks"
+echo "### Prek update"
+prek update --cooldown-days 7
 
-uv lock --upgrade
-uv sync --upgrade
+echo "### run_checks.sh"
+./scripts/run_checks.sh
 
-python scripts/gen_requirements.py
+echo "## Git"
+if [ -n "$(git status --porcelain)" ]; then
+  echo "### git push"
+  FILES="pyproject.toml uv.lock .pre-commit-config.yaml .python-version"
+  # shellcheck disable=SC2086
+  git add $FILES
+  # shellcheck disable=SC2086
+  git diff --staged --quiet || git commit -m "chore(deps): Package update" -- $FILES
+  git push
+fi
 
-# ruff
-uv run ruff format
-uv run ruff check --fix
-
-# pre-commit
-prek autoupdate --cooldown-days 7
-prek run --all-files --quiet
-
-echo DONE
+echo "update DONE, not yet deployed"
